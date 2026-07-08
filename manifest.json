@@ -6,6 +6,13 @@
     "icons": {
         "200": "icons/clock.png"
     },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "200": "icons/clock.png"
+        }
+    },
+    "permissions": ["storage"],
     "content_scripts": [
         {
             "matches": ["*://*.bilibili.com/video/*", "*://*.bilibili.com/bangumi/*"],

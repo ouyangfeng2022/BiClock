@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>BiClock 设置</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <h1>BiClock 设置</h1>
+
+    <div class="preview" id="preview">
+        <div class="preview-clock" id="previewClock">00:00:00</div>
+    </div>
+
+    <fieldset>
+        <legend>外观</legend>
+
+        <label>
+            <span>字体大小</span>
+            <input type="number" id="fontSize" min="8" max="120" step="1">
+            <span class="unit">px</span>
+        </label>
+
+        <label>
+            <span>文字颜色</span>
+            <input type="color" id="color">
+        </label>
+
+        <label>
+            <span>背景颜色</span>
+            <input type="color" id="backgroundColor">
+        </label>
+
+        <label>
+            <span>背景透明度</span>
+            <input type="range" id="bgOpacity" min="0" max="100" step="1">
+            <span class="unit" id="bgOpacityValue">100%</span>
+        </label>
+
+        <label>
+            <span>顶部偏移</span>
+            <input type="number" id="topOffset" min="0" max="200" step="1">
+            <span class="unit">px</span>
+        </label>
+
+        <label class="checkbox">
+            <input type="checkbox" id="bold">
+            <span>粗体</span>
+        </label>
+    </fieldset>
+
+    <fieldset>
+        <legend>时间格式</legend>
+
+        <label class="checkbox">
+            <input type="checkbox" id="use24Hour">
+            <span>使用 24 小时制</span>
+        </label>
+
+        <label class="checkbox">
+            <input type="checkbox" id="showSeconds">
+            <span>显示秒</span>
+        </label>
+    </fieldset>
+
+    <p class="hint">修改会自动保存，刷新 Bilibili 页面或切换标签即可看到效果。</p>
+
+    <script src="popup.js"></script>
+</body>
+</html>
