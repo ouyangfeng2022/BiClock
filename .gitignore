@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# AGENTS
+.zcode
+
+# log
+*.log
+
+# temp
+*.tmp
+
+# node
+node_modules/
