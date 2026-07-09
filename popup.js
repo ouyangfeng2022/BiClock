@@ -7,7 +7,11 @@ var DEFAULTS = {
     topOffset: 10,
     bold: false,
     use24Hour: true,
-    showSeconds: true
+    showSeconds: true,
+    // posX/posY 是相对视口宽高的 0..1 比例；useDefaultPosition=true 时退回居中。
+    useDefaultPosition: true,
+    posX: 0.5,
+    posY: 0.04
 };
 
 var config = {};
@@ -51,7 +55,11 @@ function applyToPreview() {
     el.style.color = config.color;
     el.style.fontWeight = config.bold ? 'bold' : 'normal';
     el.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+    // 预览框尺寸远小于真实播放器，预览里始终展示默认的居中效果，
+    // 自定义位置由用户在下方"位置"面板里设置。
     el.style.top = config.topOffset + 'px';
+    el.style.left = '50%';
+    el.style.transform = 'translateX(-50%)';
     refreshPreviewText();
 }
 
@@ -94,11 +102,77 @@ function onInput() {
     save();
 }
 
+// ---- 位置面板 ----
+// 拖动面板里的时针图标来设置时钟在播放器中的位置。
+// posX/posY 存为 0..1 比例，biclock.js 再按真实视口尺寸换算成像素。
+
+function updatePositionMarker() {
+    var marker = $('positionMarker');
+    // 比例 -> 面板内的百分比坐标。marker 自身用 translate(-50%,-50%) 居中到该点。
+    marker.style.left = (config.posX * 100) + '%';
+    marker.style.top = (config.posY * 100) + '%';
+}
+
+function setPositionFromPointer(clientX, clientY) {
+    var panel = $('positionPanel');
+    var rect = panel.getBoundingClientRect();
+    var x = (clientX - rect.left) / rect.width;
+    var y = (clientY - rect.top) / rect.height;
+    // 夹到面板内，避免图标跑出可视区域。
+    x = Math.max(0, Math.min(1, x));
+    y = Math.max(0, Math.min(1, y));
+    config.useDefaultPosition = false;
+    config.posX = x;
+    config.posY = y;
+    updatePositionMarker();
+    save();
+}
+
+function initPositionPanel() {
+    var panel = $('positionPanel');
+    var marker = $('positionMarker');
+
+    function onMove(e) {
+        e.preventDefault();
+        setPositionFromPointer(e.clientX, e.clientY);
+    }
+
+    function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        marker.classList.remove('dragging');
+    }
+
+    function onDown(e) {
+        // 仅鼠标左键。
+        if (e.button !== 0) return;
+        e.preventDefault();
+        marker.classList.add('dragging');
+        // 按下即定位（不用先移动一点才生效）。
+        setPositionFromPointer(e.clientX, e.clientY);
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    }
+
+    // 在整个面板上按下都可开始拖动，更符合直觉。
+    panel.addEventListener('mousedown', onDown);
+
+    $('resetPosition').addEventListener('click', function () {
+        config.useDefaultPosition = true;
+        config.posX = DEFAULTS.posX;
+        config.posY = DEFAULTS.posY;
+        save();
+        updatePositionMarker();
+        applyToPreview();
+    });
+}
+
 function init() {
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
         fillForm();
         applyToPreview();
+        updatePositionMarker();
     });
 
     var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'topOffset', 'bold', 'use24Hour', 'showSeconds'];
@@ -106,6 +180,8 @@ function init() {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);
     });
+
+    initPositionPanel();
 
     setInterval(refreshPreviewText, 1000);
 }

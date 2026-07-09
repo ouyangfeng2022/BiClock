@@ -7,7 +7,12 @@ var DEFAULTS = {
     topOffset: 10,
     bold: false,
     use24Hour: true,
-    showSeconds: true
+    showSeconds: true,
+    // 位置由 popup 里的"位置"面板控制；posX/posY 是相对视口的 0..1 比例，
+    // 这样不同分辨率的屏幕都能正确还原，而不是写死像素。
+    useDefaultPosition: true,
+    posX: 0.5,
+    posY: 0.04
 };
 
 var config = {};
@@ -15,8 +20,10 @@ var config = {};
 var clock = document.createElement('div');
 clock.className = 'bpx-player-top-clock';
 clock.style.position = 'absolute';
-clock.style.left = '50%';
-clock.style.transform = 'translateX(-50%)';
+// 用户无法在浏览器全屏里点击时钟（会退出全屏），所以位置改在 popup 面板里调整。
+// 高 z-index 避免被 Bilibili 的控件层盖住。
+clock.style.zIndex = '9999';
+clock.style.userSelect = 'none';
 
 var timer = null;
 
@@ -52,8 +59,21 @@ function applyStyles() {
     clock.style.fontSize = config.fontSize + 'px';
     clock.style.color = config.color;
     clock.style.fontWeight = config.bold ? 'bold' : 'normal';
-    clock.style.top = config.topOffset + 'px';
     clock.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+    if (config.useDefaultPosition) {
+        // 默认：水平居中，top 用 topOffset。
+        clock.style.top = config.topOffset + 'px';
+        clock.style.left = '50%';
+        clock.style.transform = 'translateX(-50%)';
+    } else {
+        // 自定义位置：用 translate 把时钟中心点对到 (posX, posY) 比例处，
+        // 比例换算成视口像素，适配任意分辨率。
+        var x = (config.posX * window.innerWidth).toFixed(1);
+        var y = (config.posY * window.innerHeight).toFixed(1);
+        clock.style.left = x + 'px';
+        clock.style.top = y + 'px';
+        clock.style.transform = 'translate(-50%, -50%)';
+    }
 }
 
 function startTimer() {
