@@ -63,6 +63,10 @@ function applyStyles() {
     clock.style.color = config.color;
     clock.style.fontWeight = config.bold ? 'bold' : 'normal';
     clock.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+    // 常驻模式挂到 .bpx-player-container 上，该容器不一定建立定位上下文，
+    // 改用 fixed 直接相对视口定位，避免位置受 Bilibili 容器的 position 影响。
+    // 鼠标触发模式挂在顶栏里，沿用 absolute 让它跟随顶栏的布局。
+    clock.style.position = config.alwaysShow ? 'fixed' : 'absolute';
     if (config.useDefaultPosition) {
         // 默认：水平居中，top 用 topOffset。
         clock.style.top = config.topOffset + 'px';
@@ -113,13 +117,27 @@ function shouldShow() {
 }
 
 function updateClock() {
-    var topLeft = document.getElementsByClassName("bpx-player-top-left")[0];
-    if (!topLeft) {
+    var container = document.getElementsByClassName('bpx-player-container')[0];
+    if (!container) {
         return;
     }
     applyStyles();
     clock.textContent = formatTime(new Date(), config.use24Hour, config.showSeconds);
-    topLeft.parentNode.insertBefore(clock, topLeft.nextSibling);
+
+    if (config.alwaysShow) {
+        // 常驻模式挂到播放器根容器：Bilibili 在控件隐藏时会把整个顶栏
+        // （.bpx-player-top，含标题及 .bpx-player-top-left 的兄弟节点）一起隐藏，
+        // 挂在顶栏子树里的时钟会被连带带走，导致常驻模式视觉上失效。
+        // 挂到根容器即可摆脱顶栏的显隐——根容器本身不会随 data-ctrl-hidden 隐藏。
+        container.appendChild(clock);
+    } else {
+        // 鼠标触发模式维持挂在顶栏里，能跟着顶栏的渐隐一起淡出，过渡更自然。
+        var topLeft = document.getElementsByClassName('bpx-player-top-left')[0];
+        if (!topLeft) {
+            return;
+        }
+        topLeft.parentNode.insertBefore(clock, topLeft.nextSibling);
+    }
 }
 
 function run() {
