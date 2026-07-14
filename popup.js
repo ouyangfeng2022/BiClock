@@ -8,6 +8,8 @@ var DEFAULTS = {
     bold: false,
     use24Hour: true,
     showSeconds: true,
+    // 显示模式：false = 鼠标触发（默认），true = 常驻。
+    alwaysShow: false,
     // posX/posY 是相对视口宽高的 0..1 比例；useDefaultPosition=true 时退回居中。
     useDefaultPosition: true,
     posX: 0.5,
@@ -81,6 +83,7 @@ function readFromForm() {
     config.bold = $('bold').checked;
     config.use24Hour = $('use24Hour').checked;
     config.showSeconds = $('showSeconds').checked;
+    config.alwaysShow = $('modeAlways').checked;
 }
 
 function fillForm() {
@@ -93,6 +96,9 @@ function fillForm() {
     $('bold').checked = config.bold;
     $('use24Hour').checked = config.use24Hour;
     $('showSeconds').checked = config.showSeconds;
+    // 两个 radio 共用一个 name，按 alwaysShow 选中其一。
+    $('modeAlways').checked = !!config.alwaysShow;
+    $('modeHover').checked = !config.alwaysShow;
 }
 
 function onInput() {
@@ -178,6 +184,11 @@ function init() {
     var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'topOffset', 'bold', 'use24Hour', 'showSeconds'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
+        $(id).addEventListener('change', onInput);
+    });
+
+    // 显示模式：两个 radio 共用 name="displayMode"，监听 change 即可。
+    ['modeHover', 'modeAlways'].forEach(function (id) {
         $(id).addEventListener('change', onInput);
     });
 

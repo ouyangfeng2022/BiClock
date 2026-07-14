@@ -8,6 +8,9 @@ var DEFAULTS = {
     bold: false,
     use24Hour: true,
     showSeconds: true,
+    // 显示模式：false = 鼠标触发（默认，仅在控件可见时显示），
+    // true = 常驻（进入浏览器全屏后一直显示，不随控件隐藏）。
+    alwaysShow: false,
     // 位置由 popup 里的"位置"面板控制；posX/posY 是相对视口的 0..1 比例，
     // 这样不同分辨率的屏幕都能正确还原，而不是写死像素。
     useDefaultPosition: true,
@@ -94,13 +97,19 @@ function stopTimer() {
     }
 }
 
-// 仅在浏览器全屏（Bilibili 的 data-screen="full"）且控件可见时显示。
-// 浏览器全屏才会隐藏其原生视频工具栏，宽屏/网页全屏仍然会浮在视频上方。
+// 是否显示时钟的统一判官。两种显示模式：
+// - 鼠标触发（alwaysShow=false）：浏览器全屏 + 控件可见才显示。
+//   控件自动隐藏后随即消失，避免遮挡画面。
+// - 常驻（alwaysShow=true）：只要处于浏览器全屏就一直显示，
+//   不再受控件可见性影响。
+// 两种模式都要求 data-screen="full"——浏览器全屏才会隐藏其原生视频工具栏，
+// 宽屏/网页全屏仍会被那些覆盖层挡住，故始终排除。
 function shouldShow() {
     var targetDiv = document.getElementsByClassName('bpx-player-container')[0];
     if (!targetDiv) return false;
-    return targetDiv.getAttribute('data-screen') === 'full'
-        && targetDiv.getAttribute('data-ctrl-hidden') === 'false';
+    if (targetDiv.getAttribute('data-screen') !== 'full') return false;
+    if (config.alwaysShow) return true;
+    return targetDiv.getAttribute('data-ctrl-hidden') === 'false';
 }
 
 function updateClock() {
@@ -149,6 +158,15 @@ function init() {
             Object.keys(changes).forEach(function (key) {
                 config[key] = changes[key].newValue;
             });
+            // 显示模式切换不会触发播放器属性变化，需要主动按当前状态
+            // 重启/停止定时器，否则切换 alwaysShow 后要等下次控件动作才生效。
+            if ('alwaysShow' in changes) {
+                if (shouldShow()) {
+                    startTimer();
+                } else {
+                    stopTimer();
+                }
+            }
         });
         run();
     });

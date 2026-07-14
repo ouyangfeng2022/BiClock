@@ -50,6 +50,22 @@
     </fieldset>
 
     <fieldset>
+        <legend>显示模式</legend>
+
+        <label class="radio">
+            <input type="radio" name="displayMode" id="modeHover" checked>
+            <span>鼠标触发（控件可见时显示）</span>
+        </label>
+
+        <label class="radio">
+            <input type="radio" name="displayMode" id="modeAlways">
+            <span>常驻（进入全屏后一直显示）</span>
+        </label>
+
+        <p class="hint">两种模式都只在浏览器全屏（F11）下生效。常驻模式下时钟不会随控制条自动隐藏。</p>
+    </fieldset>
+
+    <fieldset>
         <legend>位置</legend>
 
         <div class="position-panel" id="positionPanel">
