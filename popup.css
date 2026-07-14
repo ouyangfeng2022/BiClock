@@ -1,99 +1,543 @@
-* {
+/* ============================================================
+   BiClock popup — Bilibili-friendly, restrained but alive
+   - 单 accent：bilibili 粉（focus / 选中 / range 填充 / checkbox 勾）
+   - 中性灰阶（OKLCH），浅色背景
+   - 自绘 checkbox / radio / range，不再依赖 accent-color
+   - 打破三列网格：range 与 radio 用更自然的两行结构
+   - 所有控件 default/hover/focus/active；hint ≥ 4.5:1
+   - 遵守 prefers-reduced-motion
+   ============================================================ */
+
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
+:root {
+    /* 中性灰阶：很轻地往粉的方向偏 0.003 chroma，避免冷灰感 */
+    --bg:          oklch(98.8% 0.003 350);
+    --surface:     oklch(100%  0    0);
+    --surface-2:   oklch(97.2% 0.004 350);
+    --surface-3:   oklch(94.5% 0.005 350);
+
+    --border:      oklch(90.0% 0.004 350);
+    --border-hi:   oklch(82.0% 0.006 350);
+
+    --ink:         oklch(26.0% 0.015 350);
+    --ink-2:       oklch(42.0% 0.014 350);
+    --ink-3:       oklch(46.0% 0.013 350);
+    --ink-unit:    oklch(52.0% 0.012 350);
+
+    /* bilibili 粉 —— 这是 B 站工具，借这个色是 voice 不是 slop */
+    --pink:        oklch(64.5% 0.208 12);   /* 主 accent */
+    --pink-hi:     oklch(58.0% 0.218 12);
+    --pink-soft:   oklch(95.5% 0.038 12);   /* focus ring 底 */
+    --pink-track:  oklch(93.0% 0.022 12);   /* range 已填充轨道 */
+
+    --ring: 0 0 0 3px var(--pink-soft);
+
+    /* 预览 / 位置面板的暗画面 */
+    --player-bg:   oklch(17.0% 0.005 350);
+
+    --radius:    8px;
+    --radius-sm: 5px;
+
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1); /* ease-out-quart */
+}
+
 body {
-    width: 280px;
+    width: 296px;
     margin: 0;
-    padding: 12px;
+    padding: 14px 14px 14px;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
     font-size: 13px;
-    color: #1f2329;
-    background: #f7f7f8;
+    line-height: 1.45;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
+/* ============================================================
+   Header：图标 + 标题，单行，给一点品牌识别
+   ============================================================ */
 h1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 15px;
-    margin: 0 0 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0 0 12px;
+    color: var(--ink);
 }
 
+h1::before {
+    content: "⏰";
+    font-size: 16px;
+    line-height: 1;
+    /* 用 accent 稍稍染色，呼应 popup 主题；不过饱和 */
+    filter: hue-rotate(-8deg) saturate(0.9);
+}
+
+/* ============================================================
+   预览：顶部窄条，始终可见，不抢垂直空间
+   ============================================================ */
 .preview {
     position: relative;
-    height: 64px;
-    margin-bottom: 12px;
-    border-radius: 6px;
-    background: #1f1f1f;
+    height: 44px;
+    margin-bottom: 14px;
+    border-radius: var(--radius);
+    background:
+        radial-gradient(120% 100% at 50% 0%,
+            oklch(24.0% 0.006 350) 0%,
+            var(--player-bg) 60%);
     overflow: hidden;
+    box-shadow:
+        inset 0 0 0 1px oklch(0% 0 0 / 10%),
+        inset 0 -8px 16px oklch(0% 0 0 / 25%);
 }
 
 .preview-clock {
     position: absolute;
-    top: 10px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
     /* font-size / color / background / weight 由 popup.js 动态写入 */
 }
 
+/* ============================================================
+   Section：去分割线，靠 legend 字重 + 间距做层级
+   ============================================================ */
 fieldset {
     border: none;
-    border-top: 1px solid #e2e2e6;
-    padding: 10px 0 8px;
+    padding: 0;
     margin: 0;
 }
 
+/* section 之间留呼吸空间；最后一个收紧 */
+fieldset + fieldset {
+    margin-top: 14px;
+}
+
 legend {
+    /* 中文 legend：不套 uppercase eyebrow（那是英文 AI tell）。
+       用字重 + 偏淡的色做层级，干净直接。 */
     font-weight: 600;
+    font-size: 12.5px;
+    color: var(--ink);
     padding: 0;
     margin-bottom: 8px;
-    color: #1f2329;
 }
 
-label {
-    display: grid;
-    grid-template-columns: 90px 1fr auto;
+/* ============================================================
+   行布局：每种行有自己的内部结构，但共享一致的间距节奏。
+   - .row-inline  → 标签左 / 控件右（number、color）
+   - .row-stacked → 标签行在上 / 控件占满整行在下（range）
+   - .row-check   → checkbox + 文字，整行可点击
+   - .row-radio   → radio + 标题+描述，整行可点击
+   ============================================================ */
+
+label { margin-bottom: 9px; }
+label:last-child { margin-bottom: 0; }
+
+/* --- inline：标签左 80px，控件右侧占满 --- */
+.row-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.row-inline > span:first-child {
+    flex: 0 0 80px;
+    font-size: 12.5px;
+    color: var(--ink-2);
+}
+
+.row-inline > input[type="number"],
+.row-inline > input[type="color"],
+.row-inline > .input-unit {
+    flex: 1;
+    min-width: 0;
+}
+
+/* --- stacked：标签 + 数值在上一行，控件在下一行占满 --- */
+.row-stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.row-stacked > .row-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--ink-2);
+}
+
+.row-stacked > input[type="range"] {
+    width: 100%;
+}
+
+/* --- check：checkbox + 文字，整行可点击 --- */
+.row-check {
+    display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
-}
-
-label.checkbox {
-    grid-template-columns: auto 1fr;
-    gap: 6px;
-}
-
-label.radio {
-    grid-template-columns: auto 1fr;
-    gap: 6px;
-    margin-bottom: 6px;
-}
-
-input[type="radio"] {
-    width: 15px;
-    height: 15px;
     cursor: pointer;
 }
 
-label > span:first-child {
-    color: #4e5969;
+.row-check > span {
+    font-size: 12.5px;
+    color: var(--ink);
 }
 
-/* 位置面板：一个 16:9 的迷你播放器，里面拖动时钟图标定位 */
+/* --- radio：单选 + 标题+描述，整行可点击，hover 有底 --- */
+.row-radio {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    padding: 6px 8px;
+    margin-left: -8px;
+    margin-right: -8px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-sm);
+    transition: background 0.14s var(--ease);
+}
+
+.row-radio:last-of-type { margin-bottom: 0; }
+.row-radio:hover { background: var(--surface-2); }
+
+.row-radio .radio-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.4;
+}
+
+.row-radio .radio-title {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+.row-radio .radio-desc {
+    font-size: 11px;
+    color: var(--ink-3);
+}
+
+/* 选中的 radio 标题着 accent */
+.row-radio:has(input:checked) .radio-title { color: var(--pink-hi); }
+
+/* 数值徽标（range 的当前值，粉色 accent） */
+.value-display {
+    font-size: 11.5px;
+    color: var(--pink-hi);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+/* 单位：number 输入框内的后缀 */
+.unit {
+    color: var(--ink-unit);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+}
+
+/* number 输入框 + 单位后缀包装 */
+.input-unit {
+    position: relative;
+    width: 100%;
+}
+
+.input-unit input[type="number"] {
+    padding-right: 26px;
+}
+
+.input-unit .unit {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* ============================================================
+   原生输入控件：number / color，default/hover/focus/disabled
+   ============================================================ */
+input[type="number"],
+input[type="text"] {
+    width: 100%;
+    height: 28px;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
+}
+
+input[type="number"]:hover {
+    border-color: var(--border-hi);
+}
+
+input[type="number"]:focus-visible {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--ring);
+}
+
+input[type="number"]:disabled {
+    background: var(--surface-2);
+    color: var(--ink-unit);
+    cursor: not-allowed;
+}
+
+/* ---- 颜色选择器：统一外壳包住原生色块 ---- */
+input[type="color"] {
+    width: 100%;
+    height: 28px;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
+}
+
+input[type="color"]:hover {
+    border-color: var(--border-hi);
+}
+
+input[type="color"]:focus-visible {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--ring);
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+input[type="color"]::-moz-color-swatch { border: none; border-radius: 3px; }
+
+/* ============================================================
+   Range：label + 数值在上 / 整条滑条在下，更舒展
+   粉色已填充段 + 中性拖把 + hover/focus/active
+   ============================================================ */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 20px;
+    background: transparent;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* 默认 / 已填充段借助 backgroud-image + 0%/100% stop 由 JS 动态写入；
+   这里先给一条中性 track 作为底。 */
+input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface-3);
+}
+
+input[type="range"]::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--surface-3);
+}
+
+/* Firefox 专属：原生进度填充（Chrome 不识别，靠 popup.js 写 background-image） */
+input[type="range"]::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--pink-track);
+}
+
+/* 进度填充：用 progress 在 Firefox 上、用一个 ::before 在 Chrome 上都麻烦，
+   改由 popup.js 直接给 range 设 background-image（线性渐变 + 百分比 stop）。
+   下面只负责 thumb 样式与状态。 */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -5px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1.5px solid var(--pink);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 15%);
+    transition: transform 0.14s var(--ease),
+                box-shadow 0.14s var(--ease),
+                background 0.14s var(--ease);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1.5px solid var(--pink);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 15%);
+    transition: transform 0.14s var(--ease),
+                box-shadow 0.14s var(--ease),
+                background 0.14s var(--ease);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb,
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+    background: var(--pink-soft);
+    transform: scale(1.1);
+}
+
+input[type="range"]:hover::-moz-range-thumb,
+input[type="range"]:focus-visible::-moz-range-thumb {
+    background: var(--pink-soft);
+    transform: scale(1.1);
+}
+
+input[type="range"]:focus-visible {
+    outline: none;
+}
+
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+    box-shadow: var(--ring);
+}
+
+input[type="range"]:focus-visible::-moz-range-thumb {
+    box-shadow: var(--ring);
+}
+
+input[type="range"]:active::-webkit-slider-thumb,
+input[type="range"]:active::-moz-range-thumb {
+    background: var(--pink);
+    transform: scale(1.05);
+}
+
+/* ============================================================
+   Checkbox：自绘方块 + 粉勾，不再依赖 accent-color
+   ============================================================ */
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border: 1.5px solid var(--border-hi);
+    border-radius: 4px;
+    background: var(--surface);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.14s var(--ease),
+                border-color 0.14s var(--ease),
+                box-shadow 0.14s var(--ease);
+}
+
+input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    left: 4.5px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--surface);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0.4);
+    opacity: 0;
+    transition: transform 0.14s var(--ease), opacity 0.14s var(--ease);
+}
+
+input[type="checkbox"]:hover {
+    border-color: var(--pink);
+}
+
+input[type="checkbox"]:checked {
+    background: var(--pink);
+    border-color: var(--pink);
+}
+
+input[type="checkbox"]:checked::before {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+}
+
+input[type="checkbox"]:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+/* ============================================================
+   Radio：自绘圆形 + 粉色填充圆点
+   布局由 .row-radio 控制，这里只管控件外观。
+   ============================================================ */
+.row-radio > input[type="radio"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 1px 0 0;
+    border: 1.5px solid var(--border-hi);
+    border-radius: 50%;
+    background: var(--surface);
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.14s var(--ease),
+                box-shadow 0.14s var(--ease);
+}
+
+.row-radio > input[type="radio"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--pink);
+    transform: scale(0);
+    transition: transform 0.14s var(--ease);
+}
+
+.row-radio > input[type="radio"]:checked {
+    border-color: var(--pink);
+}
+
+.row-radio > input[type="radio"]:checked::before {
+    transform: scale(1);
+}
+
+.row-radio > input[type="radio"]:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+/* ============================================================
+   位置面板：16:9 迷你播放器
+   ============================================================ */
 .position-panel {
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
     margin-bottom: 8px;
-    border-radius: 6px;
-    background: #1f1f1f;
+    border-radius: var(--radius);
+    background: var(--player-bg);
     background-image:
-        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+        linear-gradient(oklch(100% 0 0 / 6%) 1px, transparent 1px),
+        linear-gradient(90deg, oklch(100% 0 0 / 6%) 1px, transparent 1px);
     background-size: 25% 25%;
     cursor: crosshair;
     overflow: hidden;
     touch-action: none;
     user-select: none;
+    box-shadow: inset 0 0 0 1px oklch(0% 0 0 / 10%);
 }
 
 .position-marker {
@@ -104,75 +548,66 @@ label > span:first-child {
     line-height: 1;
     cursor: grab;
     user-select: none;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
-    transition: transform 0.1s ease;
+    filter: drop-shadow(0 1px 2px oklch(0% 0 0 / 60%));
+    transition: transform 0.14s var(--ease);
 }
 
 .position-marker.dragging {
     cursor: grabbing;
-    transform: translate(-50%, -50%) scale(1.15);
+    transform: translate(-50%, -50%) scale(1.18);
 }
 
+/* ---- 重置按钮：与控件同样的状态语汇 ---- */
 .reset-btn {
     display: block;
     width: 100%;
     height: 28px;
     margin-top: 4px;
-    border: 1px solid #d2d5db;
-    border-radius: 4px;
-    background: #fff;
-    color: #1f2329;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
     font: inherit;
+    font-size: 12.5px;
     cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: background 0.14s var(--ease),
+                border-color 0.14s var(--ease),
+                box-shadow 0.14s var(--ease);
 }
 
 .reset-btn:hover {
-    background: #f2f3f5;
-    border-color: #b7bac0;
+    background: var(--surface-2);
+    border-color: var(--border-hi);
 }
 
 .reset-btn:active {
-    background: #e5e6e9;
+    background: var(--surface-3);
 }
 
-.unit {
-    color: #86909c;
-    font-variant-numeric: tabular-nums;
-    min-width: 36px;
-    text-align: right;
+.reset-btn:focus-visible {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--ring);
 }
 
-input[type="number"],
-input[type="color"] {
-    width: 100%;
-    height: 26px;
-    padding: 2px 4px;
-    border: 1px solid #d2d5db;
-    border-radius: 4px;
-    background: #fff;
-    font: inherit;
-}
-
-input[type="color"] {
-    padding: 1px;
-    cursor: pointer;
-}
-
-input[type="range"] {
-    width: 100%;
-    cursor: pointer;
-}
-
-input[type="checkbox"] {
-    width: 15px;
-    height: 15px;
-    cursor: pointer;
-}
-
+/* ---- hint：是真正的正文，必须 ≥ 4.5:1 ---- */
 .hint {
     margin: 8px 0 0;
     font-size: 11px;
-    color: #86909c;
-    line-height: 1.4;
+    line-height: 1.45;
+    color: var(--ink-3);
+}
+
+/* ============================================================
+   reduced motion：所有 transition 降级为即时
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0ms !important;
+        animation-duration: 0ms !important;
+        animation-iteration-count: 1 !important;
+    }
 }

@@ -15,35 +15,41 @@
     <fieldset>
         <legend>外观</legend>
 
-        <label>
+        <label class="row-inline">
             <span>字体大小</span>
-            <input type="number" id="fontSize" min="8" max="120" step="1">
-            <span class="unit">px</span>
+            <span class="input-unit">
+                <input type="number" id="fontSize" min="8" max="120" step="1">
+                <span class="unit">px</span>
+            </span>
         </label>
 
-        <label>
+        <label class="row-inline">
             <span>文字颜色</span>
             <input type="color" id="color">
         </label>
 
-        <label>
+        <label class="row-inline">
             <span>背景颜色</span>
             <input type="color" id="backgroundColor">
         </label>
 
-        <label>
-            <span>背景透明度</span>
+        <label class="row-stacked">
+            <span class="row-head">
+                透明度
+                <span class="unit value-display" id="bgOpacityValue">100%</span>
+            </span>
             <input type="range" id="bgOpacity" min="0" max="100" step="1">
-            <span class="unit" id="bgOpacityValue">100%</span>
         </label>
 
-        <label>
+        <label class="row-inline">
             <span>顶部偏移</span>
-            <input type="number" id="topOffset" min="0" max="200" step="1">
-            <span class="unit">px</span>
+            <span class="input-unit">
+                <input type="number" id="topOffset" min="0" max="200" step="1">
+                <span class="unit">px</span>
+            </span>
         </label>
 
-        <label class="checkbox">
+        <label class="row-check">
             <input type="checkbox" id="bold">
             <span>粗体</span>
         </label>
@@ -52,14 +58,20 @@
     <fieldset>
         <legend>显示模式</legend>
 
-        <label class="radio">
+        <label class="row-radio">
             <input type="radio" name="displayMode" id="modeHover" checked>
-            <span>鼠标触发（控件可见时显示）</span>
+            <span class="radio-text">
+                <span class="radio-title">鼠标触发</span>
+                <span class="radio-desc">仅在播放控件可见时显示</span>
+            </span>
         </label>
 
-        <label class="radio">
+        <label class="row-radio">
             <input type="radio" name="displayMode" id="modeAlways">
-            <span>常驻（进入全屏后一直显示）</span>
+            <span class="radio-text">
+                <span class="radio-title">常驻显示</span>
+                <span class="radio-desc">进入全屏后一直显示</span>
+            </span>
         </label>
 
         <p class="hint">两种模式都只在浏览器全屏（F11）下生效。常驻模式下时钟不会随控制条自动隐藏。</p>
@@ -80,12 +92,12 @@
     <fieldset>
         <legend>时间格式</legend>
 
-        <label class="checkbox">
+        <label class="row-check">
             <input type="checkbox" id="use24Hour">
             <span>使用 24 小时制</span>
         </label>
 
-        <label class="checkbox">
+        <label class="row-check">
             <input type="checkbox" id="showSeconds">
             <span>显示秒</span>
         </label>

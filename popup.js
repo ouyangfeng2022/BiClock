@@ -59,9 +59,9 @@ function applyToPreview() {
     el.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
     // 预览框尺寸远小于真实播放器，预览里始终展示默认的居中效果，
     // 自定义位置由用户在下方"位置"面板里设置。
-    el.style.top = config.topOffset + 'px';
+    el.style.top = '50%';
     el.style.left = '50%';
-    el.style.transform = 'translateX(-50%)';
+    el.style.transform = 'translate(-50%, -50%)';
     refreshPreviewText();
 }
 
@@ -92,6 +92,10 @@ function fillForm() {
     $('backgroundColor').value = config.backgroundColor;
     $('bgOpacity').value = config.bgOpacity;
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
+    // 同步 range 已填充段（与 onInput 保持一致）
+    var pct = config.bgOpacity;
+    $('bgOpacity').style.backgroundImage =
+        'linear-gradient(to right, var(--pink-track) 0%, var(--pink-track) ' + pct + '%, transparent ' + pct + '%)';
     $('topOffset').value = config.topOffset;
     $('bold').checked = config.bold;
     $('use24Hour').checked = config.use24Hour;
@@ -104,6 +108,11 @@ function fillForm() {
 function onInput() {
     readFromForm();
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
+    // 给 range 画一条粉色已填充段：左→当前值用 --pink-track，其余透明露出 track 底色。
+    // 与 popup.css 里 ::-webkit-slider-runnable-track 的中性底色配合，形成进度感。
+    var pct = config.bgOpacity;
+    $('bgOpacity').style.backgroundImage =
+        'linear-gradient(to right, var(--pink-track) 0%, var(--pink-track) ' + pct + '%, transparent ' + pct + '%)';
     applyToPreview();
     save();
 }
