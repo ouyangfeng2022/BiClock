@@ -16,7 +16,7 @@
         <legend>外观</legend>
 
         <div class="grid-2">
-            <label class="field">
+            <label class="field field-number">
                 <span class="field-label">字体大小</span>
                 <span class="input-unit">
                     <input type="number" id="fontSize" min="8" max="120" step="1">
@@ -24,12 +24,22 @@
                 </span>
             </label>
 
-            <label class="field">
+            <label class="field field-toggle">
+                <span class="field-label">粗体</span>
+                <span class="toggle">
+                    <input type="checkbox" id="bold">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </label>
+
+            <label class="field field-color">
                 <span class="field-label">文字颜色</span>
                 <input type="color" id="color">
             </label>
 
-            <label class="field">
+            <label class="field field-color">
                 <span class="field-label">背景颜色</span>
                 <input type="color" id="backgroundColor">
             </label>
@@ -43,32 +53,28 @@
             <input type="range" id="bgOpacity" min="0" max="100" step="1">
         </label>
 
-        <label class="row-check">
-            <input type="checkbox" id="bold">
-            <span>粗体</span>
-        </label>
+        <button type="button" id="resetAppearance" class="reset-btn">重置为默认</button>
     </fieldset>
 
     <fieldset>
-        <legend>显示模式</legend>
+        <legend class="legend-tip">
+            常驻显示
+            <span class="help-tip" tabindex="0" role="button" aria-label="常驻显示说明">
+                <span class="help-icon" aria-hidden="true">?</span>
+                <span class="help-bubble">
+                    关：仅当鼠标移出/移入播放器、控件可见时显示时钟（鼠标触发）。<br>
+                    开：进入浏览器全屏（F11）后时钟一直显示，不随控制条自动隐藏。<br>
+                    两种模式都只在浏览器全屏下生效。
+                </span>
+            </span>
+        </legend>
 
-        <label class="row-radio">
-            <input type="radio" name="displayMode" id="modeHover" checked>
-            <span class="radio-text">
-                <span class="radio-title">鼠标触发</span>
-                <span class="radio-desc">仅在播放控件可见时显示</span>
+        <label class="toggle toggle-row">
+            <input type="checkbox" id="modeAlways">
+            <span class="toggle-track" aria-hidden="true">
+                <span class="toggle-thumb"></span>
             </span>
         </label>
-
-        <label class="row-radio">
-            <input type="radio" name="displayMode" id="modeAlways">
-            <span class="radio-text">
-                <span class="radio-title">常驻显示</span>
-                <span class="radio-desc">进入全屏后一直显示</span>
-            </span>
-        </label>
-
-        <p class="hint">两种模式都只在浏览器全屏（F11）下生效。常驻模式下时钟不会随控制条自动隐藏。</p>
     </fieldset>
 
     <fieldset>

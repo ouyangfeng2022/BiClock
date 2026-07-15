@@ -96,9 +96,8 @@ function fillForm() {
     $('bold').checked = config.bold;
     $('use24Hour').checked = config.use24Hour;
     $('showSeconds').checked = config.showSeconds;
-    // 两个 radio 共用一个 name，按 alwaysShow 选中其一。
+    // 常驻显示：单个 checkbox，checked = 常驻（alwaysShow=true）。
     $('modeAlways').checked = !!config.alwaysShow;
-    $('modeHover').checked = !config.alwaysShow;
 }
 
 function onInput() {
@@ -176,6 +175,19 @@ function initPositionPanel() {
     });
 }
 
+function initAppearanceReset() {
+    $('resetAppearance').addEventListener('click', function () {
+        config.fontSize = DEFAULTS.fontSize;
+        config.color = DEFAULTS.color;
+        config.backgroundColor = DEFAULTS.backgroundColor;
+        config.bgOpacity = DEFAULTS.bgOpacity;
+        config.bold = DEFAULTS.bold;
+        save();
+        fillForm();
+        applyToPreview();
+    });
+}
+
 function init() {
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
@@ -184,18 +196,15 @@ function init() {
         updatePositionMarker();
     });
 
-    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold', 'use24Hour', 'showSeconds'];
+    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold',
+        'use24Hour', 'showSeconds', 'modeAlways'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);
     });
 
-    // 显示模式：两个 radio 共用 name="displayMode"，监听 change 即可。
-    ['modeHover', 'modeAlways'].forEach(function (id) {
-        $(id).addEventListener('change', onInput);
-    });
-
     initPositionPanel();
+    initAppearanceReset();
 
     setInterval(refreshPreviewText, 1000);
 }

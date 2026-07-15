@@ -167,6 +167,199 @@ label:last-child { margin-bottom: 0; }
     color: var(--ink-2);
 }
 
+/* 网格内颜色格：沿用 field 的"标签在上/控件在下"节奏（与字号行齐高），
+   但色块缩短为固定宽度靠左，不再占满整列。 */
+.field-color > input[type="color"] {
+    align-self: flex-start;
+}
+
+/* 网格内字号格：number 框缩短为固定宽度靠左，与右侧 toggle 等控件节奏一致；
+   容得下最大值 120 + px 后缀。 */
+.field-number > .input-unit {
+    width: 78px;
+}
+
+/* legend 内嵌问号：让 legend 文字与问号内联对齐 */
+.legend-tip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 常驻显示的 toggle：单独一行，排在标题下方（与其它分区"标题在上/控件在下"一致） */
+.toggle-row {
+    display: inline-flex;
+}
+
+/* --- 帮助提示：问号图标，hover/focus 时弹出气泡说明 --- */
+.help-tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    cursor: help;
+    outline: none;
+}
+
+.help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border: 1px solid var(--border-hi);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--ink-3);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    transition: border-color 0.14s var(--ease),
+                color 0.14s var(--ease),
+                background 0.14s var(--ease);
+}
+
+.help-tip:hover .help-icon,
+.help-tip:focus-visible .help-icon {
+    border-color: var(--pink);
+    color: var(--pink-hi);
+}
+
+/* 气泡：默认隐藏，hover/focus 时可见。
+   问号在行最左侧，气泡左对齐问号（不居中），避免左半边溢出 popup。 */
+.help-bubble {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    transform: translateY(4px);
+    width: 240px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: 0 4px 14px oklch(0% 0 0 / 14%);
+    color: var(--ink-2);
+    font-size: 11.5px;
+    line-height: 1.5;
+    text-align: left;
+    white-space: normal;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 10;
+    transition: opacity 0.14s var(--ease),
+                transform 0.14s var(--ease);
+}
+
+/* 小三角：气泡底部偏左，对准问号中心 */
+.help-bubble::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 6px;
+    transform: translateX(0);
+    border: 5px solid transparent;
+    border-top-color: var(--surface);
+    margin-top: -1px;
+}
+
+.help-tip:hover .help-bubble,
+.help-tip:focus-visible .help-bubble {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.help-tip:focus-visible {
+    border-radius: 50%;
+    box-shadow: var(--ring);
+}
+
+/* --- Toggle 开关：外壳包住原生 checkbox，滑块左右滑动表达开关 ---
+   纯滑块（不嵌文字），靠位置 + 颜色表达状态，避免 thumb 盖文字。 */
+/* grid 内的 toggle 格子：标签在上，开关落到单元格底沿，与同行输入框齐高 */
+.field-toggle > .toggle {
+    margin-top: auto;
+}
+
+.toggle {
+    position: relative;
+    display: inline-flex;
+    width: 44px;
+    height: 28px;
+    flex: none;
+}
+
+.toggle > input[type="checkbox"] {
+    /* 原生 checkbox 不可见但仍可聚焦/勾选，状态驱动视觉。 */
+    -webkit-appearance: none;
+    appearance: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.toggle-track {
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--border);
+    border-radius: 14px;       /* 胶囊 */
+    background: var(--surface-3);
+    transition: background 0.18s var(--ease),
+                border-color 0.18s var(--ease);
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border-hi);
+    box-shadow: 0 1px 2px oklch(0% 0 0 / 12%);
+    transition: transform 0.18s var(--ease),
+                background 0.18s var(--ease),
+                border-color 0.18s var(--ease);
+}
+
+/* hover：边框略亮 */
+.toggle > input[type="checkbox"]:hover ~ .toggle-track {
+    border-color: var(--border-hi);
+}
+
+/* 开启态：track 填粉，滑块滑到右 */
+.toggle > input[type="checkbox"]:checked ~ .toggle-track {
+    background: var(--pink);
+    border-color: var(--pink);
+}
+
+.toggle > input[type="checkbox"]:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(16px);
+    border-color: var(--surface);
+}
+
+/* focus 环：借用全局粉色 ring */
+.toggle > input[type="checkbox"]:focus-visible ~ .toggle-track {
+    box-shadow: var(--ring);
+    border-color: var(--pink);
+}
+
+/* active：滑块稍稍缩放，提供按压反馈 */
+.toggle > input[type="checkbox"]:active ~ .toggle-track .toggle-thumb {
+    transform: translateX(0) scale(0.92);
+}
+
+.toggle > input[type="checkbox"]:checked:active ~ .toggle-track .toggle-thumb {
+    transform: translateX(16px) scale(0.92);
+}
+
 /* --- stacked：标签 + 数值在上一行，控件在下一行占满 --- */
 .row-stacked {
     display: flex;
@@ -315,7 +508,7 @@ input[type="number"]:disabled {
 
 /* ---- 颜色选择器：统一外壳包住原生色块 ---- */
 input[type="color"] {
-    width: 100%;
+    width: 56px;
     height: 28px;
     padding: 3px;
     border: 1px solid var(--border);
