@@ -5,6 +5,8 @@ var DEFAULTS = {
     backgroundColor: '#000000',
     bgOpacity: 100,
     bold: false,
+    // 仅全屏显示：true（默认）只在浏览器全屏下显示；false 任意屏幕模式都显示。
+    fullscreenOnly: true,
     // 显示模式：false = 鼠标触发（默认），true = 常驻。
     alwaysShow: false,
     // posX/posY 是相对视口宽高的 0..1 比例；初始为顶部居中。
@@ -68,6 +70,7 @@ function readFromForm() {
     config.backgroundColor = $('backgroundColor').value;
     config.bgOpacity = parseInt($('bgOpacity').value, 10);
     config.bold = $('bold').checked;
+    config.fullscreenOnly = $('fullscreenOnly').checked;
     config.alwaysShow = $('modeAlways').checked;
 }
 
@@ -82,6 +85,8 @@ function fillForm() {
     $('bgOpacity').style.backgroundImage =
         'linear-gradient(to right, var(--pink-track) 0%, var(--pink-track) ' + pct + '%, transparent ' + pct + '%)';
     $('bold').checked = config.bold;
+    // 仅全屏显示：checked = 仅全屏（fullscreenOnly=true，默认）。
+    $('fullscreenOnly').checked = config.fullscreenOnly !== false;
     // 常驻显示：单个 checkbox，checked = 常驻（alwaysShow=true）。
     $('modeAlways').checked = !!config.alwaysShow;
 }
@@ -182,7 +187,7 @@ function init() {
         updatePositionMarker();
     });
 
-    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold', 'modeAlways'];
+    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);

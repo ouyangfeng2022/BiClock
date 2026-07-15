@@ -192,9 +192,24 @@ label:last-child { margin-bottom: 0; }
     gap: 5px;
 }
 
-/* 常驻显示的 toggle：单独一行，排在标题下方（与其它分区"标题在上/控件在下"一致） */
-.toggle-row {
-    display: inline-flex;
+/* 显示开关行：左侧文字、右侧 toggle，整行点击。
+   用于"仅全屏显示 / 常驻显示"等并排的开关项。 */
+.toggle-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 4px 0;
+    cursor: pointer;
+}
+
+.toggle-line + .toggle-line {
+    margin-top: 2px;
+}
+
+.toggle-line-text {
+    font-size: 12.5px;
+    color: var(--ink-2);
 }
 
 /* --- 帮助提示：问号图标，hover/focus 时弹出气泡说明 --- */
