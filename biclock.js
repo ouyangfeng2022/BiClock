@@ -54,6 +54,9 @@ function applyStyles() {
     clock.style.color = config.color;
     clock.style.fontWeight = config.bold ? 'bold' : 'normal';
     clock.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+    // 圆角背景：按字号比例缩放，不同字号下弧度协调一致。
+    clock.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
+    clock.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
     // 用 fixed 定位 + 相对播放器容器的视口坐标：Bilibili 的 .bpx-player-container
     // 不建立定位上下文，挂在容器里用 absolute 会以错误的祖先为参照，位置漂移。
     // fixed 直接相对视口，再把 (posX, posY) 比例换算成容器在视口里的真实像素，

@@ -47,6 +47,9 @@ function applyToPreview() {
     el.style.color = config.color;
     el.style.fontWeight = config.bold ? 'bold' : 'normal';
     el.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+    // 圆角背景：与 biclock.js 保持一致，按字号比例缩放。
+    el.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
+    el.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
     // 预览框尺寸远小于真实播放器，预览里始终展示默认的居中效果，
     // 自定义位置由用户在下方"位置"面板里设置。
     el.style.top = '50%';
