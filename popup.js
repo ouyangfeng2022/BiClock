@@ -4,14 +4,12 @@ var DEFAULTS = {
     color: '#ffffff',
     backgroundColor: '#000000',
     bgOpacity: 100,
-    topOffset: 10,
     bold: false,
     use24Hour: true,
     showSeconds: true,
     // 显示模式：false = 鼠标触发（默认），true = 常驻。
     alwaysShow: false,
-    // posX/posY 是相对视口宽高的 0..1 比例；useDefaultPosition=true 时退回居中。
-    useDefaultPosition: true,
+    // posX/posY 是相对视口宽高的 0..1 比例；初始为顶部居中。
     posX: 0.5,
     posY: 0.04
 };
@@ -79,7 +77,6 @@ function readFromForm() {
     config.color = $('color').value;
     config.backgroundColor = $('backgroundColor').value;
     config.bgOpacity = parseInt($('bgOpacity').value, 10);
-    config.topOffset = parseInt($('topOffset').value, 10) || DEFAULTS.topOffset;
     config.bold = $('bold').checked;
     config.use24Hour = $('use24Hour').checked;
     config.showSeconds = $('showSeconds').checked;
@@ -96,7 +93,6 @@ function fillForm() {
     var pct = config.bgOpacity;
     $('bgOpacity').style.backgroundImage =
         'linear-gradient(to right, var(--pink-track) 0%, var(--pink-track) ' + pct + '%, transparent ' + pct + '%)';
-    $('topOffset').value = config.topOffset;
     $('bold').checked = config.bold;
     $('use24Hour').checked = config.use24Hour;
     $('showSeconds').checked = config.showSeconds;
@@ -136,7 +132,6 @@ function setPositionFromPointer(clientX, clientY) {
     // 夹到面板内，避免图标跑出可视区域。
     x = Math.max(0, Math.min(1, x));
     y = Math.max(0, Math.min(1, y));
-    config.useDefaultPosition = false;
     config.posX = x;
     config.posY = y;
     updatePositionMarker();
@@ -173,7 +168,6 @@ function initPositionPanel() {
     panel.addEventListener('mousedown', onDown);
 
     $('resetPosition').addEventListener('click', function () {
-        config.useDefaultPosition = true;
         config.posX = DEFAULTS.posX;
         config.posY = DEFAULTS.posY;
         save();
@@ -190,7 +184,7 @@ function init() {
         updatePositionMarker();
     });
 
-    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'topOffset', 'bold', 'use24Hour', 'showSeconds'];
+    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold', 'use24Hour', 'showSeconds'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);

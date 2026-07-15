@@ -4,7 +4,6 @@ var DEFAULTS = {
     color: '#ffffff',
     backgroundColor: '#000000',
     bgOpacity: 100,
-    topOffset: 10,
     bold: false,
     use24Hour: true,
     showSeconds: true,
@@ -13,7 +12,6 @@ var DEFAULTS = {
     alwaysShow: false,
     // 位置由 popup 里的"位置"面板控制；posX/posY 是相对视口的 0..1 比例，
     // 这样不同分辨率的屏幕都能正确还原，而不是写死像素。
-    useDefaultPosition: true,
     posX: 0.5,
     posY: 0.04
 };
@@ -67,20 +65,14 @@ function applyStyles() {
     // 改用 fixed 直接相对视口定位，避免位置受 Bilibili 容器的 position 影响。
     // 鼠标触发模式挂在顶栏里，沿用 absolute 让它跟随顶栏的布局。
     clock.style.position = config.alwaysShow ? 'fixed' : 'absolute';
-    if (config.useDefaultPosition) {
-        // 默认：水平居中，top 用 topOffset。
-        clock.style.top = config.topOffset + 'px';
-        clock.style.left = '50%';
-        clock.style.transform = 'translateX(-50%)';
-    } else {
-        // 自定义位置：用 translate 把时钟中心点对到 (posX, posY) 比例处，
-        // 比例换算成视口像素，适配任意分辨率。
-        var x = (config.posX * window.innerWidth).toFixed(1);
-        var y = (config.posY * window.innerHeight).toFixed(1);
-        clock.style.left = x + 'px';
-        clock.style.top = y + 'px';
-        clock.style.transform = 'translate(-50%, -50%)';
-    }
+    // 位置统一由 popup 的"位置"面板控制，没有单独的顶部偏移项。
+    // 用 translate 把时钟中心点对到 (posX, posY) 比例处，
+    // 比例换算成视口像素，适配任意分辨率。
+    var x = (config.posX * window.innerWidth).toFixed(1);
+    var y = (config.posY * window.innerHeight).toFixed(1);
+    clock.style.left = x + 'px';
+    clock.style.top = y + 'px';
+    clock.style.transform = 'translate(-50%, -50%)';
 }
 
 function startTimer() {
