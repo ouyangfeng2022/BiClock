@@ -135,7 +135,8 @@ legend {
 
 /* ============================================================
    行布局：每种行有自己的内部结构，但共享一致的间距节奏。
-   - .row-inline  → 标签左 / 控件右（number、color）
+   - .grid-2     → 2 列网格，容纳紧凑的 label/控件对（字号、偏移、两色）
+   - .field      → grid 内的单格：标签在上 / 控件在下，垂直紧凑
    - .row-stacked → 标签行在上 / 控件占满整行在下（range）
    - .row-check   → checkbox + 文字，整行可点击
    - .row-radio   → radio + 标题+描述，整行可点击
@@ -144,24 +145,26 @@ legend {
 label { margin-bottom: 9px; }
 label:last-child { margin-bottom: 0; }
 
-/* --- inline：标签左 80px，控件右侧占满 --- */
-.row-inline {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+/* --- grid-2：两列等宽，行间 8px、列间 10px --- */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 8px;
+    column-gap: 10px;
+    margin-bottom: 9px;
 }
 
-.row-inline > span:first-child {
-    flex: 0 0 80px;
+/* 单元格：标签 + 控件垂直堆叠，比 inline 更省横向空间 */
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 0;
+}
+
+.field-label {
     font-size: 12.5px;
     color: var(--ink-2);
-}
-
-.row-inline > input[type="number"],
-.row-inline > input[type="color"],
-.row-inline > .input-unit {
-    flex: 1;
-    min-width: 0;
 }
 
 /* --- stacked：标签 + 数值在上一行，控件在下一行占满 --- */
@@ -194,6 +197,16 @@ label:last-child { margin-bottom: 0; }
 .row-check > span {
     font-size: 12.5px;
     color: var(--ink);
+}
+
+/* 两个 checkbox 并排成一行（时间格式用） */
+.check-row-2 {
+    display: flex;
+    gap: 16px;
+}
+
+.check-row-2 > .row-check {
+    margin-bottom: 0;
 }
 
 /* --- radio：单选 + 标题+描述，整行可点击，hover 有底 --- */
@@ -520,12 +533,12 @@ input[type="checkbox"]:focus-visible {
 }
 
 /* ============================================================
-   位置面板：16:9 迷你播放器
+   位置面板：压扁的迷你播放器（16:5），省垂直空间但保留拖拽手感
    ============================================================ */
 .position-panel {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 16 / 5;
     margin-bottom: 8px;
     border-radius: var(--radius);
     background: var(--player-bg);
