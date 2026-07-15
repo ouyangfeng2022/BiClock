@@ -138,7 +138,6 @@ legend {
    - .grid-2     → 2 列网格，容纳紧凑的 label/控件对（字号、偏移、两色）
    - .field      → grid 内的单格：标签在上 / 控件在下，垂直紧凑
    - .row-stacked → 标签行在上 / 控件占满整行在下（range）
-   - .row-check   → checkbox + 文字，整行可点击
    - .row-radio   → radio + 标题+描述，整行可点击
    ============================================================ */
 
@@ -377,29 +376,6 @@ label:last-child { margin-bottom: 0; }
 
 .row-stacked > input[type="range"] {
     width: 100%;
-}
-
-/* --- check：checkbox + 文字，整行可点击 --- */
-.row-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-.row-check > span {
-    font-size: 12.5px;
-    color: var(--ink);
-}
-
-/* 两个 checkbox 并排成一行（时间格式用） */
-.check-row-2 {
-    display: flex;
-    gap: 16px;
-}
-
-.check-row-2 > .row-check {
-    margin-bottom: 0;
 }
 
 /* --- radio：单选 + 标题+描述，整行可点击，hover 有底 --- */

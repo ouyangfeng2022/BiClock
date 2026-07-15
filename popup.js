@@ -5,8 +5,6 @@ var DEFAULTS = {
     backgroundColor: '#000000',
     bgOpacity: 100,
     bold: false,
-    use24Hour: true,
-    showSeconds: true,
     // 显示模式：false = 鼠标触发（默认），true = 常驻。
     alwaysShow: false,
     // posX/posY 是相对视口宽高的 0..1 比例；初始为顶部居中。
@@ -24,17 +22,9 @@ function pad(n) {
     return n.toString().padStart(2, '0');
 }
 
-function formatTime(now, use24Hour, showSeconds) {
-    var h = now.getHours();
-    var suffix = '';
-    if (!use24Hour) {
-        suffix = h >= 12 ? ' PM' : ' AM';
-        h = h % 12;
-        if (h === 0) h = 12;
-    }
-    var base = pad(h) + ':' + pad(now.getMinutes());
-    if (showSeconds) base += ':' + pad(now.getSeconds());
-    return base + suffix;
+// 固定 24 小时制 + 显示秒；不再可配置。
+function formatTime(now) {
+    return pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
 }
 
 // hex (#rrggbb) + 0..1 alpha -> rgba()，背景色用
@@ -64,7 +54,7 @@ function applyToPreview() {
 }
 
 function refreshPreviewText() {
-    $('previewClock').textContent = formatTime(new Date(), config.use24Hour, config.showSeconds);
+    $('previewClock').textContent = formatTime(new Date());
 }
 
 function save() {
@@ -78,8 +68,6 @@ function readFromForm() {
     config.backgroundColor = $('backgroundColor').value;
     config.bgOpacity = parseInt($('bgOpacity').value, 10);
     config.bold = $('bold').checked;
-    config.use24Hour = $('use24Hour').checked;
-    config.showSeconds = $('showSeconds').checked;
     config.alwaysShow = $('modeAlways').checked;
 }
 
@@ -94,8 +82,6 @@ function fillForm() {
     $('bgOpacity').style.backgroundImage =
         'linear-gradient(to right, var(--pink-track) 0%, var(--pink-track) ' + pct + '%, transparent ' + pct + '%)';
     $('bold').checked = config.bold;
-    $('use24Hour').checked = config.use24Hour;
-    $('showSeconds').checked = config.showSeconds;
     // 常驻显示：单个 checkbox，checked = 常驻（alwaysShow=true）。
     $('modeAlways').checked = !!config.alwaysShow;
 }
@@ -196,8 +182,7 @@ function init() {
         updatePositionMarker();
     });
 
-    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold',
-        'use24Hour', 'showSeconds', 'modeAlways'];
+    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold', 'modeAlways'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);

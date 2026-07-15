@@ -5,8 +5,6 @@ var DEFAULTS = {
     backgroundColor: '#000000',
     bgOpacity: 100,
     bold: false,
-    use24Hour: true,
-    showSeconds: true,
     // 显示模式：false = 鼠标触发（默认，仅在控件可见时显示），
     // true = 常驻（进入浏览器全屏后一直显示，不随控件隐藏）。
     alwaysShow: false,
@@ -32,17 +30,9 @@ function pad(n) {
     return n.toString().padStart(2, '0');
 }
 
-function formatTime(now, use24Hour, showSeconds) {
-    var h = now.getHours();
-    var suffix = '';
-    if (!use24Hour) {
-        suffix = h >= 12 ? ' PM' : ' AM';
-        h = h % 12;
-        if (h === 0) h = 12;
-    }
-    var base = pad(h) + ':' + pad(now.getMinutes());
-    if (showSeconds) base += ':' + pad(now.getSeconds());
-    return base + suffix;
+// 固定 24 小时制 + 显示秒；不再可配置。
+function formatTime(now) {
+    return pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
 }
 
 function hexToRgba(hex, alpha) {
@@ -114,7 +104,7 @@ function updateClock() {
         return;
     }
     applyStyles();
-    clock.textContent = formatTime(new Date(), config.use24Hour, config.showSeconds);
+    clock.textContent = formatTime(new Date());
 
     if (config.alwaysShow) {
         // 常驻模式挂到播放器根容器：Bilibili 在控件隐藏时会把整个顶栏
