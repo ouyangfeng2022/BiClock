@@ -166,6 +166,13 @@ function init() {
                 } else {
                     stopTimer();
                 }
+                return;
+            }
+            // 其余样式字段（透明度、颜色、字号、位置等）只更新 config 的话，
+            // 要等下一秒 updateClock() 的 tick 才应用到 DOM，拖动滑块时会有
+            // 明显延迟、看似"设置无效"。这里在时钟可见时立即重应用样式。
+            if (clock.parentNode) {
+                applyStyles();
             }
         });
         run();

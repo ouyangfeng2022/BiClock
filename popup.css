@@ -90,6 +90,13 @@ h1::before {
     margin-bottom: 14px;
     border-radius: var(--radius);
     background:
+        /* 棋盘格：让时钟背景的透明度变化有可对比的底纹。
+           默认背景色 #000 与深灰预览底太接近，叠棋盘格后
+           半透明黑底能透出格子明暗，透明度滑块才看得出效果。 */
+        repeating-conic-gradient(
+            oklch(100% 0 0 / 7%) 0% 25%,
+            oklch(0% 0 0 / 7%) 0% 50%
+        ) 0 0 / 12px 12px,
         radial-gradient(120% 100% at 50% 0%,
             oklch(24.0% 0.006 350) 0%,
             var(--player-bg) 60%);
