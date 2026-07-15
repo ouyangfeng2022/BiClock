@@ -1,0 +1,21 @@
+{
+  "name": "biclock",
+  "version": "1.0.0",
+  "description": "一个轻量的 Manifest V3 浏览器扩展。在 Bilibili **全屏**观看视频 / 番剧时,于播放器顶部居中叠加显示当前时间,并可完全自定义样式与时间格式。",
+  "main": "biclock.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ouyangfeng2022/BiClock.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ouyangfeng2022/BiClock/issues"
+  },
+  "homepage": "https://github.com/ouyangfeng2022/BiClock#readme"
+}

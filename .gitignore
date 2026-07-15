@@ -21,3 +21,6 @@ desktop.ini
 
 # node
 node_modules/
+
+# popup 截图（shot.mjs 产物）
+popup-shot.png
