@@ -175,6 +175,91 @@ label:last-child { margin-bottom: 0; }
     width: 78px;
 }
 
+/* ============================================================
+   配色预设：3 列网格的迷你时钟药丸，一键套用常用配色。
+   每个 chip 的深色画面模拟视频底，让半透明底色如实呈现；
+   选中态复用全局粉色 accent（描边 + ring）。
+   只覆盖 color / backgroundColor / bgOpacity，bold / 字号 / 位置不动。
+   ============================================================ */
+.presets-label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.preset {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.14s var(--ease),
+                box-shadow 0.14s var(--ease),
+                transform 0.14s var(--ease);
+}
+
+.preset:hover {
+    border-color: var(--border-hi);
+    transform: translateY(-1px);
+}
+
+.preset:active {
+    transform: translateY(0);
+}
+
+.preset:focus-visible {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--ring);
+}
+
+/* 选中：粉色描边 + focus ring，与时钟预览的 accent 一致 */
+.preset[aria-pressed="true"] {
+    border-color: var(--pink);
+    box-shadow: var(--ring);
+}
+
+.preset-swatch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    /* 模拟视频画面：与位置面板一致的深色底，半透明背景在此如实呈现 */
+    background: var(--player-bg);
+}
+
+.preset-pill {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    /* color / background-color 由 popup.js 按 preset 写入 */
+}
+
+.preset-name {
+    padding: 3px 0 4px;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--ink-2);
+    text-align: center;
+}
+
+.preset[aria-pressed="true"] .preset-name {
+    color: var(--pink-hi);
+    font-weight: 600;
+}
+
 /* legend 内嵌问号：让 legend 文字与问号内联对齐 */
 .legend-tip {
     display: flex;

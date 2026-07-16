@@ -8,7 +8,7 @@
 
 - `manifest.json` — MV3 manifest. Content script `biclock.js` runs on `*://*.bilibili.com/video/*` and `*://*.bilibili.com/bangumi/*`. Declares `action.default_popup` → `popup.html`, and `permissions: ["storage"]`. Includes `browser_specific_settings.gecko.id`, so the same package targets both Firefox and Chromium.
 - `biclock.js` — single content script. Creates a `.bpx-player-top-clock` div, formats the time according to user settings, and appends it next to `.bpx-player-top-left`.
-- `popup.html` / `popup.css` / `popup.js` — the extension popup. Lets the user customize clock styling and time format; writes to `chrome.storage.local` on every change (auto-save), with a live preview driven by a 1-second interval while the popup is open.
+- `popup.html` / `popup.css` / `popup.js` — the extension popup. Lets the user customize clock styling and time format; writes to `chrome.storage.local` on every change (auto-save), with a live preview driven by a 1-second interval while the popup is open. `popup.js` also renders a row of one-click 配色预设 (color presets: 经典 / 半透明 / B站粉 / 霓虹绿 / 琥珀 / 冰蓝) at the top of the 外观 section; each preset only sets `color` / `backgroundColor` / `bgOpacity`, so it is a popup-only convenience over existing keys — it is **not** a new setting key and is intentionally not duplicated into `biclock.js` or `DEFAULTS`.
 - `icons/clock.png` — extension icon (size 200).
 
 ## Commands

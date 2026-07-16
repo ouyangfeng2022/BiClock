@@ -14,6 +14,19 @@ var DEFAULTS = {
     posY: 0.04
 };
 
+// 配色预设：popup 专用的快捷配色入口，只覆盖 color / backgroundColor / bgOpacity，
+// 不动 bold / 字号 / 位置，也不引入新的设置键（因此不需要同步到 biclock.js）。
+// 每组都按"视频画面上可读"挑过：经典高对比、半透明柔和、B 站粉品牌色、
+// 霓虹绿 / 琥珀 / 冰蓝三种带个性的深底亮字。
+var PRESETS = [
+    { name: '经典',   color: '#ffffff', backgroundColor: '#000000', bgOpacity: 100 },
+    { name: '半透明', color: '#ffffff', backgroundColor: '#000000', bgOpacity: 55  },
+    { name: 'B站粉',  color: '#ffffff', backgroundColor: '#fb7299', bgOpacity: 100 },
+    { name: '霓虹绿', color: '#39ff14', backgroundColor: '#000000', bgOpacity: 70  },
+    { name: '琥珀',   color: '#ffb000', backgroundColor: '#1a1200', bgOpacity: 100 },
+    { name: '冰蓝',   color: '#7fdbff', backgroundColor: '#001b2e', bgOpacity: 100 }
+];
+
 var config = {};
 
 function $(id) {
@@ -92,6 +105,8 @@ function fillForm() {
     $('fullscreenOnly').checked = config.fullscreenOnly !== false;
     // 常驻显示：单个 checkbox，checked = 常驻（alwaysShow=true）。
     $('modeAlways').checked = !!config.alwaysShow;
+    // 根据当前配色高亮匹配的预设；手动改成非预设组合时全部熄灭（= 自定义）。
+    updatePresetSelection();
 }
 
 function onInput() {
@@ -104,6 +119,7 @@ function onInput() {
         'linear-gradient(to right, var(--pink-track) 0%, var(--pink-track) ' + pct + '%, transparent ' + pct + '%)';
     applyToPreview();
     save();
+    updatePresetSelection();
 }
 
 // ---- 位置面板 ----
@@ -185,9 +201,67 @@ function initAppearanceReset() {
     });
 }
 
+// ---- 配色预设 ----
+// 一组迷你时钟药丸：点击即套用该 preset 的 color/backgroundColor/bgOpacity，
+// 并在下方表单里同步显示；当前配色恰好等于某组 preset 时，该 chip 高亮。
+
+function presetMatches(p) {
+    return config.color === p.color &&
+           config.backgroundColor === p.backgroundColor &&
+           config.bgOpacity === p.bgOpacity;
+}
+
+function buildPresets() {
+    var host = $('presets');
+    PRESETS.forEach(function (p, i) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'preset';
+        btn.title = p.name;
+        btn.setAttribute('aria-pressed', 'false');
+
+        var swatch = document.createElement('span');
+        swatch.className = 'preset-swatch';
+
+        var pill = document.createElement('span');
+        pill.className = 'preset-pill';
+        pill.textContent = '12:34';
+        pill.style.color = p.color;
+        pill.style.backgroundColor = hexToRgba(p.backgroundColor, p.bgOpacity / 100);
+
+        var name = document.createElement('span');
+        name.className = 'preset-name';
+        name.textContent = p.name;
+
+        swatch.appendChild(pill);
+        btn.appendChild(swatch);
+        btn.appendChild(name);
+        btn.addEventListener('click', function () { applyPreset(i); });
+        host.appendChild(btn);
+    });
+}
+
+function applyPreset(i) {
+    var p = PRESETS[i];
+    config.color = p.color;
+    config.backgroundColor = p.backgroundColor;
+    config.bgOpacity = p.bgOpacity;
+    save();
+    fillForm();
+    applyToPreview();
+}
+
+function updatePresetSelection() {
+    var buttons = document.querySelectorAll('.preset');
+    buttons.forEach(function (btn, i) {
+        btn.setAttribute('aria-pressed', presetMatches(PRESETS[i]) ? 'true' : 'false');
+    });
+}
+
 function init() {
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
+        buildPresets();
         fillForm();
         applyToPreview();
         updatePositionMarker();
