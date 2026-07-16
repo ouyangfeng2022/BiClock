@@ -5,7 +5,16 @@ var DEFAULTS = {
     // 默认背景即 B 站粉品牌色，与时钟叠在 B 站播放器上的语境一致。
     backgroundColor: '#fb7299',
     bgOpacity: 100,
-    bold: false,
+    bold: true,
+    // 主题只覆盖视觉相关字段；位置与显示开关始终由用户独立控制。
+    clockStyle: 'bili-pink',
+    fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif',
+    textShadow: 'none',
+    borderColor: '#ffffff',
+    borderOpacity: 0,
+    borderWidth: 0,
+    accentColor: '#fb7299',
+    clockLayout: 'single',
     // 仅全屏显示：true（默认）只在浏览器全屏下显示；false 任意屏幕模式都显示。
     fullscreenOnly: true,
     // 显示模式：false = 鼠标触发（默认），true = 常驻。
@@ -22,6 +31,45 @@ var DEFAULTS = {
 var TEXT_SWATCHES = ['#ffffff', '#000000', '#fb7299', '#ffd66e', '#39ff14', '#7fdbff'];
 var BG_SWATCHES   = ['#fb7299', '#000000', '#ffffff', '#2563eb', '#16a34a', '#dc2626'];
 
+// 选中主题时直接写入最终样式值，内容脚本无须理解主题名称也能立即更新。
+// clockStyle 仅供 popup 标记当前选择；用户手动改外观时会变为 custom。
+var THEMES = [
+    {
+        id: 'bili-pink', name: 'Bilibili 粉', note: '默认品牌标签',
+        fontSize: 30, color: '#ffffff', backgroundColor: '#fb7299', bgOpacity: 100, bold: true,
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif',
+        textShadow: 'none', borderColor: '#ffffff', borderOpacity: 0, borderWidth: 0,
+        accentColor: '#fb7299', clockLayout: 'single'
+    },
+    {
+        id: 'pods', name: '分舱数码', note: '三段独立数字舱',
+        fontSize: 30, color: '#eff6ff', backgroundColor: '#26354a', bgOpacity: 96, bold: true,
+        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
+        textShadow: 'none', borderColor: '#8db4e8', borderOpacity: 58, borderWidth: 1,
+        accentColor: '#8db4e8', clockLayout: 'segments'
+    },
+    {
+        id: 'capsule', name: '胶囊计时器', note: '圆润轻盈的横条',
+        fontSize: 30, color: '#ffe2a8', backgroundColor: '#17120b', bgOpacity: 92, bold: true,
+        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
+        textShadow: '0 1px 2px rgba(0, 0, 0, 0.45)', borderColor: '#ffe2a8', borderOpacity: 62, borderWidth: 1,
+        accentColor: '#ffe2a8', clockLayout: 'capsule'
+    },
+    {
+        id: 'recording', name: '录像时间码', note: 'REC 播出状态条',
+        fontSize: 29, color: '#ffffff', backgroundColor: '#171717', bgOpacity: 94, bold: true,
+        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
+        textShadow: 'none', borderColor: '#ff4d4f', borderOpacity: 72, borderWidth: 1,
+        accentColor: '#ff3b30', clockLayout: 'recording'
+    }
+];
+
+var THEME_STYLE_KEYS = [
+    'fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold',
+    'fontFamily', 'textShadow', 'borderColor', 'borderOpacity', 'borderWidth',
+    'accentColor', 'clockLayout'
+];
+
 var config = {};
 
 function $(id) {
@@ -35,6 +83,87 @@ function pad(n) {
 // 固定 24 小时制 + 显示秒；不再可配置。
 function formatTime(now) {
     return pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+}
+
+function makeClockPart(className, text) {
+    var part = document.createElement('span');
+    part.className = className;
+    part.textContent = text;
+    return part;
+}
+
+// 不同主题可重组时钟的内部结构。样式仍来自主题设置，形态由
+// clockLayout 决定，因此用户切换时看到的不是单纯换色。
+function renderClockLayout(el, time, style) {
+    var parts = time.split(':');
+    style = style || config;
+    el.replaceChildren();
+    el.style.display = 'inline-flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
+    el.style.lineHeight = '1.2';
+
+    if (style.clockLayout === 'segments') {
+        el.style.gap = '3px';
+        el.style.padding = '0';
+        el.style.backgroundColor = 'transparent';
+        el.style.border = '0';
+        parts.forEach(function (partText) {
+            var part = makeClockPart('clock-segment', partText);
+            part.style.padding = '0.12em 0.24em';
+            part.style.borderRadius = '0.22em';
+            part.style.backgroundColor = hexToRgba(style.backgroundColor, style.bgOpacity / 100);
+            part.style.border = style.borderWidth + 'px solid ' + hexToRgba(style.borderColor, style.borderOpacity / 100);
+            el.appendChild(part);
+        });
+        return;
+    }
+
+    if (style.clockLayout === 'recording') {
+        el.style.gap = '0.38em';
+        var dot = makeClockPart('clock-rec-dot', '');
+        dot.style.width = '0.44em';
+        dot.style.height = '0.44em';
+        dot.style.borderRadius = '50%';
+        dot.style.backgroundColor = style.accentColor;
+        dot.style.boxShadow = '0 0 0.34em ' + hexToRgba(style.accentColor, 0.68);
+        var rec = makeClockPart('clock-rec-label', 'REC');
+        rec.style.color = style.accentColor;
+        rec.style.fontSize = '0.52em';
+        rec.style.letterSpacing = '0.08em';
+        var value = makeClockPart('clock-rec-time', time);
+        el.appendChild(dot);
+        el.appendChild(rec);
+        el.appendChild(value);
+        return;
+    }
+
+    if (style.clockLayout === 'corner') {
+        el.style.gap = '0.22em';
+        el.style.padding = '0';
+        el.style.backgroundColor = 'transparent';
+        el.style.border = '0';
+        var left = makeClockPart('clock-corner-left', '');
+        var right = makeClockPart('clock-corner-right', '');
+        [left, right].forEach(function (corner) {
+            corner.style.width = '0.38em';
+            corner.style.height = '1em';
+            corner.style.borderColor = style.accentColor;
+            corner.style.borderStyle = 'solid';
+            corner.style.borderWidth = '0.1em';
+        });
+        left.style.borderRightWidth = '0';
+        right.style.borderLeftWidth = '0';
+        el.appendChild(left);
+        el.appendChild(makeClockPart('clock-corner-time', time));
+        el.appendChild(right);
+        return;
+    }
+
+    if (style.clockLayout === 'capsule') {
+        el.style.borderRadius = '999px';
+    }
+    el.appendChild(makeClockPart('clock-single-time', time));
 }
 
 // hex (#rrggbb) + 0..1 alpha -> rgba()，背景色用
@@ -69,7 +198,11 @@ function applyToPreview() {
     el.style.fontSize = config.fontSize + 'px';
     el.style.color = config.color;
     el.style.fontWeight = config.bold ? 'bold' : 'normal';
+    el.style.fontFamily = config.fontFamily;
+    el.style.textShadow = config.textShadow;
     el.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+    el.style.border = config.borderWidth + 'px solid ' + hexToRgba(config.borderColor, config.borderOpacity / 100);
+    el.style.boxSizing = 'border-box';
     // 圆角背景：与 biclock.js 保持一致，按字号比例缩放。
     el.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
     el.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
@@ -82,7 +215,7 @@ function applyToPreview() {
 }
 
 function refreshPreviewText() {
-    $('previewClock').textContent = formatTime(new Date());
+    renderClockLayout($('previewClock'), formatTime(new Date()));
 }
 
 function save() {
@@ -130,15 +263,21 @@ function fillForm() {
     $('modeAlways').checked = !!config.alwaysShow;
     // 根据当前值高亮匹配的色块；非色盘内的自定义色全部不高亮。
     updateSwatchSelection();
+    updateThemeSelection();
 }
 
-function onInput() {
+function onInput(event) {
     readFromForm();
+    // 显示范围与常驻开关不属于主题视觉，不应把已选主题标成“自定义”。
+    if (!event || ['fontSize', 'bgOpacity', 'bold'].indexOf(event.target.id) !== -1) {
+        config.clockStyle = 'custom';
+    }
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
     refreshOpacityTrack();
     applyToPreview();
     save();
     updateSwatchSelection();
+    updateThemeSelection();
 }
 
 // ---- 位置面板 ----
@@ -214,6 +353,14 @@ function initAppearanceReset() {
         config.backgroundColor = DEFAULTS.backgroundColor;
         config.bgOpacity = DEFAULTS.bgOpacity;
         config.bold = DEFAULTS.bold;
+        config.clockStyle = DEFAULTS.clockStyle;
+        config.fontFamily = DEFAULTS.fontFamily;
+        config.textShadow = DEFAULTS.textShadow;
+        config.borderColor = DEFAULTS.borderColor;
+        config.borderOpacity = DEFAULTS.borderOpacity;
+        config.borderWidth = DEFAULTS.borderWidth;
+        config.accentColor = DEFAULTS.accentColor;
+        config.clockLayout = DEFAULTS.clockLayout;
         save();
         fillForm();
         applyToPreview();
@@ -237,6 +384,7 @@ function buildSwatches(hostId, palette, applyKey) {
         btn.style.backgroundColor = hex;
         btn.addEventListener('click', function () {
             config[applyKey] = hex;
+            config.clockStyle = 'custom';
             save();
             fillForm();
             applyToPreview();
@@ -260,6 +408,76 @@ function updateSwatchSelection() {
     });
 }
 
+function applyTheme(theme) {
+    THEME_STYLE_KEYS.forEach(function (key) {
+        config[key] = theme[key];
+    });
+    config.clockStyle = theme.id;
+    save();
+    fillForm();
+    applyToPreview();
+}
+
+// 已移除的主题会回退到默认 Bilibili 粉，避免留下没有对应卡片的状态。
+function migrateRemovedTheme() {
+    if (['minimal', 'glass', 'neon', 'retro', 'corner'].indexOf(config.clockStyle) === -1) return;
+    var fallback = THEMES.find(function (theme) { return theme.id === DEFAULTS.clockStyle; });
+    THEME_STYLE_KEYS.forEach(function (key) {
+        config[key] = fallback[key];
+    });
+    config.clockStyle = fallback.id;
+    save();
+}
+
+function buildThemeCards() {
+    var host = $('themeGrid');
+    THEMES.forEach(function (theme) {
+        var button = document.createElement('button');
+        var sample = document.createElement('span');
+        var copy = document.createElement('span');
+        var name = document.createElement('span');
+        var note = document.createElement('span');
+
+        button.type = 'button';
+        button.className = 'theme-card';
+        button.dataset.themeId = theme.id;
+        button.setAttribute('aria-pressed', 'false');
+        button.setAttribute('aria-label', theme.name + '：' + theme.note);
+
+        sample.className = 'theme-sample';
+        sample.style.color = theme.color;
+        sample.style.backgroundColor = hexToRgba(theme.backgroundColor, theme.bgOpacity / 100);
+        sample.style.fontFamily = theme.fontFamily;
+        sample.style.fontWeight = theme.bold ? '700' : '400';
+        sample.style.textShadow = theme.textShadow;
+        sample.style.border = theme.borderWidth + 'px solid ' + hexToRgba(theme.borderColor, theme.borderOpacity / 100);
+        renderClockLayout(sample, '23:47:08', theme);
+
+        copy.className = 'theme-copy';
+        name.className = 'theme-name';
+        name.textContent = theme.name;
+        note.className = 'theme-note';
+        note.textContent = theme.note;
+        copy.appendChild(name);
+        copy.appendChild(note);
+        button.appendChild(sample);
+        button.appendChild(copy);
+        button.addEventListener('click', function () { applyTheme(theme); });
+        host.appendChild(button);
+    });
+}
+
+function updateThemeSelection() {
+    var activeId = config.clockStyle;
+    var hint = $('themeHint');
+    document.querySelectorAll('.theme-card').forEach(function (button) {
+        button.setAttribute('aria-pressed', button.dataset.themeId === activeId ? 'true' : 'false');
+    });
+    hint.textContent = activeId === 'custom'
+        ? '自定义：已保留手动调整的外观。'
+        : '选择主题会保留你的位置与显示设置。';
+}
+
 // Hex 输入：input 事件即时校验，合法归一化保存 + 刷新预览，不合法仅标红不落盘。
 function bindHexInput(inputId, key) {
     var el = $(inputId);
@@ -270,9 +488,11 @@ function bindHexInput(inputId, key) {
             // 只在完整输入时落盘（输入中途如 "#fb" 也合法字符但不完整 ——
             // 但 normalizeHex 要求 3 或 6 位，所以走到这里一定是完整值）。
             config[key] = norm;
+            config.clockStyle = 'custom';
             applyToPreview();
             save();
             updateSwatchSelection();
+            updateThemeSelection();
         } else {
             // 空串视为编辑中、不报错；非空且非法才标红。
             el.setAttribute('aria-invalid', el.value.trim() === '' ? 'false' : 'true');
@@ -288,6 +508,8 @@ function bindHexInput(inputId, key) {
 function init() {
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
+        migrateRemovedTheme();
+        buildThemeCards();
         buildSwatches('colorSwatches', TEXT_SWATCHES, 'color');
         buildSwatches('bgColorSwatches', BG_SWATCHES, 'backgroundColor');
         fillForm();
