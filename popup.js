@@ -112,9 +112,12 @@ function onInput() {
 
 function updatePositionMarker() {
     var marker = $('positionMarker');
-    // 比例 -> 面板内的百分比坐标。marker 自身用 translate(-50%,-50%) 居中到该点。
+    // left/top 是 (posX, posY) 比例点；--mx/--my 让 transform 用边角对齐镜像时钟真实定位，
+    // 这样面板里标记的相对位置与播放器里时钟的相对位置一致。
     marker.style.left = (config.posX * 100) + '%';
     marker.style.top = (config.posY * 100) + '%';
+    marker.style.setProperty('--mx', (config.posX * -100) + '%');
+    marker.style.setProperty('--my', (config.posY * -100) + '%');
 }
 
 function setPositionFromPointer(clientX, clientY) {

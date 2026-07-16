@@ -736,8 +736,10 @@ input[type="checkbox"]:focus-visible {
 
 .position-marker {
     position: absolute;
-    /* translate(-50%, -50%) 让标记中心对齐 (left%, top%) 坐标点 */
-    transform: translate(-50%, -50%);
+    /* 标记代表时钟本身，用与时钟一致的边角对齐：--mx/--my 由 popup.js 写入，
+       posX=0 → 不偏移（标记左上角贴面板左上角），posX=1 → 偏移整身宽（右贴右）。
+       dragging 态在 transform 链尾叠加 scale，故拆成 CSS 变量。 */
+    transform: translate(var(--mx, -50%), var(--my, -50%));
     font-size: 18px;
     line-height: 1;
     cursor: grab;
@@ -748,7 +750,7 @@ input[type="checkbox"]:focus-visible {
 
 .position-marker.dragging {
     cursor: grabbing;
-    transform: translate(-50%, -50%) scale(1.18);
+    transform: translate(var(--mx, -50%), var(--my, -50%)) scale(1.18);
 }
 
 /* ---- 重置按钮：与控件同样的状态语汇 ---- */

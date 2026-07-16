@@ -68,13 +68,16 @@ function applyStyles() {
     var h = rect ? rect.height : window.innerHeight;
     var ox = rect ? rect.left : 0;
     var oy = rect ? rect.top : 0;
-    // 用 translate 把时钟中心点对到容器内 (posX, posY) 比例处，
+    // 用 translate 把时钟左上角对到容器内 (posX, posY) 比例处，
     // 加上容器左上角偏移得到视口坐标，适配任意分辨率与页面布局。
     var x = (ox + config.posX * w).toFixed(1);
     var y = (oy + config.posY * h).toFixed(1);
     clock.style.left = x + 'px';
     clock.style.top = y + 'px';
-    clock.style.transform = 'translate(-50%, -50%)';
+    // 边角对齐：translate 的百分比相对元素自身尺寸。
+    // posX=0 → 不偏移（左贴左），posX=1 → 偏移整身宽（右贴右），
+    // 0.5 → 偏移半身（居中）。不测量像素，让 posY=0 能真正贴顶。
+    clock.style.transform = 'translate(' + (config.posX * -100) + '%, ' + (config.posY * -100) + '%)';
 }
 
 function startTimer() {
