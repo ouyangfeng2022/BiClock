@@ -700,6 +700,63 @@ input[type="range"]:active::-moz-range-thumb {
 }
 
 /* ============================================================
+   透明度滑条：让轨道本身成为活的透明度预览。
+   - 棋盘格底（透明度惯例），透出真实 backgroundColor 的当前 alpha
+   - thumb 仍沿用粉色，作为"这是可拖动的"与品牌的唯一 accent
+   - 拖动时轨道颜色与顶部预览同步变化，所见即所得
+   ============================================================ */
+.opacity-range {
+    /* 真实时钟背景色（rgba），由 popup.js 随 backgroundColor 与 bgOpacity 写入。
+       这里只占位，避免初始无值时空白。 */
+    --clock-bg: transparent;
+    --checker:  var(--surface-3);
+    height: 24px;
+}
+
+/* 轨道：加厚到 16px，承载棋盘 + 透明色层；input 高 24px 给 thumb 留探出余量。 */
+.opacity-range::-webkit-slider-runnable-track {
+    height: 16px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background:
+        /* 真实 alpha 的时钟背景色 */
+        var(--clock-bg)
+        /* 棋盘格底（位于时钟色下方：时钟色 alpha<1 时透出它来表达"半透明"） */
+        repeating-conic-gradient(var(--checker) 0% 25%, transparent 0% 50%)
+        0 0 / 10px 10px,
+        var(--surface);
+}
+.opacity-range::-moz-range-track {
+    height: 16px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background:
+        var(--clock-bg)
+        repeating-conic-gradient(var(--checker) 0% 25%, transparent 0% 50%)
+        0 0 / 10px 10px,
+        var(--surface);
+}
+
+/* thumb：抬高的厚轨道上居中。track 16px + 1px 边框，thumb 14px →
+   webkit margin-top = (trackTop) − (thumbDefaultTop)。
+   trackTop = (24−16)/2 = 4；默认 thumb 顶贴 track 顶 = 4；目标 thumb 顶
+   让中心对 track 中心 = 4 + (16−14)/2 = 5；故 margin-top = 5 − 4 = 1px。 */
+.opacity-range::-webkit-slider-thumb {
+    margin-top: 1px;
+    background: var(--surface);
+}
+.opacity-range::-moz-range-thumb {
+    background: var(--surface);
+}
+
+/* Firefox 没有 conic-gradient 在 track 上能稳定覆盖的问题，但 background 层叠
+   与 -moz-range-progress 不会叠加（progress 只画在 track 之上）。
+   这里禁用 progress 的可视，避免它盖住棋盘 + 透明层。 */
+.opacity-range::-moz-range-progress {
+    background: transparent;
+}
+
+/* ============================================================
    Checkbox：自绘方块 + 粉勾，不再依赖 accent-color
    ============================================================ */
 input[type="checkbox"] {

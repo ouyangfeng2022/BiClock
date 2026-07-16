@@ -90,16 +90,22 @@ function readFromForm() {
     config.alwaysShow = $('modeAlways').checked;
 }
 
+// 把当前 backgroundColor + bgOpacity 写入透明度滑条的 --clock-bg，
+// 让滑条轨道直接呈现真实时钟背景的半透明色（叠在棋盘格底上）。
+function refreshOpacityTrack() {
+    $('bgOpacity').style.setProperty(
+        '--clock-bg',
+        hexToRgba(config.backgroundColor, config.bgOpacity / 100)
+    );
+}
+
 function fillForm() {
     $('fontSize').value = config.fontSize;
     $('color').value = config.color;
     $('backgroundColor').value = config.backgroundColor;
     $('bgOpacity').value = config.bgOpacity;
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
-    // 同步 range 已填充段（与 onInput 保持一致）
-    var pct = config.bgOpacity;
-    $('bgOpacity').style.backgroundImage =
-        'linear-gradient(to right, var(--pink-track) 0%, var(--pink-track) ' + pct + '%, transparent ' + pct + '%)';
+    refreshOpacityTrack();
     $('bold').checked = config.bold;
     // 仅全屏显示：checked = 仅全屏（fullscreenOnly=true，默认）。
     $('fullscreenOnly').checked = config.fullscreenOnly !== false;
@@ -112,11 +118,7 @@ function fillForm() {
 function onInput() {
     readFromForm();
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
-    // 给 range 画一条粉色已填充段：左→当前值用 --pink-track，其余透明露出 track 底色。
-    // 与 popup.css 里 ::-webkit-slider-runnable-track 的中性底色配合，形成进度感。
-    var pct = config.bgOpacity;
-    $('bgOpacity').style.backgroundImage =
-        'linear-gradient(to right, var(--pink-track) 0%, var(--pink-track) ' + pct + '%, transparent ' + pct + '%)';
+    refreshOpacityTrack();
     applyToPreview();
     save();
     updatePresetSelection();
