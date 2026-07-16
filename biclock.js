@@ -2,7 +2,8 @@
 var DEFAULTS = {
     fontSize: 30,
     color: '#ffffff',
-    backgroundColor: '#000000',
+    // 默认背景即 B 站粉品牌色，与时钟叠在 B 站播放器上的语境一致。
+    backgroundColor: '#fb7299',
     bgOpacity: 100,
     bold: false,
     // 仅全屏显示：true = 只在浏览器全屏下显示（默认，避开 B 站/浏览器

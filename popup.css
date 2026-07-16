@@ -163,12 +163,6 @@ label:last-child { margin-bottom: 0; }
     color: var(--ink-2);
 }
 
-/* 网格内颜色格：沿用 field 的"标签在上/控件在下"节奏（与字号行齐高），
-   但色块缩短为固定宽度靠左，不再占满整列。 */
-.field-color > input[type="color"] {
-    align-self: flex-start;
-}
-
 /* 网格内字号格：number 框缩短为固定宽度靠左，与右侧 toggle 等控件节奏一致；
    容得下最大值 120 + px 后缀。 */
 .field-number > .input-unit {
@@ -176,88 +170,72 @@ label:last-child { margin-bottom: 0; }
 }
 
 /* ============================================================
-   配色预设：3 列网格的迷你时钟药丸，一键套用常用配色。
-   每个 chip 的深色画面模拟视频底，让半透明底色如实呈现；
-   选中态复用全局粉色 accent（描边 + ring）。
-   只覆盖 color / backgroundColor / bgOpacity，bold / 字号 / 位置不动。
+   颜色字段：色块组 + Hex 文本输入
+   - 色块：固定小方块，点击即套用；选中态复用全局粉色 accent（描边 + ring）
+   - Hex 输入：复用通用 text input 样式，仅收窄宽度；非法值标红
+   只覆盖 color / backgroundColor 单键，bold / 字号 / 位置 / 透明度不动。
    ============================================================ */
-.presets-label {
-    display: block;
-    margin-bottom: 5px;
+.field-color {
+    margin-bottom: 9px;
 }
 
-.presets {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    margin-bottom: 10px;
-}
-
-.preset {
+.color-row {
     display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.swatch {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid var(--border-hi);
+    border-radius: 6px;
+    /* background-color 由 popup.js 按色盘写入 */
     cursor: pointer;
-    overflow: hidden;
     transition: border-color 0.14s var(--ease),
                 box-shadow 0.14s var(--ease),
                 transform 0.14s var(--ease);
 }
 
-.preset:hover {
-    border-color: var(--border-hi);
+.swatch:hover {
     transform: translateY(-1px);
+    border-color: var(--ink-3);
 }
 
-.preset:active {
+.swatch:active {
     transform: translateY(0);
 }
 
-.preset:focus-visible {
+.swatch:focus-visible {
     outline: none;
     border-color: var(--pink);
     box-shadow: var(--ring);
 }
 
 /* 选中：粉色描边 + focus ring，与时钟预览的 accent 一致 */
-.preset[aria-pressed="true"] {
+.swatch[aria-pressed="true"] {
     border-color: var(--pink);
     box-shadow: var(--ring);
 }
 
-.preset-swatch {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 34px;
-    /* 模拟视频画面：与位置面板一致的深色底，半透明背景在此如实呈现 */
-    background: var(--player-bg);
+/* Hex 输入：复用通用 input[type="text"] 样式，仅收窄到刚好容下 #rrggbb */
+.hex-input {
+    width: 84px;
+    margin-left: auto;
 }
 
-.preset-pill {
-    font-size: 10px;
-    font-weight: 600;
-    line-height: 1;
-    padding: 2px 6px;
-    border-radius: 4px;
-    letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
-    /* color / background-color 由 popup.js 按 preset 写入 */
-}
-
-.preset-name {
-    padding: 3px 0 4px;
-    font-size: 11px;
-    line-height: 1;
-    color: var(--ink-2);
-    text-align: center;
-}
-
-.preset[aria-pressed="true"] .preset-name {
-    color: var(--pink-hi);
-    font-weight: 600;
+/* 非法值：红色边框提示（不落盘，失焦回填合法值） */
+.hex-input[aria-invalid="true"] {
+    border-color: oklch(58% 0.2 25);
+    box-shadow: 0 0 0 3px oklch(58% 0.2 25 / 18%);
 }
 
 /* legend 内嵌问号：让 legend 文字与问号内联对齐 */
@@ -577,32 +555,6 @@ input[type="number"]:disabled {
     color: var(--ink-unit);
     cursor: not-allowed;
 }
-
-/* ---- 颜色选择器：统一外壳包住原生色块 ---- */
-input[type="color"] {
-    width: 56px;
-    height: 28px;
-    padding: 3px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    cursor: pointer;
-    transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
-}
-
-input[type="color"]:hover {
-    border-color: var(--border-hi);
-}
-
-input[type="color"]:focus-visible {
-    outline: none;
-    border-color: var(--pink);
-    box-shadow: var(--ring);
-}
-
-input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
-input[type="color"]::-moz-color-swatch { border: none; border-radius: 3px; }
 
 /* ============================================================
    Range：label + 数值在上 / 整条滑条在下，更舒展

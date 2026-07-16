@@ -2,7 +2,8 @@
 var DEFAULTS = {
     fontSize: 30,
     color: '#ffffff',
-    backgroundColor: '#000000',
+    // 默认背景即 B 站粉品牌色，与时钟叠在 B 站播放器上的语境一致。
+    backgroundColor: '#fb7299',
     bgOpacity: 100,
     bold: false,
     // 仅全屏显示：true（默认）只在浏览器全屏下显示；false 任意屏幕模式都显示。
@@ -14,18 +15,12 @@ var DEFAULTS = {
     posY: 0.04
 };
 
-// 配色预设：popup 专用的快捷配色入口，只覆盖 color / backgroundColor / bgOpacity，
-// 不动 bold / 字号 / 位置，也不引入新的设置键（因此不需要同步到 biclock.js）。
-// 每组都按"视频画面上可读"挑过：经典高对比、半透明柔和、B 站粉品牌色、
-// 霓虹绿 / 琥珀 / 冰蓝三种带个性的深底亮字。
-var PRESETS = [
-    { name: '经典',   color: '#ffffff', backgroundColor: '#000000', bgOpacity: 100 },
-    { name: '半透明', color: '#ffffff', backgroundColor: '#000000', bgOpacity: 55  },
-    { name: 'B站粉',  color: '#ffffff', backgroundColor: '#fb7299', bgOpacity: 100 },
-    { name: '霓虹绿', color: '#39ff14', backgroundColor: '#000000', bgOpacity: 70  },
-    { name: '琥珀',   color: '#ffb000', backgroundColor: '#1a1200', bgOpacity: 100 },
-    { name: '冰蓝',   color: '#7fdbff', backgroundColor: '#001b2e', bgOpacity: 100 }
-];
+// 颜色色块：popup 专用的便捷入口，点击只覆盖对应的一个键（color 或
+// backgroundColor），不引入新设置键，也不需要同步到 biclock.js。
+// 取色按"视频画面上可读 + 小色块上彼此易区分"挑：每个色块都落在明显不同的
+// 色相上，避免几个深色挤在一起分不清。
+var TEXT_SWATCHES = ['#ffffff', '#000000', '#fb7299', '#ffd66e', '#39ff14', '#7fdbff'];
+var BG_SWATCHES   = ['#fb7299', '#000000', '#ffffff', '#2563eb', '#16a34a', '#dc2626'];
 
 var config = {};
 
@@ -54,6 +49,21 @@ function hexToRgba(hex, alpha) {
     return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
 }
 
+// 把任意用户输入归一化为 #rrggbb 小写；不合法返回 null。
+// 接受可选前缀 #，3 位 shorthand 会展开为 6 位。
+function normalizeHex(raw) {
+    if (typeof raw !== 'string') return null;
+    var h = raw.trim().replace(/^#/, '').toLowerCase();
+    if (!/^[0-9a-f]{6}$/.test(h)) {
+        if (/^[0-9a-f]{3}$/.test(h)) {
+            h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+        } else {
+            return null;
+        }
+    }
+    return '#' + h;
+}
+
 function applyToPreview() {
     var el = $('previewClock');
     el.style.fontSize = config.fontSize + 'px';
@@ -79,11 +89,15 @@ function save() {
     chrome.storage.local.set(config);
 }
 
-// 把表单当前值读回 config
+// 把表单当前值读回 config。
+// 颜色字段由 Hex 校验函数 normalizeHexInput 负责：合法才落回 config，
+// 不合法时 readFromForm 跳过该字段（保留上次有效值），由调用方决定是否落盘。
 function readFromForm() {
     config.fontSize = parseInt($('fontSize').value, 10) || DEFAULTS.fontSize;
-    config.color = $('color').value;
-    config.backgroundColor = $('backgroundColor').value;
+    var textHex = normalizeHex($('colorHex').value);
+    if (textHex) config.color = textHex;
+    var bgHex = normalizeHex($('bgColorHex').value);
+    if (bgHex) config.backgroundColor = bgHex;
     config.bgOpacity = parseInt($('bgOpacity').value, 10);
     config.bold = $('bold').checked;
     config.fullscreenOnly = $('fullscreenOnly').checked;
@@ -101,8 +115,11 @@ function refreshOpacityTrack() {
 
 function fillForm() {
     $('fontSize').value = config.fontSize;
-    $('color').value = config.color;
-    $('backgroundColor').value = config.backgroundColor;
+    $('colorHex').value = config.color;
+    $('bgColorHex').value = config.backgroundColor;
+    // 输入框内容合法时清掉红框；保存的 config 一定是合法的。
+    $('colorHex').setAttribute('aria-invalid', 'false');
+    $('bgColorHex').setAttribute('aria-invalid', 'false');
     $('bgOpacity').value = config.bgOpacity;
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
     refreshOpacityTrack();
@@ -111,8 +128,8 @@ function fillForm() {
     $('fullscreenOnly').checked = config.fullscreenOnly !== false;
     // 常驻显示：单个 checkbox，checked = 常驻（alwaysShow=true）。
     $('modeAlways').checked = !!config.alwaysShow;
-    // 根据当前配色高亮匹配的预设；手动改成非预设组合时全部熄灭（= 自定义）。
-    updatePresetSelection();
+    // 根据当前值高亮匹配的色块；非色盘内的自定义色全部不高亮。
+    updateSwatchSelection();
 }
 
 function onInput() {
@@ -121,7 +138,7 @@ function onInput() {
     refreshOpacityTrack();
     applyToPreview();
     save();
-    updatePresetSelection();
+    updateSwatchSelection();
 }
 
 // ---- 位置面板 ----
@@ -203,77 +220,89 @@ function initAppearanceReset() {
     });
 }
 
-// ---- 配色预设 ----
-// 一组迷你时钟药丸：点击即套用该 preset 的 color/backgroundColor/bgOpacity，
-// 并在下方表单里同步显示；当前配色恰好等于某组 preset 时，该 chip 高亮。
+// ---- 颜色色块 + Hex 输入 ----
+// 色块点击即套用对应键（color 或 backgroundColor）；Hex 输入框接受任意 #rrggbb，
+// 合法归一化后保存、不合法标红但不覆盖上次有效值。两种入口都同步刷新色块高亮
+// 与顶部预览。
 
-function presetMatches(p) {
-    return config.color === p.color &&
-           config.backgroundColor === p.backgroundColor &&
-           config.bgOpacity === p.bgOpacity;
-}
-
-function buildPresets() {
-    var host = $('presets');
-    PRESETS.forEach(function (p, i) {
+function buildSwatches(hostId, palette, applyKey) {
+    var host = $(hostId);
+    palette.forEach(function (hex) {
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'preset';
-        btn.title = p.name;
+        btn.className = 'swatch';
+        btn.title = hex;
+        btn.setAttribute('aria-label', hex);
         btn.setAttribute('aria-pressed', 'false');
-
-        var swatch = document.createElement('span');
-        swatch.className = 'preset-swatch';
-
-        var pill = document.createElement('span');
-        pill.className = 'preset-pill';
-        pill.textContent = '12:34';
-        pill.style.color = p.color;
-        pill.style.backgroundColor = hexToRgba(p.backgroundColor, p.bgOpacity / 100);
-
-        var name = document.createElement('span');
-        name.className = 'preset-name';
-        name.textContent = p.name;
-
-        swatch.appendChild(pill);
-        btn.appendChild(swatch);
-        btn.appendChild(name);
-        btn.addEventListener('click', function () { applyPreset(i); });
+        btn.style.backgroundColor = hex;
+        btn.addEventListener('click', function () {
+            config[applyKey] = hex;
+            save();
+            fillForm();
+            applyToPreview();
+        });
         host.appendChild(btn);
     });
 }
 
-function applyPreset(i) {
-    var p = PRESETS[i];
-    config.color = p.color;
-    config.backgroundColor = p.backgroundColor;
-    config.bgOpacity = p.bgOpacity;
-    save();
-    fillForm();
-    applyToPreview();
+function updateSwatchSelection() {
+    var map = [
+        { hostId: 'colorSwatches', key: 'color' },
+        { hostId: 'bgColorSwatches', key: 'backgroundColor' }
+    ];
+    map.forEach(function (m) {
+        var host = $(m.hostId);
+        if (!host) return;
+        var buttons = host.querySelectorAll('.swatch');
+        buttons.forEach(function (btn) {
+            btn.setAttribute('aria-pressed', btn.title === config[m.key] ? 'true' : 'false');
+        });
+    });
 }
 
-function updatePresetSelection() {
-    var buttons = document.querySelectorAll('.preset');
-    buttons.forEach(function (btn, i) {
-        btn.setAttribute('aria-pressed', presetMatches(PRESETS[i]) ? 'true' : 'false');
+// Hex 输入：input 事件即时校验，合法归一化保存 + 刷新预览，不合法仅标红不落盘。
+function bindHexInput(inputId, key) {
+    var el = $(inputId);
+    el.addEventListener('input', function () {
+        var norm = normalizeHex(el.value);
+        if (norm) {
+            el.setAttribute('aria-invalid', 'false');
+            // 只在完整输入时落盘（输入中途如 "#fb" 也合法字符但不完整 ——
+            // 但 normalizeHex 要求 3 或 6 位，所以走到这里一定是完整值）。
+            config[key] = norm;
+            applyToPreview();
+            save();
+            updateSwatchSelection();
+        } else {
+            // 空串视为编辑中、不报错；非空且非法才标红。
+            el.setAttribute('aria-invalid', el.value.trim() === '' ? 'false' : 'true');
+        }
+    });
+    // 失焦时回填 config 中的合法值，避免输入框残留不完整内容。
+    el.addEventListener('blur', function () {
+        el.value = config[key];
+        el.setAttribute('aria-invalid', 'false');
     });
 }
 
 function init() {
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
-        buildPresets();
+        buildSwatches('colorSwatches', TEXT_SWATCHES, 'color');
+        buildSwatches('bgColorSwatches', BG_SWATCHES, 'backgroundColor');
         fillForm();
         applyToPreview();
         updatePositionMarker();
     });
 
-    var ids = ['fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways'];
+    // 颜色字段改由 bindHexInput 单独处理（含校验逻辑），其余字段走统一的 onInput。
+    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);
     });
+    bindHexInput('colorHex', 'color');
+    bindHexInput('bgColorHex', 'backgroundColor');
 
     initPositionPanel();
     initAppearanceReset();

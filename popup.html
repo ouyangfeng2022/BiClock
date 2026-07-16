@@ -15,9 +15,6 @@
     <fieldset>
         <legend>外观</legend>
 
-        <span class="presets-label field-label">配色预设</span>
-        <div class="presets" id="presets" role="group" aria-label="配色预设"></div>
-
         <div class="grid-2">
             <label class="field field-number">
                 <span class="field-label">字体大小</span>
@@ -36,15 +33,25 @@
                     </span>
                 </span>
             </div>
+        </div>
 
-            <div class="field field-color">
-                <span class="field-label">文字颜色</span>
-                <input type="color" id="color">
+        <div class="field field-color">
+            <span class="field-label">文字颜色</span>
+            <div class="color-row">
+                <div class="swatches" id="colorSwatches" role="group" aria-label="文字颜色色块"></div>
+                <input type="text" id="colorHex" class="hex-input"
+                       maxlength="7" spellcheck="false" placeholder="#ffffff"
+                       aria-label="文字颜色 Hex 值" aria-invalid="false">
             </div>
+        </div>
 
-            <div class="field field-color">
-                <span class="field-label">背景颜色</span>
-                <input type="color" id="backgroundColor">
+        <div class="field field-color">
+            <span class="field-label">背景颜色</span>
+            <div class="color-row">
+                <div class="swatches" id="bgColorSwatches" role="group" aria-label="背景颜色色块"></div>
+                <input type="text" id="bgColorHex" class="hex-input"
+                       maxlength="7" spellcheck="false" placeholder="#fb7299"
+                       aria-label="背景颜色 Hex 值" aria-invalid="false">
             </div>
         </div>
 
