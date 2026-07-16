@@ -1,18 +1,35 @@
+<div align="center">
+
+<img src="./icons/clock.png" width="96" alt="BiClock">
+
 # BiClock · Bilibili 时钟
 
-一个轻量的 Manifest V3 浏览器扩展。在 Bilibili **全屏**观看视频 / 番剧时,于播放器顶部居中叠加显示当前时间,并可完全自定义样式与时间格式。
+一个轻量的 Manifest V3 浏览器扩展。在 Bilibili **全屏**观看视频 / 番剧时,于播放器顶部叠加显示当前时间,样式与位置完全可自定义。
 
-仅在「浏览器全屏(F11)+ 控制条可见」时出现 —— 既不会被 Bilibili / 浏览器自带的浮动工具栏遮挡,也不会在你专心看片时打扰画面。支持 Chromium(Chrome / Edge 等)与 Firefox,同一套代码、同一个安装包即可加载。
+[功能](#功能) · [预览](#预览) · [安装](#安装) · [使用](#使用) · [设置](#设置) · [工作原理](#工作原理)
+
+</div>
+
+> [!NOTE]
+> 默认只在「**浏览器全屏(F11)+ 控制条可见**」时出现 —— 既不会被 Bilibili / 浏览器自带的浮动工具栏遮挡,也不会在你专心看片时打扰画面。需要更激进地显示时,可在 popup 中关闭「仅全屏显示」或开启「常驻显示」。
+
+同一套代码、同一个安装包同时支持 Chromium(Chrome / Edge 等)与 Firefox。
 
 ## 功能
 
-- 🕐 **全屏叠加时钟** —— 进入浏览器全屏后,时钟出现在播放器顶部居中
-- 🖱️ **两种显示模式** —— **鼠标触发**(默认,控件可见时才显示,自动隐藏后消失,不挡画面)或**常驻**(进入全屏后一直显示,可随时掌握时间)
-- 🎨 **完全可自定义** —— 字号、文字颜色、背景色、背景透明度、上下位置、是否加粗
-- ⏰ **灵活的时间格式** —— 12 / 24 小时制可选,可单独开关是否显示秒
-- 🔄 **实时生效** —— 在 popup 中调整的每一项都会自动保存,并即时同步到已打开的 Bilibili 标签页,无需刷新
-- 🌐 **跨浏览器** —— Manifest V3,同一套代码同时支持 Chrome / Edge / Firefox
-- 🪶 **零依赖、零构建** —— 纯原生 JS,加载即用
+- **全屏叠加时钟** —— 进入浏览器全屏后,时钟出现在播放器顶部
+- **两种显示模式** —— *鼠标触发*(默认,控件可见时才显示,自动隐藏后消失)或*常驻*(进入全屏后一直显示)
+- **完全可自定义** —— 字号、文字颜色、背景色、背景透明度、加粗
+- **二维位置调节** —— 在 popup 的位置面板上拖动 🕐 即可设定时钟在视频画面内的任意位置
+- **实时生效** —— popup 中的每一项改动都会自动保存,并即时同步到已打开的 Bilibili 标签页,无需刷新
+- **跨浏览器** —— Manifest V3,同时支持 Chrome / Edge / Firefox
+- **零依赖、零构建** —— 纯原生 JS,加载即用
+
+## 预览
+
+![BiClock 设置 popup](./popup-shot.png)
+
+> 扩展弹窗(popup)的设置界面,分为外观、显示、位置三个分区,顶部为时钟的实时预览。
 
 ## 安装
 
@@ -28,50 +45,50 @@
 2. 点击「加载临时附加组件…」
 3. 选择本目录下的 `manifest.json`
 
-> Firefox 临时附加组件在浏览器关闭后会失效。若需永久安装,需要将扩展签名(提交到 [addons.mozilla.org](https://addons.mozilla.org)),或使用 [Firefox Developer Edition / Nightly](https://www.mozilla.org/firefox/developer/) 并设置 `xpinstall.signatures.required = false`。
+> [!TIP]
+> Firefox 临时附加组件在浏览器关闭后会失效。若需永久安装,需将扩展签名(提交到 [addons.mozilla.org](https://addons.mozilla.org)),或使用 [Firefox Developer Edition / Nightly](https://www.mozilla.org/firefox/developer/) 并设置 `xpinstall.signatures.required = false`。
 
 ## 使用
 
 1. 打开任意 Bilibili 视频页(`/video/` 或 `/bangumi/`)
-2. 按 **F11** 进入**浏览器全屏**(注意:网页全屏按钮和宽屏模式都不会触发时钟)
-3. **鼠标触发模式**(默认):移动鼠标使控制条显示,时钟出现;控制条自动隐藏后消失。**常驻模式**:进入全屏后时钟一直显示,无需移动鼠标
-4. 点击工具栏的扩展图标,在弹出的 popup 中切换显示模式或自定义时钟样式,改动会即时生效
+2. 按 **F11** 进入**浏览器全屏**(网页全屏按钮和宽屏模式都不会触发时钟)
+3. 移动鼠标使控制条显示,时钟出现(默认的鼠标触发模式)
+4. 点击工具栏的扩展图标,在 popup 中切换显示模式、自定义样式或拖动位置,改动即时生效
 
-## 自定义项
+## 设置
 
-在扩展 popup 中可调整以下选项,所有改动自动保存到 `chrome.storage.local`:
+所有改动自动保存到 `chrome.storage.local`,无需点击保存按钮。
 
-| 选项 | 说明 |
+| 设置项 | 说明 |
 | --- | --- |
-| 显示模式 | 鼠标触发(控件可见时显示)或常驻(进入全屏后一直显示) |
-| 字号 | 时钟文字大小 |
+| 字体大小 | 时钟文字大小(px) |
 | 文字颜色 | 时钟前景色 |
-| 背景色 + 背景透明度 | 背景以 `rgba()` 形式应用,透明度 0–100% |
-| 上下位置 | 距播放器顶部的偏移 |
-| 加粗 | 是否加粗显示 |
-| 24 小时制 | 关闭则使用 12 小时制(上午 / 下午) |
-| 显示秒 | 是否在时间中包含秒 |
+| 背景颜色 + 透明度 | 背景以 `rgba()` 形式应用,透明度 0–100% |
+| 粗体 | 是否加粗显示 |
+| 仅全屏显示 | 开(默认)= 只在浏览器全屏下显示;关 = 普通播放 / 宽屏 / 网页全屏也都显示 |
+| 常驻显示 | 关(默认)= 控件可见时才显示(鼠标触发);开 = 在「仅全屏显示」选定的范围内一直显示 |
+| 位置 | 拖动面板里的 🕐 设定时钟在播放器中的位置 |
+
+> [!NOTE]
+> 时间格式固定为 **24 小时制 + 显示秒**(`HH:MM:SS`),不可配置。
 
 ## 工作原理
 
 `biclock.js` 作为内容脚本注入 Bilibili 页面,创建一个 `.bpx-player-top-clock` 的 `div`,并通过 `MutationObserver` 监听 `.bpx-player-container` 的两个属性:
 
-- `data-screen="full"` —— 表示真正的浏览器全屏(Fullscreen API)。只有这种模式才会隐藏 Bilibili / 浏览器自带的浮动视频工具栏,因此时钟**仅**在此模式下显示;宽屏(`"wide"`)和网页全屏(`"web"`)模式会保留那些覆盖层,被**故意排除**。
-- `data-ctrl-hidden="false"` —— 表示控制条可见。
+- **`data-screen`** —— `"full"` 表示真正的浏览器全屏(Fullscreen API)。只有这种模式才会隐藏 Bilibili / 浏览器自带的浮动视频工具栏,因此默认(仅全屏显示)**仅**在此模式下显示;宽屏(`"wide"`)和网页全屏(`"web"`)会保留那些覆盖层,被**故意排除**。关闭「仅全屏显示」后此属性被忽略,任何屏幕模式都显示。
+- **`data-ctrl-hidden`** —— `"false"` 表示控制条可见。仅在「鼠标触发」模式下参与判断;「常驻」模式忽略它。
 
-`shouldShow()` 是显示与否的唯一判官,两种显示模式的行为不同:
+`shouldShow()` 是显示与否的唯一判官,先应用「仅全屏显示」这一范围门,再应用「常驻 / 鼠标触发」这一模式门:
 
-- **鼠标触发**(默认,`alwaysShow=false`):必须同时满足 `data-screen="full"` 且 `data-ctrl-hidden="false"`——即全屏且控制条可见才显示,控制条自动隐藏后随即消失。
-- **常驻**(`alwaysShow=true`):只要 `data-screen="full"` 即一直显示,忽略控制条可见性。
+- **鼠标触发**(默认,`alwaysShow=false`):在范围门通过的前提下,再要求控制条可见。
+- **常驻**(`alwaysShow=true`):只要范围门通过即一直显示,忽略控制条可见性。
 
-满足显示条件时启动 1 秒定时器刷新时钟;不满足时停止定时器,并把时钟节点从 DOM 中移除,避免在非全屏模式下残留。模式切换通过 `chrome.storage.onChanged` 实时同步,无需刷新页面。
+满足显示条件时启动 1 秒定时器刷新时钟;不满足时停止定时器,并把时钟节点从 DOM 中移除,避免残留。用户在 popup 中切换 `fullscreenOnly` / `alwaysShow` 的动作通过 `chrome.storage.onChanged` 实时到达,内容脚本立即重新判断并启停定时器,无需刷新页面。
 
-时钟节点在每次 tick 中通过 `insertBefore` 被重新定位到 `.bpx-player-top-left` 的后面,节点本身始终是同一个引用,避免重复堆叠。用户样式通过 `chrome.storage.local` 传递,`biclock.js` 在启动时读取并订阅 `chrome.storage.onChanged`,因此 popup 中的改动能即时反映到已打开的标签页。
+时钟节点在每次 tick 中被重新挂回 `.bpx-player-container`(节点本身始终是同一个引用,不会重复堆叠)。定位使用 `position: fixed` + 播放器容器的视口坐标:播放器在非全屏模式下并不铺满视口(Bilibili 网页 chrome 占据上下 / 两侧),若用视口坐标比例换算,时钟会跑到视频画面之外;改为相对容器视口矩形计算,才能保证在普通 / 宽屏 / 网页全屏 / 浏览器全屏下都落在视频画面内。
 
 ## 已知限制
 
-扩展强依赖 Bilibili 当前播放器的 DOM 结构(`.bpx-player-container`、`.bpx-player-top-left`,以及属性 `data-screen`、`data-ctrl-hidden`)。如果 Bilibili 改版调整这些类名或属性(历史上已经从 `bilibili-player-` 前缀改到过 `bpx-player-`),时钟会失效。失效时优先排查类名 / 属性是否变更。
-
-## 许可证
-
-[MIT License](./LICENSE)
+> [!WARNING]
+> 扩展强依赖 Bilibili 当前播放器的 DOM 结构(`.bpx-player-container`、属性 `data-screen` / `data-ctrl-hidden`)。Bilibili 历史上已从 `bilibili-player-` 前缀改到过 `bpx-player-`;若再次改版调整这些类名或属性,时钟会失效。失效时优先排查类名 / 属性是否变更。
