@@ -267,7 +267,7 @@ label:last-child { margin-bottom: 0; }
     gap: 5px;
 }
 
-/* 显示开关行：左侧文字、右侧 toggle，整行点击。
+/* 显示开关行：左侧文字、右侧 toggle，只有开关本身可点。
    用于"仅全屏显示 / 常驻显示"等并排的开关项。 */
 .toggle-line {
     display: flex;
@@ -275,7 +275,6 @@ label:last-child { margin-bottom: 0; }
     justify-content: space-between;
     gap: 10px;
     padding: 4px 0;
-    cursor: pointer;
 }
 
 .toggle-line + .toggle-line {
