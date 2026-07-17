@@ -61,6 +61,34 @@ var THEMES = [
         fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
         textShadow: 'none', borderColor: '#ff4d4f', borderOpacity: 72, borderWidth: 1,
         accentColor: '#ff3b30', clockLayout: 'recording'
+    },
+    {
+        id: 'analog', name: '指针表盘', note: '圆形模拟时钟',
+        fontSize: 48, color: '#e8e5de', backgroundColor: '#3b3d3b', bgOpacity: 96, bold: true,
+        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
+        textShadow: 'none', borderColor: '#aaa69c', borderOpacity: 82, borderWidth: 2,
+        accentColor: '#a87078', clockLayout: 'analog'
+    },
+    {
+        id: 'flip', name: '翻页时钟', note: '复古翻牌数字',
+        fontSize: 31, color: '#f8fafc', backgroundColor: '#111827', bgOpacity: 97, bold: true,
+        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
+        textShadow: '0 1px 1px rgba(0, 0, 0, 0.8)', borderColor: '#475569', borderOpacity: 100, borderWidth: 1,
+        accentColor: '#94a3b8', clockLayout: 'flip'
+    },
+    {
+        id: 'hud', name: '科幻 HUD', note: '取景框状态读数',
+        fontSize: 28, color: '#a7f3d0', backgroundColor: '#06281f', bgOpacity: 52, bold: true,
+        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
+        textShadow: '0 0 0.42em rgba(74, 222, 128, 0.7)', borderColor: '#4ade80', borderOpacity: 88, borderWidth: 1,
+        accentColor: '#4ade80', clockLayout: 'hud'
+    },
+    {
+        id: 'calendar', name: '日历桌牌', note: '日期与时间卡片',
+        fontSize: 27, color: '#172033', backgroundColor: '#fffdf5', bgOpacity: 98, bold: true,
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif',
+        textShadow: 'none', borderColor: '#f43f5e', borderOpacity: 75, borderWidth: 1,
+        accentColor: '#f43f5e', clockLayout: 'calendar'
     }
 ];
 
@@ -102,6 +130,10 @@ function renderClockLayout(el, time, style) {
     el.style.alignItems = 'center';
     el.style.justifyContent = 'center';
     el.style.lineHeight = '1.2';
+    // 每次重绘先清掉形态主题留下的布局状态，主题之间切换不会串样式。
+    el.style.flexDirection = 'row';
+    el.style.overflow = 'visible';
+    el.style.backgroundImage = 'none';
 
     if (style.clockLayout === 'segments') {
         el.style.gap = '3px';
@@ -157,6 +189,96 @@ function renderClockLayout(el, time, style) {
         el.appendChild(left);
         el.appendChild(makeClockPart('clock-corner-time', time));
         el.appendChild(right);
+        return;
+    }
+
+    if (style.clockLayout === 'analog') {
+        el.style.padding = '0';
+        el.style.backgroundColor = 'transparent';
+        el.style.border = '0';
+        var now = new Date();
+        var dial = makeClockPart('clock-analog-dial', '');
+        dial.style.position = 'relative';
+        dial.style.width = '2.15em';
+        dial.style.height = '2.15em';
+        dial.style.borderRadius = '50%';
+        dial.style.backgroundColor = hexToRgba(style.backgroundColor, style.bgOpacity / 100);
+        dial.style.border = style.borderWidth + 'px solid ' + hexToRgba(style.borderColor, style.borderOpacity / 100);
+        dial.style.boxShadow = '0 0.12em 0.28em rgba(0, 0, 0, 0.22)';
+        for (var tickIndex = 0; tickIndex < 12; tickIndex++) {
+            var tick = makeClockPart('clock-analog-tick', '');
+            var isMajor = tickIndex % 3 === 0;
+            tick.style.position = 'absolute'; tick.style.left = '50%'; tick.style.top = '0.18em';
+            tick.style.width = isMajor ? '0.065em' : '0.04em'; tick.style.height = isMajor ? '0.2em' : '0.12em';
+            tick.style.borderRadius = '999px'; tick.style.backgroundColor = isMajor ? style.borderColor : hexToRgba(style.color, 0.42);
+            tick.style.transformOrigin = '50% 0.91em';
+            tick.style.transform = 'translateX(-50%) rotate(' + (tickIndex * 30) + 'deg)';
+            dial.appendChild(tick);
+        }
+        ['12', '3', '6', '9'].forEach(function (label, index) {
+            var marker = makeClockPart('clock-analog-marker', label);
+            marker.style.position = 'absolute';
+            marker.style.fontSize = '0.2em';
+            marker.style.fontWeight = '700';
+            marker.style.color = style.color;
+            marker.style.lineHeight = '1';
+            marker.style.left = index === 1 ? '84%' : index === 3 ? '10%' : '50%';
+            marker.style.top = index === 0 ? '11%' : index === 2 ? '86%' : '50%';
+            marker.style.transform = 'translate(-50%, -50%)';
+            dial.appendChild(marker);
+        });
+        [{ angle: (now.getHours() % 12) * 30 + now.getMinutes() * 0.5, width: '0.12em', height: '0.5em', color: style.color }, { angle: now.getMinutes() * 6, width: '0.075em', height: '0.72em', color: style.borderColor }, { angle: now.getSeconds() * 6, width: '0.032em', height: '0.86em', color: style.accentColor }].forEach(function (hand, handIndex) {
+            var item = makeClockPart('clock-analog-hand', '');
+            item.style.position = 'absolute';
+            item.style.left = '50%'; item.style.top = '50%';
+            item.style.width = hand.width; item.style.height = hand.height;
+            item.style.borderRadius = '999px'; item.style.backgroundColor = hand.color;
+            item.style.boxShadow = handIndex === 2 ? 'none' : '0 0.03em 0.06em rgba(0, 0, 0, 0.28)';
+            item.style.transformOrigin = '50% 0';
+            // 指针从圆心向下延伸；标准钟表角度以 12 点为 0°，故补 180° 对齐。
+            item.style.transform = 'translateX(-50%) rotate(' + (hand.angle + 180) + 'deg)';
+            dial.appendChild(item);
+        });
+        var pin = makeClockPart('clock-analog-pin', '');
+        pin.style.position = 'absolute'; pin.style.left = '50%'; pin.style.top = '50%';
+        pin.style.width = '0.16em'; pin.style.height = '0.16em'; pin.style.borderRadius = '50%';
+        pin.style.transform = 'translate(-50%, -50%)'; pin.style.backgroundColor = style.accentColor;
+        pin.style.border = '0.06em solid ' + style.backgroundColor;
+        pin.style.boxShadow = 'none';
+        dial.appendChild(pin); el.appendChild(dial);
+        return;
+    }
+
+    if (style.clockLayout === 'flip') {
+        el.style.gap = '0.12em'; el.style.padding = '0'; el.style.backgroundColor = 'transparent'; el.style.border = '0';
+        parts.forEach(function (partText) {
+            var card = makeClockPart('clock-flip-card', partText);
+            card.style.padding = '0.13em 0.2em'; card.style.borderRadius = '0.11em';
+            card.style.backgroundImage = 'linear-gradient(to bottom, ' + hexToRgba(style.backgroundColor, style.bgOpacity / 100) + ' 48%, #020617 49%, #020617 52%, ' + hexToRgba(style.backgroundColor, style.bgOpacity / 100) + ' 53%)';
+            card.style.border = style.borderWidth + 'px solid ' + hexToRgba(style.borderColor, style.borderOpacity / 100);
+            card.style.boxShadow = '0 0.08em 0.12em rgba(0, 0, 0, 0.35)'; el.appendChild(card);
+        });
+        return;
+    }
+
+    if (style.clockLayout === 'hud') {
+        el.style.gap = '0.26em'; el.style.padding = '0.16em 0.28em'; el.style.borderRadius = '0';
+        var tag = makeClockPart('clock-hud-tag', 'TIME');
+        tag.style.fontSize = '0.42em'; tag.style.letterSpacing = '0.12em'; tag.style.color = style.accentColor;
+        el.appendChild(tag); el.appendChild(makeClockPart('clock-hud-time', time));
+        return;
+    }
+
+    if (style.clockLayout === 'calendar') {
+        var date = new Date();
+        el.style.flexDirection = 'column'; el.style.gap = '0'; el.style.padding = '0'; el.style.overflow = 'hidden';
+        var header = makeClockPart('clock-calendar-header', (date.getMonth() + 1) + ' 月 ' + date.getDate() + ' 日');
+        header.style.width = '100%'; header.style.padding = '0.14em 0.55em'; header.style.boxSizing = 'border-box';
+        header.style.textAlign = 'center'; header.style.fontSize = '0.42em'; header.style.letterSpacing = '0.08em';
+        header.style.backgroundColor = style.accentColor; header.style.color = '#ffffff';
+        var value = makeClockPart('clock-calendar-time', time);
+        value.style.padding = '0.12em 0.48em 0.16em'; value.style.fontVariantNumeric = 'tabular-nums';
+        el.appendChild(header); el.appendChild(value);
         return;
     }
 

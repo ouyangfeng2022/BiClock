@@ -64,6 +64,10 @@ function renderClockLayout(time) {
     clock.style.alignItems = 'center';
     clock.style.justifyContent = 'center';
     clock.style.lineHeight = '1.2';
+    // 每次重绘先清掉形态主题留下的布局状态，主题之间切换不会串样式。
+    clock.style.flexDirection = 'row';
+    clock.style.overflow = 'visible';
+    clock.style.backgroundImage = 'none';
     clock.style.gap = '0';
 
     if (config.clockLayout === 'segments') {
@@ -119,6 +123,87 @@ function renderClockLayout(time) {
         clock.appendChild(left);
         clock.appendChild(makeClockPart('bpx-player-clock-corner-time', time));
         clock.appendChild(right);
+        return;
+    }
+
+    if (config.clockLayout === 'analog') {
+        clock.style.padding = '0';
+        clock.style.backgroundColor = 'transparent';
+        clock.style.border = '0';
+        var now = new Date();
+        var dial = makeClockPart('bpx-player-clock-analog-dial', '');
+        dial.style.position = 'relative';
+        dial.style.width = '2.15em';
+        dial.style.height = '2.15em';
+        dial.style.borderRadius = '50%';
+        dial.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+        dial.style.border = config.borderWidth + 'px solid ' + hexToRgba(config.borderColor, config.borderOpacity / 100);
+        dial.style.boxShadow = '0 0.12em 0.28em rgba(0, 0, 0, 0.22)';
+        for (var tickIndex = 0; tickIndex < 12; tickIndex++) {
+            var tick = makeClockPart('bpx-player-clock-analog-tick', '');
+            var isMajor = tickIndex % 3 === 0;
+            tick.style.position = 'absolute'; tick.style.left = '50%'; tick.style.top = '0.18em';
+            tick.style.width = isMajor ? '0.065em' : '0.04em'; tick.style.height = isMajor ? '0.2em' : '0.12em';
+            tick.style.borderRadius = '999px'; tick.style.backgroundColor = isMajor ? config.borderColor : hexToRgba(config.color, 0.42);
+            tick.style.transformOrigin = '50% 0.91em';
+            tick.style.transform = 'translateX(-50%) rotate(' + (tickIndex * 30) + 'deg)';
+            dial.appendChild(tick);
+        }
+        ['12', '3', '6', '9'].forEach(function (label, index) {
+            var marker = makeClockPart('bpx-player-clock-analog-marker', label);
+            marker.style.position = 'absolute'; marker.style.fontSize = '0.2em'; marker.style.fontWeight = '700'; marker.style.color = config.color; marker.style.lineHeight = '1';
+            marker.style.left = index === 1 ? '84%' : index === 3 ? '10%' : '50%';
+            marker.style.top = index === 0 ? '11%' : index === 2 ? '86%' : '50%';
+            marker.style.transform = 'translate(-50%, -50%)'; dial.appendChild(marker);
+        });
+        [{ angle: (now.getHours() % 12) * 30 + now.getMinutes() * 0.5, width: '0.12em', height: '0.5em', color: config.color }, { angle: now.getMinutes() * 6, width: '0.075em', height: '0.72em', color: config.borderColor }, { angle: now.getSeconds() * 6, width: '0.032em', height: '0.86em', color: config.accentColor }].forEach(function (hand, handIndex) {
+            var item = makeClockPart('bpx-player-clock-analog-hand', '');
+            item.style.position = 'absolute'; item.style.left = '50%'; item.style.top = '50%';
+            item.style.width = hand.width; item.style.height = hand.height; item.style.borderRadius = '999px';
+            item.style.backgroundColor = hand.color; item.style.boxShadow = handIndex === 2 ? 'none' : '0 0.03em 0.06em rgba(0, 0, 0, 0.28)'; item.style.transformOrigin = '50% 0';
+            // 指针从圆心向下延伸；标准钟表角度以 12 点为 0°，故补 180° 对齐。
+            item.style.transform = 'translateX(-50%) rotate(' + (hand.angle + 180) + 'deg)'; dial.appendChild(item);
+        });
+        var pin = makeClockPart('bpx-player-clock-analog-pin', '');
+        pin.style.position = 'absolute'; pin.style.left = '50%'; pin.style.top = '50%';
+        pin.style.width = '0.16em'; pin.style.height = '0.16em'; pin.style.borderRadius = '50%';
+        pin.style.transform = 'translate(-50%, -50%)'; pin.style.backgroundColor = config.accentColor;
+        pin.style.border = '0.06em solid ' + config.backgroundColor;
+        pin.style.boxShadow = 'none';
+        dial.appendChild(pin); clock.appendChild(dial);
+        return;
+    }
+
+    if (config.clockLayout === 'flip') {
+        clock.style.gap = '0.12em'; clock.style.padding = '0'; clock.style.backgroundColor = 'transparent'; clock.style.border = '0';
+        parts.forEach(function (partText) {
+            var card = makeClockPart('bpx-player-clock-flip-card', partText);
+            card.style.padding = '0.13em 0.2em'; card.style.borderRadius = '0.11em';
+            card.style.backgroundImage = 'linear-gradient(to bottom, ' + hexToRgba(config.backgroundColor, config.bgOpacity / 100) + ' 48%, #020617 49%, #020617 52%, ' + hexToRgba(config.backgroundColor, config.bgOpacity / 100) + ' 53%)';
+            card.style.border = config.borderWidth + 'px solid ' + hexToRgba(config.borderColor, config.borderOpacity / 100);
+            card.style.boxShadow = '0 0.08em 0.12em rgba(0, 0, 0, 0.35)'; clock.appendChild(card);
+        });
+        return;
+    }
+
+    if (config.clockLayout === 'hud') {
+        clock.style.gap = '0.26em'; clock.style.padding = '0.16em 0.28em'; clock.style.borderRadius = '0';
+        var tag = makeClockPart('bpx-player-clock-hud-tag', 'TIME');
+        tag.style.fontSize = '0.42em'; tag.style.letterSpacing = '0.12em'; tag.style.color = config.accentColor;
+        clock.appendChild(tag); clock.appendChild(makeClockPart('bpx-player-clock-hud-time', time));
+        return;
+    }
+
+    if (config.clockLayout === 'calendar') {
+        var date = new Date();
+        clock.style.flexDirection = 'column'; clock.style.gap = '0'; clock.style.padding = '0'; clock.style.overflow = 'hidden';
+        var header = makeClockPart('bpx-player-clock-calendar-header', (date.getMonth() + 1) + ' 月 ' + date.getDate() + ' 日');
+        header.style.width = '100%'; header.style.padding = '0.14em 0.55em'; header.style.boxSizing = 'border-box';
+        header.style.textAlign = 'center'; header.style.fontSize = '0.42em'; header.style.letterSpacing = '0.08em';
+        header.style.backgroundColor = config.accentColor; header.style.color = '#ffffff';
+        var value = makeClockPart('bpx-player-clock-calendar-time', time);
+        value.style.padding = '0.12em 0.48em 0.16em'; value.style.fontVariantNumeric = 'tabular-nums';
+        clock.appendChild(header); clock.appendChild(value);
         return;
     }
 

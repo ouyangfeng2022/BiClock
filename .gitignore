@@ -21,3 +21,7 @@ desktop.ini
 
 # node
 node_modules/
+
+# 发布打包产物
+/*.zip
+/.dist-staging/
