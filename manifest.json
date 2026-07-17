@@ -16,7 +16,7 @@
     "content_scripts": [
         {
             "matches": ["*://*.bilibili.com/video/*", "*://*.bilibili.com/bangumi/*"],
-            "js": ["biclock.js"]
+            "js": ["shared.js", "biclock.js"]
         }
     ],
     "browser_specific_settings": {

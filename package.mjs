@@ -23,6 +23,7 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 // 需要打包进 zip 的运行时文件（仅扩展加载时需要的文件）。
 const INCLUDE = [
     'manifest.json',
+    'shared.js',
     'biclock.js',
     'popup.html',
     'popup.css',
