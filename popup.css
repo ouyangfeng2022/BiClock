@@ -83,24 +83,34 @@ h1::before {
 
 /* ============================================================
    预览：顶部窄条，始终可见，不抢垂直空间
+   sticky 让它在 popup 滚动时吸住顶部，便于调整下方控件（透明度、
+   位置等）时仍能看到效果。
    ============================================================ */
 .preview {
-    position: relative;
-    height: 44px;
+    position: sticky;
+    /* top 决定吸顶位置：吸顶后距 popup 顶端 6px，四周都留呼吸空间。 */
+    top: 6px;
     margin-bottom: 14px;
+    min-height: 44px;
+    padding: 8px 14px;
+    /* 圆角卡片：不再铺满 popup 宽度，让它像一块浮起的预览卡。 */
     border-radius: var(--radius);
-    /* 透明背景：直接透出 popup 浅色底，不再模拟深色播放器。
+    /* 半透明背景：透出下方滚动内容的轮廓，避免吸顶时一块纯色堵死的突兀感；
        时钟节点自带 backgroundColor（见 popup.js），仍清晰可见。 */
-    background: transparent;
-    overflow: hidden;
-    box-shadow: inset 0 0 0 1px oklch(0% 0 0 / 10%);
+    background: oklch(98.8% 0.003 350 / 88%);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 5;
+    /* 抬升感：细描边 + 轻阴影，区分于下方滚动内容。 */
+    box-shadow: inset 0 0 0 1px var(--border),
+                0 2px 8px oklch(0% 0 0 / 8%);
+    /* 用 flex 居中让预览内容随字号自然撑高，不再 overflow: hidden 裁切。 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .preview-clock {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
     /* font-size / color / background / weight 由 popup.js 动态写入 */
