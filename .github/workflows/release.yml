@@ -1,0 +1,58 @@
+# 推送 v* 形式的 git tag 时触发发版：
+#   1. 校验 tag 与 manifest.json 的 version 一致（防止打错 tag）
+#   2. 复用项目根目录的 package.mjs 跨平台打包成 BiClock-<version>.zip
+#   3. 用 softprops/action-gh-release 创建 Release 并附上 zip，
+#      Release body 由 GitHub 自动生成（上一 tag 到本 tag 的 commit/PR 列表）
+#
+# 本地发版流程：
+#   1. 改 manifest.json 的 version（如 3.0 → 3.1）
+#   2. git commit -am "chore: bump version to 3.1"
+#   3. git tag v3.1          # tag 必须与 manifest version 一致
+#   4. git push origin main v3.1
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # softprops/action-gh-release 需要写权限来创建 Release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 完整历史，以便 GitHub 自动生成的 release notes 能取到上一个 tag。
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify tag matches manifest version
+        run: |
+          # GITHUB_REF_NAME 形如 v3.1，去掉前导 v 得到 tag 版本号。
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          MANIFEST_VERSION=$(node -p "require('./manifest.json').version")
+          echo "tag version:      $TAG_VERSION"
+          echo "manifest version: $MANIFEST_VERSION"
+          if [ "$TAG_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "::error::tag ($TAG_VERSION) 与 manifest.json version ($MANIFEST_VERSION) 不一致"
+            exit 1
+          fi
+          echo "VERSION=$TAG_VERSION" >> "$GITHUB_ENV"
+
+      - name: Build zip
+        run: node package.mjs
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # 让 GitHub 用上一 tag 到本 tag 之间的 commit/PR 自动填充 Release body。
+          generate_release_notes: true
+          files: BiClock-${{ env.VERSION }}.zip
