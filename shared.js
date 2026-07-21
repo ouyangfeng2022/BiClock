@@ -35,7 +35,11 @@ var DEFAULTS = {
     // 位置由 popup 里的"位置"面板控制；posX/posY 是相对视口的 0..1 比例，
     // 这样不同分辨率的屏幕都能正确还原，而不是写死像素。
     posX: 0.5,
-    posY: 0.04
+    posY: 0.04,
+    // 用户在 popup 里保存的自定义主题列表；仅 popup 读写，内容脚本不消费。
+    // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 12 个外观键。
+    // id 形如 "custom_<timestamp>"，作为 clockStyle 标记当前激活的自定义主题。
+    customThemes: []
 };
 
 // 已下线、不再有主题卡的旧主题 id。打开旧版本遗留的存储时需要回退到默认。

@@ -70,6 +70,24 @@ var THEMES = [
     }
 ];
 
+// clockLayout 值 → 卡片副标题里展示的形态描述。自定义主题没有内置 note，
+// 用这个表给它补一句副标题，方便多张自定义卡之间区分。
+var LAYOUT_LABELS = {
+    single: '基础数字',
+    segments: '分舱数码',
+    capsule: '胶囊计时器',
+    recording: '录像时间码',
+    analog: '指针表盘',
+    flip: '翻页时钟',
+    hud: '科幻 HUD',
+    calendar: '日历桌牌',
+    corner: '边角框'
+};
+
+// 用户保存的自定义主题（与 config.customThemes 同源）。每次 rebuildThemeGrid()
+// 都从这里读，保存/删除/重命名后写回 storage 再 rebuild。
+var customThemes = [];
+
 var config = {};
 
 function $(id) {
@@ -244,25 +262,8 @@ function initPositionPanel() {
     });
 }
 
-function initAppearanceReset() {
-    $('resetAppearance').addEventListener('click', function () {
-        config.fontSize = DEFAULTS.fontSize;
-        config.color = DEFAULTS.color;
-        config.backgroundColor = DEFAULTS.backgroundColor;
-        config.bgOpacity = DEFAULTS.bgOpacity;
-        config.bold = DEFAULTS.bold;
-        config.clockStyle = DEFAULTS.clockStyle;
-        config.fontFamily = DEFAULTS.fontFamily;
-        config.textShadow = DEFAULTS.textShadow;
-        config.borderColor = DEFAULTS.borderColor;
-        config.borderOpacity = DEFAULTS.borderOpacity;
-        config.borderWidth = DEFAULTS.borderWidth;
-        config.accentColor = DEFAULTS.accentColor;
-        config.clockLayout = DEFAULTS.clockLayout;
-        save();
-        fillForm();
-        applyToPreview();
-    });
+function initSaveCustomTheme() {
+    $('saveCustomTheme').addEventListener('click', saveCurrentAsCustomTheme);
 }
 
 // ---- 颜色色块 + Hex 输入 ----
@@ -316,42 +317,229 @@ function applyTheme(theme) {
     applyToPreview();
 }
 
-function buildThemeCards() {
-    var host = $('themeGrid');
-    THEMES.forEach(function (theme) {
-        var button = document.createElement('button');
-        var sample = document.createElement('span');
-        var copy = document.createElement('span');
-        var name = document.createElement('span');
-        var note = document.createElement('span');
+// 渲染主题小样：把主题外观键灌到一个 .theme-sample 节点里，让卡片预览
+// 与时钟真实渲染同源（都用 renderClockLayout）。preset 与 custom 共用。
+function paintThemeSample(sample, theme) {
+    sample.style.color = theme.color;
+    sample.style.backgroundColor = hexToRgba(theme.backgroundColor, theme.bgOpacity / 100);
+    sample.style.fontFamily = theme.fontFamily;
+    sample.style.fontWeight = theme.bold ? '700' : '400';
+    sample.style.textShadow = theme.textShadow;
+    sample.style.border = theme.borderWidth + 'px solid ' + hexToRgba(theme.borderColor, theme.borderOpacity / 100);
+    renderClockLayout(sample, '23:47:08', theme, 'clock');
+}
 
-        button.type = 'button';
-        button.className = 'theme-card';
-        button.dataset.themeId = theme.id;
-        button.setAttribute('aria-pressed', 'false');
-        button.setAttribute('aria-label', theme.name + '：' + theme.note);
+// 预制主题卡：<button>，整卡可点。结构和样式保持原样，不引入 actions。
+function buildPresetCard(theme) {
+    var button = document.createElement('button');
+    var sample = document.createElement('span');
+    var copy = document.createElement('span');
+    var name = document.createElement('span');
+    var note = document.createElement('span');
 
-        sample.className = 'theme-sample';
-        sample.style.color = theme.color;
-        sample.style.backgroundColor = hexToRgba(theme.backgroundColor, theme.bgOpacity / 100);
-        sample.style.fontFamily = theme.fontFamily;
-        sample.style.fontWeight = theme.bold ? '700' : '400';
-        sample.style.textShadow = theme.textShadow;
-        sample.style.border = theme.borderWidth + 'px solid ' + hexToRgba(theme.borderColor, theme.borderOpacity / 100);
-        renderClockLayout(sample, '23:47:08', theme, 'clock');
+    button.type = 'button';
+    button.className = 'theme-card';
+    button.dataset.themeId = theme.id;
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', theme.name + '：' + theme.note);
 
-        copy.className = 'theme-copy';
-        name.className = 'theme-name';
-        name.textContent = theme.name;
-        note.className = 'theme-note';
-        note.textContent = theme.note;
-        copy.appendChild(name);
-        copy.appendChild(note);
-        button.appendChild(sample);
-        button.appendChild(copy);
-        button.addEventListener('click', function () { applyTheme(theme); });
-        host.appendChild(button);
+    sample.className = 'theme-sample';
+    paintThemeSample(sample, theme);
+
+    copy.className = 'theme-copy';
+    name.className = 'theme-name';
+    name.textContent = theme.name;
+    note.className = 'theme-note';
+    note.textContent = theme.note;
+    copy.appendChild(name);
+    copy.appendChild(note);
+    button.appendChild(sample);
+    button.appendChild(copy);
+    button.addEventListener('click', function () { applyTheme(theme); });
+    return button;
+}
+
+// 自定义主题卡：外层 div（容纳内部 <button> actions 与可编辑名称），整卡点击
+// 等价于套用该主题；右上 ↻ 更新当前外观、× 删除；双击名称可重命名。
+function buildCustomCard(theme) {
+    var card = document.createElement('div');
+    var actions = document.createElement('span');
+    var updateBtn = document.createElement('button');
+    var deleteBtn = document.createElement('button');
+    var sample = document.createElement('span');
+    var copy = document.createElement('span');
+    var name = document.createElement('span');
+    var note = document.createElement('span');
+
+    card.className = 'theme-card theme-card-custom';
+    card.dataset.themeId = theme.id;
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-pressed', 'false');
+    // 名称里的连字符等不需要特意处理；副标题给个形态描述帮助区分多张自定义卡。
+    card.setAttribute('aria-label', theme.name + '：' + (LAYOUT_LABELS[theme.clockLayout] || '自定义主题'));
+
+    actions.className = 'theme-actions';
+    updateBtn.type = 'button';
+    updateBtn.className = 'theme-action theme-update';
+    updateBtn.title = '更新为当前外观';
+    updateBtn.setAttribute('aria-label', '更新“' + theme.name + '”为当前外观');
+    updateBtn.textContent = '↻';
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'theme-action theme-delete';
+    deleteBtn.title = '删除该自定义主题';
+    deleteBtn.setAttribute('aria-label', '删除“' + theme.name + '”');
+    deleteBtn.textContent = '×';
+    // 阻止冒泡到外层 div 触发 applyTheme，否则按 × 的同时会先把主题套上再删。
+    [updateBtn, deleteBtn].forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
     });
+    updateBtn.addEventListener('click', function () { updateCustomTheme(theme.id); });
+    deleteBtn.addEventListener('click', function () { deleteCustomTheme(theme.id); });
+    actions.appendChild(updateBtn);
+    actions.appendChild(deleteBtn);
+
+    sample.className = 'theme-sample';
+    paintThemeSample(sample, theme);
+
+    copy.className = 'theme-copy';
+    name.className = 'theme-name';
+    name.textContent = theme.name;
+    name.title = '双击重命名';
+    note.className = 'theme-note';
+    note.textContent = LAYOUT_LABELS[theme.clockLayout] || '自定义主题';
+    copy.appendChild(name);
+    copy.appendChild(note);
+
+    card.appendChild(actions);
+    card.appendChild(sample);
+    card.appendChild(copy);
+
+    card.addEventListener('click', function () { applyTheme(theme); });
+    // 键盘可达：Enter / Space 触发套用（与 <button> 默认行为对齐）。
+    card.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            applyTheme(theme);
+        }
+    });
+    name.addEventListener('dblclick', function (e) {
+        // 双击只重命名，不冒泡触发 applyTheme。
+        e.stopPropagation();
+        startRename(theme, name);
+    });
+    return card;
+}
+
+// 主题集合发生变化（首次渲染、保存、删除、重命名）时清空网格重建。
+// 预制主题在前、自定义主题在后，顺序稳定。
+function rebuildThemeGrid() {
+    var host = $('themeGrid');
+    host.replaceChildren();
+    THEMES.forEach(function (theme) { host.appendChild(buildPresetCard(theme)); });
+    customThemes.forEach(function (theme) { host.appendChild(buildCustomCard(theme)); });
+    updateThemeSelection();
+}
+
+// 扫描已有名称里的“自定义 N”，取最大编号 +1。已被重命名的卡不参与编号，
+// 避免覆盖用户的命名（不会出现“自定义 2”与“我的粉色”撞号）。
+function nextCustomName(themes) {
+    var max = 0;
+    themes.forEach(function (t) {
+        var m = /^自定义 (\d+)$/.exec(t.name || '');
+        if (m) {
+            var n = parseInt(m[1], 10);
+            if (n > max) max = n;
+        }
+    });
+    return '自定义 ' + (max + 1);
+}
+
+// 外观 fieldset 底部按钮：把当前外观 12 键打包成一张新自定义主题。
+// 位置/全屏/常驻不进主题；新卡立即激活。
+function saveCurrentAsCustomTheme() {
+    var theme = { id: 'custom_' + Date.now(), name: nextCustomName(customThemes) };
+    THEME_STYLE_KEYS.forEach(function (key) {
+        theme[key] = config[key];
+    });
+    customThemes.push(theme);
+    config.customThemes = customThemes;
+    config.clockStyle = theme.id;
+    // save() 写整个 config，已包含 customThemes；无需再单独 saveCustomThemes()。
+    save();
+    rebuildThemeGrid();
+}
+
+// 把当前外观 12 键覆盖回已有自定义主题。多用于：套用某张自定义卡后又微调，
+// 想把微调并入该卡。
+function updateCustomTheme(id) {
+    var theme = null;
+    for (var i = 0; i < customThemes.length; i++) {
+        if (customThemes[i].id === id) { theme = customThemes[i]; break; }
+    }
+    if (!theme) return;
+    THEME_STYLE_KEYS.forEach(function (key) {
+        theme[key] = config[key];
+    });
+    config.customThemes = customThemes;
+    // 当前外观与该主题已一致，标回该 id（如果之前是 custom 的话也借此激活）。
+    config.clockStyle = theme.id;
+    save();
+    rebuildThemeGrid();
+}
+
+// 删除自定义主题。删的是当前激活卡时回退到 custom（hint 会提示已保留手动调整）。
+function deleteCustomTheme(id) {
+    customThemes = customThemes.filter(function (t) { return t.id !== id; });
+    config.customThemes = customThemes;
+    if (config.clockStyle === id) {
+        config.clockStyle = 'custom';
+    }
+    save();
+    rebuildThemeGrid();
+}
+
+// 双击名称 → 原地换成 input；Enter/blur 提交、Esc 还原。空名视为取消。
+function startRename(theme, nameSpan) {
+    if (!nameSpan.parentNode) return;
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'theme-name-input';
+    input.value = theme.name;
+    input.maxLength = 20;
+    input.setAttribute('aria-label', '重命名“' + theme.name + '”');
+    nameSpan.parentNode.replaceChild(input, nameSpan);
+    input.focus();
+    input.select();
+
+    var done = false;
+    function commit() {
+        if (done) return;
+        done = true;
+        var v = (input.value || '').trim();
+        if (v && v !== theme.name) {
+            theme.name = v;
+            config.customThemes = customThemes;
+            // save() 写整个 config，已包含 customThemes；无需再单独 saveCustomThemes()。
+            save();
+        }
+        // 无论是否改名，rebuild 会用最新 name 重建卡片（input 被一并替换掉）。
+        rebuildThemeGrid();
+    }
+    function cancel() {
+        if (done) return;
+        done = true;
+        rebuildThemeGrid();
+    }
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+        else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    });
+    // 重命名期间禁用卡片点击套用（输入框吞掉鼠标事件，但仍保险）。
+    input.addEventListener('click', function (e) { e.stopPropagation(); });
 }
 
 function updateThemeSelection() {
@@ -418,7 +606,10 @@ function init() {
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
         migrateRemovedTheme(config, save);
-        buildThemeCards();
+        // DEFAULTS 已注入 customThemes: []，这里再防御一下老 storage 的脏值。
+        customThemes = Array.isArray(stored.customThemes) ? stored.customThemes : [];
+        config.customThemes = customThemes;
+        rebuildThemeGrid();
         buildSwatches('colorSwatches', TEXT_SWATCHES, 'color');
         buildSwatches('bgColorSwatches', BG_SWATCHES, 'backgroundColor');
         fillForm();
@@ -436,7 +627,7 @@ function init() {
     bindHexInput('bgColorHex', 'backgroundColor');
 
     initPositionPanel();
-    initAppearanceReset();
+    initSaveCustomTheme();
 
     setInterval(refreshPreviewText, 1000);
 }
