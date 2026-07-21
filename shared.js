@@ -39,7 +39,13 @@ var DEFAULTS = {
     // 用户在 popup 里保存的自定义主题列表；仅 popup 读写，内容脚本不消费。
     // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 12 个外观键。
     // id 形如 "custom_<timestamp>"，作为 clockStyle 标记当前激活的自定义主题。
-    customThemes: []
+    customThemes: [],
+    // 自定义 CSS：用户在 popup 里写的任意 CSS，通过 <style> 注入叠加到时钟节点上，
+    // 实现内置主题/外观键做不到的视觉效果（动画、阴影、渐变 等）。
+    // 不在 THEME_STYLE_KEYS 里，与主题解耦：切主题不动它，主题卡也不带它。
+    // customCssEnabled 关掉即不注入；空串视为未填写。
+    customCss: '',
+    customCssEnabled: false
 };
 
 // 已下线、不再有主题卡的旧主题 id。打开旧版本遗留的存储时需要回退到默认。

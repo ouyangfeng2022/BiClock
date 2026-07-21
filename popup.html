@@ -9,7 +9,7 @@
     <h1>BiClock 设置</h1>
 
     <div class="preview" id="preview">
-        <div class="preview-clock" id="previewClock">00:00:00</div>
+        <div class="preview-clock bpx-player-top-clock" id="previewClock">00:00:00</div>
     </div>
 
     <fieldset class="theme-fieldset">
@@ -123,6 +123,58 @@
                 </span>
             </span>
         </div>
+    </fieldset>
+
+    <fieldset>
+        <legend class="legend-tip">
+            自定义 CSS
+            <span class="help-tip" tabindex="0" role="button" aria-label="自定义 CSS 选择器速查">
+                <span class="help-icon" aria-hidden="true">?</span>
+                <span class="help-bubble">
+                    <span class="help-item">
+                        <span class="help-item-title">可用选择器</span>
+                        <span class="css-selector-list">
+                            <code>.bpx-player-top-clock</code>
+                            <code>.bpx-player-clock-single-time</code>
+                            <code>.bpx-player-clock-segment</code>
+                            <code>.bpx-player-clock-rec-dot</code>
+                            <code>.bpx-player-clock-rec-label</code>
+                            <code>.bpx-player-clock-rec-time</code>
+                            <code>.bpx-player-clock-corner-left</code>
+                            <code>.bpx-player-clock-corner-right</code>
+                            <code>.bpx-player-clock-corner-time</code>
+                            <code>.bpx-player-clock-analog-dial</code>
+                            <code>.bpx-player-clock-analog-tick</code>
+                            <code>.bpx-player-clock-analog-marker</code>
+                            <code>.bpx-player-clock-analog-hand</code>
+                            <code>.bpx-player-clock-analog-pin</code>
+                            <code>.bpx-player-clock-flip-card</code>
+                            <code>.bpx-player-clock-hud-tag</code>
+                            <code>.bpx-player-clock-hud-time</code>
+                            <code>.bpx-player-clock-calendar-header</code>
+                            <code>.bpx-player-clock-calendar-time</code>
+                        </span>
+                    </span>
+                    <span class="help-item">
+                        <span class="help-item-title">提示</span>
+                        <span class="help-item-text">内置样式是 inline style，覆盖请加 <code>!important</code>。</span>
+                    </span>
+                </span>
+            </span>
+        </legend>
+
+        <div class="toggle-line">
+            <span class="toggle-line-text">启用</span>
+            <span class="toggle">
+                <input type="checkbox" id="customCssEnabled">
+                <span class="toggle-track" aria-hidden="true">
+                    <span class="toggle-thumb"></span>
+                </span>
+            </span>
+        </div>
+
+        <textarea id="customCss" class="css-input" rows="6" spellcheck="false"
+                  placeholder=".bpx-player-top-clock {&#10;  animation: pulse 2s infinite;&#10;}&#10;@keyframes pulse {&#10;  50% { opacity: .5; }&#10;}"></textarea>
     </fieldset>
 
     <fieldset>

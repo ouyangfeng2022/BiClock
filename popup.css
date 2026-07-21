@@ -824,6 +824,70 @@ input[type="number"]:disabled {
 }
 
 /* ============================================================
+   Textarea：自定义 CSS 输入。复用 input 的边框/聚焦语汇，等宽字体。
+   ============================================================ */
+textarea.css-input {
+    display: block;
+    width: 100%;
+    min-height: 110px;
+    margin-top: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11.5px;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
+}
+
+textarea.css-input:hover {
+    border-color: var(--border-hi);
+}
+
+textarea.css-input:focus-visible {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--ring);
+}
+
+textarea.css-input::placeholder {
+    color: var(--ink-unit);
+    font-style: italic;
+}
+
+/* CSS 选择器速查气泡内的 code 列表：紧凑双列、等宽、可换行 */
+.css-selector-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    margin-top: 4px;
+}
+
+.css-selector-list code {
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--surface-2);
+    color: var(--pink-hi);
+    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10.5px;
+    line-height: 1.5;
+    word-break: break-all;
+}
+
+/* 气泡内提示项的行内 code 样式（与速查列表区分） */
+.help-item-text code {
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: var(--surface-2);
+    color: var(--pink-hi);
+    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10.5px;
+}
+
+/* ============================================================
    Range：label + 数值在上 / 整条滑条在下，更舒展
    粉色已填充段 + 中性拖把 + hover/focus/active
    ============================================================ */

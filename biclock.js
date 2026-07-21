@@ -12,6 +12,13 @@ clock.style.position = 'absolute';
 clock.style.zIndex = '9999';
 clock.style.userSelect = 'none';
 
+// 用户自定义 CSS 通过 <style> 注入：textContent 随 config 重写。
+// 挂到 document.documentElement（不挂 head：内容脚本运行时 head 可能尚未就绪，
+// documentElement 一定在）。节点只创建一次，反复更新 textContent。
+var customCssStyle = document.createElement('style');
+customCssStyle.id = 'biclock-custom-css';
+document.documentElement.appendChild(customCssStyle);
+
 var timer = null;
 
 
@@ -48,6 +55,16 @@ function applyStyles() {
     // posX=0 → 不偏移（左贴左），posX=1 → 偏移整身宽（右贴右），
     // 0.5 → 偏移半身（居中）。不测量像素，让 posY=0 能真正贴顶。
     clock.style.transform = 'translate(' + (config.posX * -100) + '%, ' + (config.posY * -100) + '%)';
+    // 用户自定义 CSS：disabled 或空串时清空（不删节点，避免反复创建）。
+    applyCustomCss();
+}
+
+// 把 config.customCss 同步到 <style> 节点。
+// 用户写的 CSS 作用域是整个 B 站页面，但选择器前缀 .bpx-player-top-clock /
+// .bpx-player-clock-* 只有时钟节点匹配；用户用 !important 才能覆盖 inline style。
+function applyCustomCss() {
+    customCssStyle.textContent =
+        config.customCssEnabled && config.customCss ? config.customCss : '';
 }
 
 

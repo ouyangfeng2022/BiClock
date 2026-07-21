@@ -126,10 +126,22 @@ function applyToPreview() {
     // 这样大字号下预览条会自然撑高，不会被 overflow: hidden 裁掉。
     // 自定义位置由用户在下方"位置"面板里设置。
     refreshPreviewText();
+    // 用户 CSS 在布局文本之后注入，让选择器在预览里也能命中。
+    applyPreviewCustomCss();
 }
 
 function refreshPreviewText() {
-    renderClockLayout($('previewClock'), formatTime(new Date()), config, 'clock');
+    // 用与内容脚本一致的 prefix：preview clock 自身带 .bpx-player-top-clock，
+    // 子元素用 .bpx-player-clock-* —— 这样用户写的选择器在预览与播放器里同源。
+    renderClockLayout($('previewClock'), formatTime(new Date()), config, 'bpx-player-clock');
+}
+
+// 用户 CSS 注入：与 biclock.js 同源，挂一个 <style> 节点到 document.head，
+// textContent 随当前 config 重写。disabled 或空串时清空（不删节点，避免反复创建）。
+function applyPreviewCustomCss() {
+    var style = document.getElementById('preview-custom-css');
+    if (!style) return;
+    style.textContent = config.customCssEnabled && config.customCss ? config.customCss : '';
 }
 
 function save() {
@@ -149,6 +161,9 @@ function readFromForm() {
     config.bold = $('bold').checked;
     config.fullscreenOnly = $('fullscreenOnly').checked;
     config.alwaysShow = $('modeAlways').checked;
+    // customCssEnabled 是 toggle，沿用 onInput 路径，故也由 readFromForm 读回。
+    // customCss（textarea）由专用 input 绑定直接写 config，不经 readFromForm。
+    config.customCssEnabled = $('customCssEnabled').checked;
 }
 
 // 把当前 backgroundColor + bgOpacity 写入透明度滑条的 --clock-bg，
@@ -175,6 +190,10 @@ function fillForm() {
     $('fullscreenOnly').checked = config.fullscreenOnly !== false;
     // 常驻显示：单个 checkbox，checked = 常驻（alwaysShow=true）。
     $('modeAlways').checked = !!config.alwaysShow;
+    // 自定义 CSS：textarea 文本 + 启用 toggle。不走 onInput（textarea 由专用绑定处理），
+    // 但 customCssEnabled 走 onInput 通用路径，这里仅回填值。
+    $('customCss').value = config.customCss || '';
+    $('customCssEnabled').checked = !!config.customCssEnabled;
     // 根据当前值高亮匹配的色块；非色盘内的自定义色全部不高亮。
     updateSwatchSelection();
     updateThemeSelection();
@@ -618,13 +637,25 @@ function init() {
     });
 
     // 颜色字段改由 bindHexInput 单独处理（含校验逻辑），其余字段走统一的 onInput。
-    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways'];
+    // customCssEnabled 是 toggle，沿用 onInput；textarea 下方单独绑定（不应改 clockStyle）。
+    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'customCssEnabled'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);
     });
     bindHexInput('colorHex', 'color');
     bindHexInput('bgColorHex', 'backgroundColor');
+
+    // 预创建 <style> 用于注入用户 CSS 到 popup 预览。挂到 head 即可。
+    var previewStyle = document.createElement('style');
+    previewStyle.id = 'preview-custom-css';
+    document.head.appendChild(previewStyle);
+    // 自定义 CSS textarea：实时落盘 + 刷新预览，但不改 clockStyle（CSS 与主题解耦）。
+    $('customCss').addEventListener('input', function () {
+        config.customCss = $('customCss').value;
+        applyToPreview();
+        save();
+    });
 
     initPositionPanel();
     initSaveCustomTheme();
