@@ -50,7 +50,7 @@ body {
     width: 296px;
     margin: 0;
     padding: 14px 14px 14px;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
     font-size: 13px;
     line-height: 1.45;
     color: var(--ink);
@@ -398,15 +398,22 @@ label:last-child { margin-bottom: 0; }
     bottom: calc(100% + 8px);
     left: 0;
     transform: translateY(4px);
-    width: 240px;
-    padding: 8px 10px;
+    width: 248px;
+    padding: 10px 12px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius);
     background: var(--surface);
-    box-shadow: 0 4px 14px oklch(0% 0 0 / 14%);
+    /* 双层阴影：近处锐利 + 远处弥散，比单层更有浮空感 */
+    box-shadow:
+        0 1px 3px oklch(0% 0 0 / 7%),
+        0 6px 20px oklch(0% 0 0 / 12%);
     color: var(--ink-2);
-    font-size: 11.5px;
-    line-height: 1.5;
+    /* YaHei UI 放在 system-ui 之前：避免 Windows DirectWrite 的字体回退表
+       绕过 CSS 把中文落到普通（更糊的）YaHei 或 SimSun。
+       11.5px 下 UI 版的 hinting 明显比普通版利落。 */
+    font-family: "Microsoft YaHei UI", "PingFang SC", "Source Han Sans SC", "Noto Sans SC", system-ui, sans-serif;
+    font-size: 12px;
+    line-height: 1.55;
     text-align: left;
     white-space: normal;
     pointer-events: none;
@@ -426,6 +433,71 @@ label:last-child { margin-bottom: 0; }
     border: 5px solid transparent;
     border-top-color: var(--surface);
     margin-top: -1px;
+}
+
+.help-item {
+    display: block;
+}
+
+/* 气泡内每个开关项独立成块：标题 + 开/关两行，便于扫读 */
+.help-item + .help-item {
+    margin-top: 9px;
+    padding-top: 9px;
+    border-top: 1px solid var(--border-hi);
+}
+
+.help-item-title {
+    display: block;
+    margin-bottom: 4px;
+    padding-left: 8px;
+    border-left: 2.5px solid var(--pink);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--pink-hi);
+    letter-spacing: 0.01em;
+}
+
+.help-item-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.help-item-line + .help-item-line {
+    margin-top: 4px;
+}
+
+/* "开/关"做成中性 chip：浅灰底 + 圆角，跟描述明显分开但不带情感色。
+   选中态仍由整行 opacity 控制（见下），chip 本身不染色。 */
+.help-tag {
+    flex: none;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--surface-3);
+    color: var(--ink-2);
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+}
+
+/* 未选中的那档整行调淡，让"当前生效的那档"一眼可辨 */
+.help-item-line[data-state] {
+    transition: opacity 0.14s var(--ease);
+}
+
+.help-item[data-help-key] .help-item-line:not([data-active]) {
+    opacity: 0.42;
+}
+
+/* 当前生效那档：文字加深，强化"这是我现在的选择" */
+.help-item[data-help-key] .help-item-line[data-active] .help-item-text {
+    color: var(--ink);
+}
+
+.help-item-text {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .help-tip:hover .help-bubble,

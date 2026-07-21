@@ -78,8 +78,28 @@
             <span class="help-tip" tabindex="0" role="button" aria-label="显示设置说明">
                 <span class="help-icon" aria-hidden="true">?</span>
                 <span class="help-bubble">
-                    <b>仅全屏显示</b>：开 = 只在浏览器全屏（F11）下显示（默认，避免被 B 站/浏览器原生视频工具栏遮挡）；关 = 普通播放、宽屏、网页全屏也都显示。<br>
-                    <b>常驻显示</b>：关 = 控件可见时才显示（鼠标触发）；开 = 在上方选定的范围内一直显示，不随控制条自动隐藏。
+                    <span class="help-item" data-help-key="fullscreenOnly">
+                        <span class="help-item-title">仅全屏显示</span>
+                        <span class="help-item-line" data-state="on">
+                            <span class="help-tag">开</span>
+                            <span class="help-item-text">仅在全屏播放下显示</span>
+                        </span>
+                        <span class="help-item-line" data-state="off">
+                            <span class="help-tag">关</span>
+                            <span class="help-item-text">页面存在视频窗口即显示</span>
+                        </span>
+                    </span>
+                    <span class="help-item" data-help-key="alwaysShow">
+                        <span class="help-item-title">常驻显示</span>
+                        <span class="help-item-line" data-state="on">
+                            <span class="help-tag">开</span>
+                            <span class="help-item-text">始终显示</span>
+                        </span>
+                        <span class="help-item-line" data-state="off">
+                            <span class="help-tag">关</span>
+                            <span class="help-item-text">随进度条隐藏</span>
+                        </span>
+                    </span>
                 </span>
             </span>
         </legend>

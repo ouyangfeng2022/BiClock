@@ -160,6 +160,7 @@ function fillForm() {
     // 根据当前值高亮匹配的色块；非色盘内的自定义色全部不高亮。
     updateSwatchSelection();
     updateThemeSelection();
+    updateHelpActiveStates();
 }
 
 function onInput(event) {
@@ -174,6 +175,7 @@ function onInput(event) {
     save();
     updateSwatchSelection();
     updateThemeSelection();
+    updateHelpActiveStates();
 }
 
 // ---- 位置面板 ----
@@ -361,6 +363,28 @@ function updateThemeSelection() {
     hint.textContent = activeId === 'custom'
         ? '自定义：已保留手动调整的外观。'
         : '选择主题会保留你的位置与显示设置。';
+}
+
+// 同步"显示"气泡里每个开关项的当前态：选中档加 data-active 满色，
+// 另一档调淡。fullscreenOnly 与表单一致用 !== false（默认 true），
+// alwaysShow 用 !!（默认 false）。
+function updateHelpActiveStates() {
+    var map = [
+        { key: 'fullscreenOnly', on: config.fullscreenOnly !== false },
+        { key: 'alwaysShow',     on: !!config.alwaysShow }
+    ];
+    map.forEach(function (m) {
+        var item = document.querySelector('.help-item[data-help-key="' + m.key + '"]');
+        if (!item) return;
+        item.querySelectorAll('.help-item-line').forEach(function (line) {
+            var isOn = line.getAttribute('data-state') === 'on';
+            if (isOn === m.on) {
+                line.setAttribute('data-active', '');
+            } else {
+                line.removeAttribute('data-active');
+            }
+        });
+    });
 }
 
 // Hex 输入：input 事件即时校验，合法归一化保存 + 刷新预览，不合法仅标红不落盘。
