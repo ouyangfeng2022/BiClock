@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>BiClock · 设置</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+    <header class="options-header">
+        <h1>⏰ BiClock <span class="options-sub">设置</span></h1>
+        <a class="github-link" href="https://github.com/ouyangfeng2022/BiClock" target="_blank" rel="noopener">
+            在 GitHub 上查看 <span aria-hidden="true">↗</span>
+        </a>
+    </header>
+
+    <section class="preview-banner" aria-label="时钟预览">
+        <div class="preview-clock bpx-player-top-clock" id="previewClock">00:00:00</div>
+    </section>
+
+    <main class="options-main">
+        <fieldset class="theme-fieldset">
+            <legend>主题</legend>
+            <p class="section-intro">点击应用主题。位置与显示设置不会被主题覆盖。双击自定义主题名称可重命名。</p>
+            <div class="theme-grid" id="themeGrid" role="group" aria-label="时钟主题"></div>
+            <p class="theme-hint" id="themeHint">选择主题会保留你的位置与显示设置。</p>
+            <button type="button" id="saveCustomTheme" class="reset-btn">保存当前外观为自定义主题</button>
+        </fieldset>
+
+        <fieldset>
+            <legend>外观</legend>
+
+            <div class="grid-2">
+                <label class="field field-number">
+                    <span class="field-label">字体大小</span>
+                    <span class="input-unit">
+                        <input type="number" id="fontSize" min="8" max="120" step="1">
+                        <span class="unit">px</span>
+                    </span>
+                </label>
+
+                <div class="field field-toggle">
+                    <span class="field-label">粗体</span>
+                    <span class="toggle">
+                        <input type="checkbox" id="bold">
+                        <span class="toggle-track" aria-hidden="true">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="field field-color">
+                <span class="field-label">文字颜色</span>
+                <div class="color-row">
+                    <div class="swatches" id="colorSwatches" role="group" aria-label="文字颜色色块"></div>
+                    <input type="text" id="colorHex" class="hex-input"
+                           maxlength="7" spellcheck="false" placeholder="#ffffff"
+                           aria-label="文字颜色 Hex 值" aria-invalid="false">
+                </div>
+            </div>
+
+            <div class="field field-color">
+                <span class="field-label">背景颜色</span>
+                <div class="color-row">
+                    <div class="swatches" id="bgColorSwatches" role="group" aria-label="背景颜色色块"></div>
+                    <input type="text" id="bgColorHex" class="hex-input"
+                           maxlength="7" spellcheck="false" placeholder="#fb7299"
+                           aria-label="背景颜色 Hex 值" aria-invalid="false">
+                </div>
+            </div>
+
+            <label class="row-stacked">
+                <span class="row-head">
+                    透明度
+                    <span class="unit value-display" id="bgOpacityValue">100%</span>
+                </span>
+                <input type="range" id="bgOpacity" class="opacity-range" min="0" max="100" step="1">
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <legend class="legend-tip">
+                显示
+                <span class="help-tip" tabindex="0" role="button" aria-label="显示设置说明">
+                    <span class="help-icon" aria-hidden="true">?</span>
+                    <span class="help-bubble">
+                        <span class="help-item" data-help-key="fullscreenOnly">
+                            <span class="help-item-title">仅全屏显示</span>
+                            <span class="help-item-line" data-state="on">
+                                <span class="help-tag">开</span>
+                                <span class="help-item-text">仅在全屏播放下显示</span>
+                            </span>
+                            <span class="help-item-line" data-state="off">
+                                <span class="help-tag">关</span>
+                                <span class="help-item-text">页面存在视频窗口即显示</span>
+                            </span>
+                        </span>
+                        <span class="help-item" data-help-key="alwaysShow">
+                            <span class="help-item-title">常驻显示</span>
+                            <span class="help-item-line" data-state="on">
+                                <span class="help-tag">开</span>
+                                <span class="help-item-text">始终显示</span>
+                            </span>
+                            <span class="help-item-line" data-state="off">
+                                <span class="help-tag">关</span>
+                                <span class="help-item-text">随进度条隐藏</span>
+                            </span>
+                        </span>
+                    </span>
+                </span>
+            </legend>
+
+            <div class="toggle-line">
+                <span class="toggle-line-text">仅全屏显示</span>
+                <span class="toggle">
+                    <input type="checkbox" id="fullscreenOnly">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </div>
+
+            <div class="toggle-line">
+                <span class="toggle-line-text">常驻显示</span>
+                <span class="toggle">
+                    <input type="checkbox" id="modeAlways">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>位置</legend>
+            <p class="section-intro">在面板里拖动 ⏰ 设定时钟在播放器画面内的位置。坐标按比例存储，适配任意分辨率。</p>
+            <div class="position-panel" id="positionPanel">
+                <div class="position-marker" id="positionMarker">⏰</div>
+            </div>
+            <button type="button" id="resetPosition" class="reset-btn">重置为居中</button>
+        </fieldset>
+
+        <fieldset class="css-fieldset">
+            <legend>自定义 CSS</legend>
+            <p class="section-intro">
+                自定义 CSS 叠加在当前主题之上，通过 <code>&lt;style&gt;</code> 注入到 Bilibili 页面。
+                它与主题<strong>解耦</strong>：切换或删除主题都不会改动它。
+            </p>
+
+            <div class="toggle-line">
+                <span class="toggle-line-text">启用</span>
+                <span class="toggle">
+                    <input type="checkbox" id="customCssEnabled">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </div>
+
+            <textarea id="customCss" class="css-input" rows="8" spellcheck="false"
+                      placeholder=".bpx-player-top-clock {&#10;  animation: pulse 2s infinite;&#10;}&#10;@keyframes pulse {&#10;  50% { opacity: .5; }&#10;}"></textarea>
+
+            <section class="docs">
+                <h2>自定义 CSS 说明</h2>
+                <p>
+                    时钟节点带 <code>bpx-player-top-clock</code> 类，子元素按布局形态命名为
+                    <code>bpx-player-clock-*</code>。以下选择器覆盖所有内置布局形态。
+                </p>
+
+                <div class="docs-callout docs-callout-warn">
+                    <strong>必须用 <code>!important</code>。</strong>
+                    内置样式是 inline style（<code>style="…"</code>），优先级高于普通 CSS 规则。
+                    要覆盖字号、颜色、透明度、动画等 inline 属性，必须加 <code>!important</code>，否则不会生效。
+                </div>
+
+                <h3>可用选择器</h3>
+                <div class="docs-selector-grid">
+                    <div class="docs-selector-row"><code>.bpx-player-top-clock</code><span>时钟容器（所有布局都有）</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-single-time</code><span>基础数字 / 胶囊布局的数字</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-segment</code><span>分舱数码的每一段数字舱</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-rec-dot</code><span>录像时间码的红点</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-rec-label</code><span>录像时间码的 "REC" 字样</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-rec-time</code><span>录像时间码的时间数字</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-corner-left</code><span>边角框的左侧框</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-corner-right</code><span>边角框的右侧框</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-corner-time</code><span>边角框中间的时间数字</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-dial</code><span>指针表盘的圆盘</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-tick</code><span>指针表盘的刻度</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-marker</code><span>指针表盘的 12/3/6/9 数字</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-hand</code><span>指针表盘的指针（共 3 根）</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-pin</code><span>指针表盘的中心轴</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-flip-card</code><span>翻页时钟的每一格翻牌</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-hud-tag</code><span>科幻 HUD 的 "TIME" 标签</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-hud-time</code><span>科幻 HUD 的时间数字</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-calendar-header</code><span>日历桌牌的日期条</span></div>
+                    <div class="docs-selector-row"><code>.bpx-player-clock-calendar-time</code><span>日历桌牌的时间数字</span></div>
+                </div>
+
+                <h3>示例</h3>
+                <p class="docs-hint">点击「复制」可直接粘贴到上面的输入框试用。</p>
+
+                <div class="docs-card">
+                    <div class="docs-card-head">
+                        <span class="docs-card-title">脉冲呼吸动画</span>
+                        <button type="button" class="copy-btn" data-copy="pulse">复制</button>
+                    </div>
+                    <pre class="docs-code" id="code-pulse"><code>@keyframes biclock-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+.bpx-player-top-clock {
+  animation: biclock-pulse 2s ease-in-out infinite !important;
+}</code></pre>
+                </div>
+
+                <div class="docs-card">
+                    <div class="docs-card-head">
+                        <span class="docs-card-title">霓虹光晕（青色）</span>
+                        <button type="button" class="copy-btn" data-copy="neon">复制</button>
+                    </div>
+                    <pre class="docs-code" id="code-neon"><code>.bpx-player-top-clock {
+  text-shadow:
+    0 0 0.18em rgba(94, 234, 212, 0.9),
+    0 0 0.42em rgba(94, 234, 212, 0.6) !important;
+}</code></pre>
+                </div>
+
+                <div class="docs-card">
+                    <div class="docs-card-head">
+                        <span class="docs-card-title">隐藏录像时间码的红点</span>
+                        <button type="button" class="copy-btn" data-copy="hide-dot">复制</button>
+                    </div>
+                    <pre class="docs-code" id="code-hide-dot"><code>.bpx-player-clock-rec-dot {
+  display: none !important;
+}</code></pre>
+                </div>
+
+                <div class="docs-card">
+                    <div class="docs-card-head">
+                        <span class="docs-card-title">更换数字字体</span>
+                        <button type="button" class="copy-btn" data-copy="font">复制</button>
+                    </div>
+                    <pre class="docs-code" id="code-font"><code>.bpx-player-top-clock {
+  font-family: "DSEG7 Classic", ui-monospace, monospace !important;
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="css-save-block">
+                <p class="css-save-note">
+                    自定义 CSS 文本<strong>已自动保存</strong>，且与主题解耦 —— 切换或删除主题都不会丢失它。
+                    若想把当前的外观（含上面的 CSS 之外的 12 个外观键）存成一张可随时切换的主题卡：
+                </p>
+                <button type="button" id="saveCustomThemeCss" class="reset-btn">保存当前外观为自定义主题</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="about-fieldset">
+            <legend>关于</legend>
+            <p class="about-desc">
+                BiClock 是一个轻量的 Manifest V3 浏览器扩展，在 Bilibili 视频播放器顶部叠加显示当前时间。
+                纯原生 JS，零依赖、零构建，同一套代码同时支持 Chrome / Edge / Firefox。
+            </p>
+            <ul class="about-links">
+                <li><a href="https://github.com/ouyangfeng2022/BiClock" target="_blank" rel="noopener">📦 源代码仓库</a></li>
+                <li><a href="https://github.com/ouyangfeng2022/BiClock/issues" target="_blank" rel="noopener">🐛 反馈问题 / 提建议</a></li>
+                <li><a href="https://github.com/ouyangfeng2022/BiClock#readme" target="_blank" rel="noopener">📖 使用文档</a></li>
+            </ul>
+            <p class="about-meta">版本 <span id="versionTag">3.2</span> · MIT License · 用 ❤️ 制作</p>
+        </fieldset>
+    </main>
+
+    <script src="shared.js"></script>
+    <script src="options.js"></script>
+</body>
+</html>

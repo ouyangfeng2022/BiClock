@@ -2,21 +2,20 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>BiClock 设置</title>
+    <title>BiClock</title>
     <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-    <h1>BiClock 设置</h1>
+    <header class="popup-header">
+        <h1>BiClock</h1>
+        <button type="button" id="openOptions" class="options-btn" title="打开完整设置页面">
+            <span aria-hidden="true">⚙</span> 更多设置
+        </button>
+    </header>
 
     <div class="preview" id="preview">
         <div class="preview-clock bpx-player-top-clock" id="previewClock">00:00:00</div>
     </div>
-
-    <fieldset class="theme-fieldset">
-        <legend>主题</legend>
-        <div class="theme-grid" id="themeGrid" role="group" aria-label="时钟主题"></div>
-        <p class="theme-hint" id="themeHint">选择主题会保留你的位置与显示设置。</p>
-    </fieldset>
 
     <fieldset>
         <legend>外观</legend>
@@ -68,8 +67,6 @@
             </span>
             <input type="range" id="bgOpacity" class="opacity-range" min="0" max="100" step="1">
         </label>
-
-        <button type="button" id="saveCustomTheme" class="reset-btn">保存为自定义主题</button>
     </fieldset>
 
     <fieldset>
@@ -125,67 +122,9 @@
         </div>
     </fieldset>
 
-    <fieldset>
-        <legend class="legend-tip">
-            自定义 CSS
-            <span class="help-tip" tabindex="0" role="button" aria-label="自定义 CSS 选择器速查">
-                <span class="help-icon" aria-hidden="true">?</span>
-                <span class="help-bubble">
-                    <span class="help-item">
-                        <span class="help-item-title">可用选择器</span>
-                        <span class="css-selector-list">
-                            <code>.bpx-player-top-clock</code>
-                            <code>.bpx-player-clock-single-time</code>
-                            <code>.bpx-player-clock-segment</code>
-                            <code>.bpx-player-clock-rec-dot</code>
-                            <code>.bpx-player-clock-rec-label</code>
-                            <code>.bpx-player-clock-rec-time</code>
-                            <code>.bpx-player-clock-corner-left</code>
-                            <code>.bpx-player-clock-corner-right</code>
-                            <code>.bpx-player-clock-corner-time</code>
-                            <code>.bpx-player-clock-analog-dial</code>
-                            <code>.bpx-player-clock-analog-tick</code>
-                            <code>.bpx-player-clock-analog-marker</code>
-                            <code>.bpx-player-clock-analog-hand</code>
-                            <code>.bpx-player-clock-analog-pin</code>
-                            <code>.bpx-player-clock-flip-card</code>
-                            <code>.bpx-player-clock-hud-tag</code>
-                            <code>.bpx-player-clock-hud-time</code>
-                            <code>.bpx-player-clock-calendar-header</code>
-                            <code>.bpx-player-clock-calendar-time</code>
-                        </span>
-                    </span>
-                    <span class="help-item">
-                        <span class="help-item-title">提示</span>
-                        <span class="help-item-text">内置样式是 inline style，覆盖请加 <code>!important</code>。</span>
-                    </span>
-                </span>
-            </span>
-        </legend>
-
-        <div class="toggle-line">
-            <span class="toggle-line-text">启用</span>
-            <span class="toggle">
-                <input type="checkbox" id="customCssEnabled">
-                <span class="toggle-track" aria-hidden="true">
-                    <span class="toggle-thumb"></span>
-                </span>
-            </span>
-        </div>
-
-        <textarea id="customCss" class="css-input" rows="6" spellcheck="false"
-                  placeholder=".bpx-player-top-clock {&#10;  animation: pulse 2s infinite;&#10;}&#10;@keyframes pulse {&#10;  50% { opacity: .5; }&#10;}"></textarea>
-    </fieldset>
-
-    <fieldset>
-        <legend>位置</legend>
-
-        <div class="position-panel" id="positionPanel">
-            <div class="position-marker" id="positionMarker">⏰</div>
-        </div>
-
-        <button type="button" id="resetPosition" class="reset-btn">重置为居中</button>
-    </fieldset>
+    <p class="more-hint">
+        预制主题、位置、自定义 CSS 等更多设置请打开<a href="#" id="openOptionsLink" role="button">更多设置 ↗</a>。
+    </p>
 
     <script src="shared.js"></script>
     <script src="popup.js"></script>

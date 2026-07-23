@@ -37,7 +37,7 @@
 
     --ring: 0 0 0 3px var(--pink-soft);
 
-    /* 预览 / 位置面板的暗画面 */
+    /* 预览的暗画面 */
     --player-bg:   oklch(17.0% 0.005 350);
 
     --radius:    8px;
@@ -60,51 +60,76 @@ body {
 }
 
 /* ============================================================
-   Header：图标 + 标题，单行，给一点品牌识别
+   Header：标题 + 「更多设置」按钮，单行
    ============================================================ */
-h1 {
+.popup-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
+    margin: 0 0 12px;
+}
+
+h1 {
+    margin: 0;
     font-size: 15px;
     font-weight: 600;
     letter-spacing: 0.01em;
-    margin: 0 0 12px;
     color: var(--ink);
 }
 
-h1::before {
-    content: "⏰";
-    font-size: 16px;
-    line-height: 1;
-    /* 用 accent 稍稍染色，呼应 popup 主题；不过饱和 */
-    filter: hue-rotate(-8deg) saturate(0.9);
+.options-btn {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 9px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: border-color 0.14s var(--ease),
+                color 0.14s var(--ease),
+                background 0.14s var(--ease);
+}
+
+.options-btn:hover {
+    border-color: var(--pink);
+    color: var(--pink-hi);
+    background: var(--pink-soft);
+}
+
+.options-btn:active {
+    background: var(--surface-2);
+}
+
+.options-btn:focus-visible {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--ring);
 }
 
 /* ============================================================
    预览：顶部窄条，始终可见，不抢垂直空间
-   sticky 让它在 popup 滚动时吸住顶部，便于调整下方控件（透明度、
-   位置等）时仍能看到效果。
+   sticky 让它在 popup 滚动时吸住顶部，便于调整下方控件（透明度等）
+   时仍能看到效果。
    ============================================================ */
 .preview {
     position: sticky;
-    /* top 决定吸顶位置：吸顶后距 popup 顶端 6px，四周都留呼吸空间。 */
     top: 6px;
     margin-bottom: 14px;
     min-height: 44px;
     padding: 8px 14px;
-    /* 圆角卡片：不再铺满 popup 宽度，让它像一块浮起的预览卡。 */
     border-radius: var(--radius);
-    /* 半透明背景：透出下方滚动内容的轮廓，避免吸顶时一块纯色堵死的突兀感；
-       时钟节点自带 backgroundColor（见 popup.js），仍清晰可见。 */
     background: oklch(98.8% 0.003 350 / 88%);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     z-index: 5;
-    /* 抬升感：细描边 + 轻阴影，区分于下方滚动内容。 */
     box-shadow: inset 0 0 0 1px var(--border),
                 0 2px 8px oklch(0% 0 0 / 8%);
-    /* 用 flex 居中让预览内容随字号自然撑高，不再 overflow: hidden 裁切。 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -117,191 +142,6 @@ h1::before {
 }
 
 /* ============================================================
-   主题：用真实时钟小样组成紧凑的选择卡，而非抽象色块。
-   ============================================================ */
-.theme-fieldset {
-    margin-top: 0;
-}
-
-.theme-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
-}
-
-.theme-card {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 5px;
-    min-width: 0;
-    padding: 7px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--ink);
-    text-align: left;
-    font: inherit;
-    cursor: pointer;
-    transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease), transform 0.14s var(--ease);
-}
-
-.theme-card:hover {
-    border-color: var(--border-hi);
-    transform: translateY(-1px);
-}
-
-.theme-card:focus-visible {
-    outline: none;
-    border-color: var(--pink);
-    box-shadow: var(--ring);
-}
-
-.theme-card[aria-pressed="true"] {
-    border-color: var(--pink);
-    box-shadow: var(--ring);
-}
-
-/* ---- 自定义主题卡：相对定位承载右上角 actions；卡片本身是 div 而非 button，
-   所以补齐 :hover 边框抬升、focus-visible ring、aria-pressed 选中态。 ---- */
-.theme-card-custom {
-    position: relative;
-}
-
-.theme-card-custom:hover {
-    border-color: var(--border-hi);
-    transform: translateY(-1px);
-}
-
-.theme-card-custom:focus-visible {
-    outline: none;
-    border-color: var(--pink);
-    box-shadow: var(--ring);
-}
-
-.theme-card-custom[aria-pressed="true"] {
-    border-color: var(--pink);
-    box-shadow: var(--ring);
-}
-
-/* 右上角操作组：↻ 更新、× 删除。平时淡出，hover/focus-within 时显形，
-   避免抢走小样预览的视觉焦点。 */
-.theme-actions {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    display: flex;
-    gap: 3px;
-    opacity: 0.55;
-    transition: opacity 0.14s var(--ease);
-    z-index: 1;
-}
-
-.theme-card-custom:hover .theme-actions,
-.theme-card-custom:focus-within .theme-actions {
-    opacity: 1;
-}
-
-.theme-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    background: oklch(100% 0 0 / 88%);
-    color: var(--ink-2);
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-    transition: border-color 0.14s var(--ease),
-                color 0.14s var(--ease),
-                background 0.14s var(--ease);
-}
-
-.theme-action:hover {
-    border-color: var(--pink);
-    color: var(--pink-hi);
-    background: var(--surface);
-}
-
-.theme-action:focus-visible {
-    outline: none;
-    border-color: var(--pink);
-    box-shadow: var(--ring);
-}
-
-/* 删除按钮 hover 转红，复用 Hex 非法值的红（语义一致：警示） */
-.theme-action.theme-delete:hover {
-    border-color: oklch(58% 0.2 25);
-    color: oklch(48% 0.21 25);
-}
-
-/* 自定义卡名称：双击重命名入口；hover 提示可编辑；长名省略号收尾 */
-.theme-card-custom .theme-name {
-    cursor: text;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* 原地重命名输入框：与 .theme-name 同字号字重，避免替换时高度跳变 */
-.theme-name-input {
-    width: 100%;
-    height: 18px;
-    padding: 0 4px;
-    border: 1px solid var(--pink);
-    border-radius: 3px;
-    background: var(--surface);
-    color: var(--ink);
-    font: inherit;
-    font-size: 11.5px;
-    font-weight: 600;
-    box-shadow: var(--ring);
-}
-
-.theme-name-input:focus {
-    outline: none;
-}
-
-.theme-sample {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 28px;
-    border-radius: 5px;
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
-.theme-copy {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-}
-
-.theme-name {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.theme-note,
-.theme-hint {
-    font-size: 10.5px;
-    line-height: 1.35;
-    color: var(--ink-3);
-}
-
-.theme-hint {
-    margin: 7px 0 0;
-}
-
-/* ============================================================
    Section：去分割线，靠 legend 字重 + 间距做层级
    ============================================================ */
 fieldset {
@@ -310,14 +150,11 @@ fieldset {
     margin: 0;
 }
 
-/* section 之间留呼吸空间；最后一个收紧 */
 fieldset + fieldset {
     margin-top: 14px;
 }
 
 legend {
-    /* 中文 legend：不套 uppercase eyebrow（那是英文 AI tell）。
-       用字重 + 偏淡的色做层级，干净直接。 */
     font-weight: 600;
     font-size: 12.5px;
     color: var(--ink);
@@ -327,16 +164,14 @@ legend {
 
 /* ============================================================
    行布局：每种行有自己的内部结构，但共享一致的间距节奏。
-   - .grid-2     → 2 列网格，容纳紧凑的 label/控件对（字号、偏移、两色）
+   - .grid-2     → 2 列网格，容纳紧凑的 label/控件对（字号、两色）
    - .field      → grid 内的单格：标签在上 / 控件在下，垂直紧凑
    - .row-stacked → 标签行在上 / 控件占满整行在下（range）
-   - .row-radio   → radio + 标题+描述，整行可点击
    ============================================================ */
 
 label { margin-bottom: 9px; }
 label:last-child { margin-bottom: 0; }
 
-/* --- grid-2：两列等宽，行间 8px、列间 10px --- */
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -345,7 +180,6 @@ label:last-child { margin-bottom: 0; }
     margin-bottom: 9px;
 }
 
-/* 单元格：标签 + 控件垂直堆叠，比 inline 更省横向空间 */
 .field {
     display: flex;
     flex-direction: column;
@@ -358,17 +192,13 @@ label:last-child { margin-bottom: 0; }
     color: var(--ink-2);
 }
 
-/* 网格内字号格：number 框缩短为固定宽度靠左，与右侧 toggle 等控件节奏一致；
-   容得下最大值 120 + px 后缀。 */
 .field-number > .input-unit {
     width: 78px;
 }
 
 /* ============================================================
    颜色字段：色块组 + Hex 文本输入
-   - 色块：固定小方块，点击即套用；选中态复用全局粉色 accent（描边 + ring）
-   - Hex 输入：复用通用 text input 样式，仅收窄宽度；非法值标红
-   只覆盖 color / backgroundColor 单键，bold / 字号 / 位置 / 透明度不动。
+   只覆盖 color / backgroundColor 单键，bold / 字号 / 透明度不动。
    ============================================================ */
 .field-color {
     margin-bottom: 9px;
@@ -393,7 +223,6 @@ label:last-child { margin-bottom: 0; }
     padding: 0;
     border: 1px solid var(--border-hi);
     border-radius: 6px;
-    /* background-color 由 popup.js 按色盘写入 */
     cursor: pointer;
     transition: border-color 0.14s var(--ease),
                 box-shadow 0.14s var(--ease),
@@ -415,19 +244,16 @@ label:last-child { margin-bottom: 0; }
     box-shadow: var(--ring);
 }
 
-/* 选中：粉色描边 + focus ring，与时钟预览的 accent 一致 */
 .swatch[aria-pressed="true"] {
     border-color: var(--pink);
     box-shadow: var(--ring);
 }
 
-/* Hex 输入：复用通用 input[type="text"] 样式，仅收窄到刚好容下 #rrggbb */
 .hex-input {
     width: 84px;
     margin-left: auto;
 }
 
-/* 非法值：红色边框提示（不落盘，失焦回填合法值） */
 .hex-input[aria-invalid="true"] {
     border-color: oklch(58% 0.2 25);
     box-shadow: 0 0 0 3px oklch(58% 0.2 25 / 18%);
@@ -440,8 +266,7 @@ label:last-child { margin-bottom: 0; }
     gap: 5px;
 }
 
-/* 显示开关行：左侧文字、右侧 toggle，只有开关本身可点。
-   用于"仅全屏显示 / 常驻显示"等并排的开关项。 */
+/* 显示开关行：左侧文字、右侧 toggle，只有开关本身可点。 */
 .toggle-line {
     display: flex;
     align-items: center;
@@ -507,14 +332,10 @@ label:last-child { margin-bottom: 0; }
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface);
-    /* 双层阴影：近处锐利 + 远处弥散，比单层更有浮空感 */
     box-shadow:
         0 1px 3px oklch(0% 0 0 / 7%),
         0 6px 20px oklch(0% 0 0 / 12%);
     color: var(--ink-2);
-    /* YaHei UI 放在 system-ui 之前：避免 Windows DirectWrite 的字体回退表
-       绕过 CSS 把中文落到普通（更糊的）YaHei 或 SimSun。
-       11.5px 下 UI 版的 hinting 明显比普通版利落。 */
     font-family: "Microsoft YaHei UI", "PingFang SC", "Source Han Sans SC", "Noto Sans SC", system-ui, sans-serif;
     font-size: 12px;
     line-height: 1.55;
@@ -527,7 +348,6 @@ label:last-child { margin-bottom: 0; }
                 transform 0.14s var(--ease);
 }
 
-/* 小三角：气泡底部偏左，对准问号中心 */
 .help-bubble::after {
     content: "";
     position: absolute;
@@ -543,7 +363,6 @@ label:last-child { margin-bottom: 0; }
     display: block;
 }
 
-/* 气泡内每个开关项独立成块：标题 + 开/关两行，便于扫读 */
 .help-item + .help-item {
     margin-top: 9px;
     padding-top: 9px;
@@ -571,8 +390,6 @@ label:last-child { margin-bottom: 0; }
     margin-top: 4px;
 }
 
-/* "开/关"做成中性 chip：浅灰底 + 圆角，跟描述明显分开但不带情感色。
-   选中态仍由整行 opacity 控制（见下），chip 本身不染色。 */
 .help-tag {
     flex: none;
     padding: 2px 7px;
@@ -585,7 +402,6 @@ label:last-child { margin-bottom: 0; }
     letter-spacing: 0.02em;
 }
 
-/* 未选中的那档整行调淡，让"当前生效的那档"一眼可辨 */
 .help-item-line[data-state] {
     transition: opacity 0.14s var(--ease);
 }
@@ -594,7 +410,6 @@ label:last-child { margin-bottom: 0; }
     opacity: 0.42;
 }
 
-/* 当前生效那档：文字加深，强化"这是我现在的选择" */
 .help-item[data-help-key] .help-item-line[data-active] .help-item-text {
     color: var(--ink);
 }
@@ -615,9 +430,7 @@ label:last-child { margin-bottom: 0; }
     box-shadow: var(--ring);
 }
 
-/* --- Toggle 开关：外壳包住原生 checkbox，滑块左右滑动表达开关 ---
-   纯滑块（不嵌文字），靠位置 + 颜色表达状态，避免 thumb 盖文字。 */
-/* grid 内的 toggle 格子：标签在上，开关落到单元格底沿，与同行输入框齐高 */
+/* --- Toggle 开关：外壳包住原生 checkbox，滑块左右滑动表达开关 --- */
 .field-toggle > .toggle {
     margin-top: auto;
 }
@@ -631,7 +444,6 @@ label:last-child { margin-bottom: 0; }
 }
 
 .toggle > input[type="checkbox"] {
-    /* 原生 checkbox 不可见但仍可聚焦/勾选，状态驱动视觉。 */
     -webkit-appearance: none;
     appearance: none;
     position: absolute;
@@ -648,7 +460,7 @@ label:last-child { margin-bottom: 0; }
     position: absolute;
     inset: 0;
     border: 1px solid var(--border);
-    border-radius: 14px;       /* 胶囊 */
+    border-radius: 14px;
     background: var(--surface-3);
     transition: background 0.18s var(--ease),
                 border-color 0.18s var(--ease);
@@ -669,12 +481,10 @@ label:last-child { margin-bottom: 0; }
                 border-color 0.18s var(--ease);
 }
 
-/* hover：边框略亮 */
 .toggle > input[type="checkbox"]:hover ~ .toggle-track {
     border-color: var(--border-hi);
 }
 
-/* 开启态：track 填粉，滑块滑到右 */
 .toggle > input[type="checkbox"]:checked ~ .toggle-track {
     background: var(--pink);
     border-color: var(--pink);
@@ -685,13 +495,11 @@ label:last-child { margin-bottom: 0; }
     border-color: var(--surface);
 }
 
-/* focus 环：借用全局粉色 ring */
 .toggle > input[type="checkbox"]:focus-visible ~ .toggle-track {
     box-shadow: var(--ring);
     border-color: var(--pink);
 }
 
-/* active：滑块稍稍缩放，提供按压反馈 */
 .toggle > input[type="checkbox"]:active ~ .toggle-track .toggle-thumb {
     transform: translateX(0) scale(0.92);
 }
@@ -719,44 +527,6 @@ label:last-child { margin-bottom: 0; }
     width: 100%;
 }
 
-/* --- radio：单选 + 标题+描述，整行可点击，hover 有底 --- */
-.row-radio {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    cursor: pointer;
-    padding: 6px 8px;
-    margin-left: -8px;
-    margin-right: -8px;
-    margin-bottom: 4px;
-    border-radius: var(--radius-sm);
-    transition: background 0.14s var(--ease);
-}
-
-.row-radio:last-of-type { margin-bottom: 0; }
-.row-radio:hover { background: var(--surface-2); }
-
-.row-radio .radio-text {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    line-height: 1.4;
-}
-
-.row-radio .radio-title {
-    font-size: 12.5px;
-    font-weight: 500;
-    color: var(--ink);
-}
-
-.row-radio .radio-desc {
-    font-size: 11px;
-    color: var(--ink-3);
-}
-
-/* 选中的 radio 标题着 accent */
-.row-radio:has(input:checked) .radio-title { color: var(--pink-hi); }
-
 /* 数值徽标（range 的当前值，粉色 accent） */
 .value-display {
     font-size: 11.5px;
@@ -772,7 +542,6 @@ label:last-child { margin-bottom: 0; }
     font-size: 12px;
 }
 
-/* number 输入框 + 单位后缀包装 */
 .input-unit {
     position: relative;
     width: 100%;
@@ -791,7 +560,7 @@ label:last-child { margin-bottom: 0; }
 }
 
 /* ============================================================
-   原生输入控件：number / color，default/hover/focus/disabled
+   原生输入控件：number / text，default/hover/focus
    ============================================================ */
 input[type="number"],
 input[type="text"] {
@@ -807,11 +576,13 @@ input[type="text"] {
     transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
 }
 
-input[type="number"]:hover {
+input[type="number"]:hover,
+input[type="text"]:hover {
     border-color: var(--border-hi);
 }
 
-input[type="number"]:focus-visible {
+input[type="number"]:focus-visible,
+input[type="text"]:focus-visible {
     outline: none;
     border-color: var(--pink);
     box-shadow: var(--ring);
@@ -824,71 +595,7 @@ input[type="number"]:disabled {
 }
 
 /* ============================================================
-   Textarea：自定义 CSS 输入。复用 input 的边框/聚焦语汇，等宽字体。
-   ============================================================ */
-textarea.css-input {
-    display: block;
-    width: 100%;
-    min-height: 110px;
-    margin-top: 8px;
-    padding: 6px 8px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--ink);
-    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 11.5px;
-    line-height: 1.5;
-    resize: vertical;
-    transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
-}
-
-textarea.css-input:hover {
-    border-color: var(--border-hi);
-}
-
-textarea.css-input:focus-visible {
-    outline: none;
-    border-color: var(--pink);
-    box-shadow: var(--ring);
-}
-
-textarea.css-input::placeholder {
-    color: var(--ink-unit);
-    font-style: italic;
-}
-
-/* CSS 选择器速查气泡内的 code 列表：紧凑双列、等宽、可换行 */
-.css-selector-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 6px;
-    margin-top: 4px;
-}
-
-.css-selector-list code {
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: var(--surface-2);
-    color: var(--pink-hi);
-    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 10.5px;
-    line-height: 1.5;
-    word-break: break-all;
-}
-
-/* 气泡内提示项的行内 code 样式（与速查列表区分） */
-.help-item-text code {
-    padding: 1px 4px;
-    border-radius: 3px;
-    background: var(--surface-2);
-    color: var(--pink-hi);
-    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 10.5px;
-}
-
-/* ============================================================
-   Range：label + 数值在上 / 整条滑条在下，更舒展
+   Range：label + 数值在上 / 整条滑条在下
    粉色已填充段 + 中性拖把 + hover/focus/active
    ============================================================ */
 input[type="range"] {
@@ -901,8 +608,6 @@ input[type="range"] {
     margin: 0;
 }
 
-/* 默认 / 已填充段借助 backgroud-image + 0%/100% stop 由 JS 动态写入；
-   这里先给一条中性 track 作为底。 */
 input[type="range"]::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 2px;
@@ -915,16 +620,12 @@ input[type="range"]::-moz-range-track {
     background: var(--surface-3);
 }
 
-/* Firefox 专属：原生进度填充（Chrome 不识别，靠 popup.js 写 background-image） */
 input[type="range"]::-moz-range-progress {
     height: 4px;
     border-radius: 2px;
     background: var(--pink-track);
 }
 
-/* 进度填充：用 progress 在 Firefox 上、用一个 ::before 在 Chrome 上都麻烦，
-   改由 popup.js 直接给 range 设 background-image（线性渐变 + 百分比 stop）。
-   下面只负责 thumb 样式与状态。 */
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -984,31 +685,24 @@ input[type="range"]:active::-moz-range-thumb {
 
 /* ============================================================
    透明度滑条：让轨道本身成为活的透明度预览。
-   - 棋盘格底（透明度惯例），透出真实 backgroundColor 的当前 alpha
-   - thumb 仍沿用粉色，作为"这是可拖动的"与品牌的唯一 accent
-   - 拖动时轨道颜色与顶部预览同步变化，所见即所得
    ============================================================ */
 .opacity-range {
-    /* 真实时钟背景色（rgba），由 popup.js 随 backgroundColor 与 bgOpacity 写入。
-       这里只占位，避免初始无值时空白。 */
     --clock-bg: transparent;
     --checker:  var(--surface-3);
     height: 24px;
 }
 
-/* 轨道：加厚到 16px，承载棋盘 + 透明色层；input 高 24px 给 thumb 留探出余量。 */
 .opacity-range::-webkit-slider-runnable-track {
     height: 16px;
     border-radius: 5px;
     border: 1px solid var(--border);
     background:
-        /* 真实 alpha 的时钟背景色 */
         var(--clock-bg)
-        /* 棋盘格底（位于时钟色下方：时钟色 alpha<1 时透出它来表达"半透明"） */
         repeating-conic-gradient(var(--checker) 0% 25%, transparent 0% 50%)
         0 0 / 10px 10px,
         var(--surface);
 }
+
 .opacity-range::-moz-range-track {
     height: 16px;
     border-radius: 5px;
@@ -1020,21 +714,15 @@ input[type="range"]:active::-moz-range-thumb {
         var(--surface);
 }
 
-/* thumb：抬高的厚轨道上居中。track 16px + 1px 边框，thumb 14px →
-   webkit margin-top = (trackTop) − (thumbDefaultTop)。
-   trackTop = (24−16)/2 = 4；默认 thumb 顶贴 track 顶 = 4；目标 thumb 顶
-   让中心对 track 中心 = 4 + (16−14)/2 = 5；故 margin-top = 5 − 4 = 1px。 */
 .opacity-range::-webkit-slider-thumb {
     margin-top: 1px;
     background: var(--surface);
 }
+
 .opacity-range::-moz-range-thumb {
     background: var(--surface);
 }
 
-/* Firefox 没有 conic-gradient 在 track 上能稳定覆盖的问题，但 background 层叠
-   与 -moz-range-progress 不会叠加（progress 只画在 track 之上）。
-   这里禁用 progress 的可视，避免它盖住棋盘 + 透明层。 */
 .opacity-range::-moz-range-progress {
     background: transparent;
 }
@@ -1092,131 +780,34 @@ input[type="checkbox"]:focus-visible {
 }
 
 /* ============================================================
-   Radio：自绘圆形 + 粉色填充圆点
-   布局由 .row-radio 控制，这里只管控件外观。
+   底部「更多设置」提示行：链接形式，触发同一 openOptions
    ============================================================ */
-.row-radio > input[type="radio"] {
-    -webkit-appearance: none;
-    appearance: none;
-    flex: none;
-    width: 16px;
-    height: 16px;
-    margin: 1px 0 0;
-    border: 1.5px solid var(--border-hi);
-    border-radius: 50%;
-    background: var(--surface);
-    cursor: pointer;
-    position: relative;
-    transition: border-color 0.14s var(--ease),
-                box-shadow 0.14s var(--ease);
-}
-
-.row-radio > input[type="radio"]::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    margin: auto;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--pink);
-    transform: scale(0);
-    transition: transform 0.14s var(--ease);
-}
-
-.row-radio > input[type="radio"]:checked {
-    border-color: var(--pink);
-}
-
-.row-radio > input[type="radio"]:checked::before {
-    transform: scale(1);
-}
-
-.row-radio > input[type="radio"]:focus-visible {
-    outline: none;
-    box-shadow: var(--ring);
-}
-
-/* ============================================================
-   位置面板：压扁的迷你播放器（16:5），省垂直空间但保留拖拽手感
-   ============================================================ */
-.position-panel {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 5;
-    margin-bottom: 8px;
-    border-radius: var(--radius);
-    background: var(--player-bg);
-    background-image:
-        linear-gradient(oklch(100% 0 0 / 6%) 1px, transparent 1px),
-        linear-gradient(90deg, oklch(100% 0 0 / 6%) 1px, transparent 1px);
-    background-size: 25% 25%;
-    cursor: crosshair;
-    overflow: hidden;
-    touch-action: none;
-    user-select: none;
-    box-shadow: inset 0 0 0 1px oklch(0% 0 0 / 10%);
-}
-
-.position-marker {
-    position: absolute;
-    /* 标记代表时钟本身，用与时钟一致的边角对齐：--mx/--my 由 popup.js 写入，
-       posX=0 → 不偏移（标记左上角贴面板左上角），posX=1 → 偏移整身宽（右贴右）。
-       dragging 态在 transform 链尾叠加 scale，故拆成 CSS 变量。 */
-    transform: translate(var(--mx, -50%), var(--my, -50%));
-    font-size: 18px;
-    line-height: 1;
-    cursor: grab;
-    user-select: none;
-    filter: drop-shadow(0 1px 2px oklch(0% 0 0 / 60%));
-    transition: transform 0.14s var(--ease);
-}
-
-.position-marker.dragging {
-    cursor: grabbing;
-    transform: translate(var(--mx, -50%), var(--my, -50%)) scale(1.18);
-}
-
-/* ---- 重置按钮：与控件同样的状态语汇 ---- */
-.reset-btn {
-    display: block;
-    width: 100%;
-    height: 28px;
-    margin-top: 4px;
-    padding: 0 10px;
-    border: 1px solid var(--border);
+.more-hint {
+    margin: 14px 0 0;
+    padding: 10px 12px;
     border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--ink);
-    font: inherit;
-    font-size: 12.5px;
-    cursor: pointer;
-    transition: background 0.14s var(--ease),
-                border-color 0.14s var(--ease),
-                box-shadow 0.14s var(--ease);
-}
-
-.reset-btn:hover {
     background: var(--surface-2);
-    border-color: var(--border-hi);
-}
-
-.reset-btn:active {
-    background: var(--surface-3);
-}
-
-.reset-btn:focus-visible {
-    outline: none;
-    border-color: var(--pink);
-    box-shadow: var(--ring);
-}
-
-/* ---- hint：是真正的正文，必须 ≥ 4.5:1 ---- */
-.hint {
-    margin: 8px 0 0;
     font-size: 11px;
-    line-height: 1.45;
+    line-height: 1.5;
     color: var(--ink-3);
+    text-align: center;
+}
+
+.more-hint a {
+    color: var(--pink-hi);
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.more-hint a:hover {
+    text-decoration: underline;
+}
+
+.more-hint a:focus-visible {
+    outline: none;
+    border-radius: 2px;
+    box-shadow: var(--ring);
 }
 
 /* ============================================================
