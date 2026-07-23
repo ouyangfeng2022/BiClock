@@ -32,10 +32,14 @@ var DEFAULTS = {
     // 显示模式：false = 鼠标触发（默认，仅在控件可见时显示），
     // true = 常驻（进入浏览器全屏后一直显示，不随控件隐藏）。
     alwaysShow: false,
-    // 位置由 popup 里的"位置"面板控制；posX/posY 是相对视口的 0..1 比例，
-    // 这样不同分辨率的屏幕都能正确还原，而不是写死像素。
+    // 位置由 options 页的预览拖拽控制；posX/posY 是相对播放器容器的 0..1 比例
+    // （edge-aligned：translate 按自身尺寸反向偏移，posX=0 左贴左，1 右贴右，
+    // 0.5 水平居中；posY 同理），这样不同分辨率的屏幕都能正确还原而非写死像素。
+    // 默认顶部水平居中、且与视频顶边无间距：posY=0 让时钟左上角贴到容器顶端，
+    // translateY(0%) 无偏移，所以时钟真正贴顶（旧值 0.04 会在顶部留约 4% 空隙，
+    // 导致「默认位置」与「居中」按钮看似不同——见 options.js resetPosition）。
     posX: 0.5,
-    posY: 0.04,
+    posY: 0,
     // 用户在 options 页保存的自定义主题列表；仅 options 页读写，内容脚本不消费。
     // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 12 个外观键
     // + THEME_CSS_KEYS 的 2 个 CSS 键（customCss / customCssEnabled）。

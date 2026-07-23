@@ -35,11 +35,18 @@ function normalizeHex(raw) {
 
 function applyToPreview() {
     var el = $('previewClock');
-    refreshPreviewText();
 
     // 外观双模式：cssMode 时清掉外观类 inline style，用户 CSS 成唯一来源
     // （无需 !important）；否则照常把外观灌成 inline。与 biclock.js 同源，
     // 预览与真实播放器视觉表现一致。
+    // 注意调用顺序：必须先写 inline 外观，再调用 refreshPreviewText()
+    // （renderClockLayout），与 biclock.js 的 applyStyles() → renderClockLayout()
+    // 一致。形态主题（analog / segments / flip / corner / calendar 等）会在
+    // renderClockLayout 里把 el 的背景/边框/padding 清成 transparent / 0，
+    // 让圆盘或翻牌"裸露"显示；若顺序相反（先布局再 inline），inline 会把
+    // 这些清理重新盖回去，预览首帧就出现一圈底层阴影盒子；而 1 秒后
+    // setInterval(refreshPreviewText, 1000) 只跑 renderClockLayout 不再写 inline，
+    // 盒子又消失，表现为点击主题后"一秒后样式跳变"。详见 options.js 同名函数。
     if (config.customCssEnabled && config.customCss) {
         APPEARANCE_INLINE_KEYS.forEach(function (k) {
             el.style.removeProperty(k);
@@ -61,6 +68,9 @@ function applyToPreview() {
     // 注意：popup 不再提供 customCss 的编辑入口（移到 options 页），
     // 但仍读 storage 里的值反映到预览，保证两边视觉一致。
     applyPreviewCustomCss();
+    // 最后渲染布局：让形态主题对 el 背景/边框/padding 的清理成为最终态，
+    // 与每秒 setInterval 的单独 refreshPreviewText() 渲染路径完全等价。
+    refreshPreviewText();
 }
 
 function refreshPreviewText() {
