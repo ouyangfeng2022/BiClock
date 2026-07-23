@@ -12,34 +12,7 @@
     </header>
 
     <div class="options-layout">
-        <!-- 左栏：常驻预览（B 站播放器外壳 + 时钟叠在上面 + 直接拖动定位） -->
-        <aside class="preview-column" aria-label="时钟预览与位置">
-            <section class="preview-banner" id="previewBanner">
-                <!-- CSS 还原的 B 站播放器外壳：纯装饰，aria-hidden 让屏幕阅读器跳过 -->
-                <div class="shell-top" aria-hidden="true">
-                    <span class="shell-avatar"></span>
-                    <span class="shell-up">UP 主 · 示例视频标题</span>
-                    <span class="shell-follow">关注</span>
-                </div>
-                <div class="shell-video" aria-hidden="true"></div>
-                <div class="shell-bottom" aria-hidden="true">
-                    <span class="shell-play"></span>
-                    <span class="shell-time">00:00</span>
-                    <span class="shell-progress"><span class="shell-progress-fill"></span></span>
-                    <span class="shell-dur">12:34</span>
-                    <span class="shell-vol"></span>
-                    <span class="shell-fs"></span>
-                </div>
-
-                <!-- 真正的预览时钟：拖动它调整在播放器画面里的位置 -->
-                <div class="preview-clock bpx-player-top-clock" id="previewClock">00:00:00</div>
-                <span class="preview-tag">实时预览</span>
-                <span class="preview-hint">拖动时钟调整位置</span>
-                <button type="button" id="resetPosition" class="preview-reset" title="重置为居中">居中</button>
-            </section>
-        </aside>
-
-        <!-- 右栏：滚动控制面板 -->
+        <!-- 左栏：滚动控制面板 -->
         <main class="options-main">
           <fieldset class="theme-fieldset">
             <legend>主题</legend>
@@ -288,11 +261,37 @@
                 <a href="https://github.com/ouyangfeng2022/BiClock#readme" target="_blank" rel="noopener">使用文档</a>
             </p>
           </fieldset>
-
-          <div class="bottom-actions">
-            <button type="button" id="saveCustomTheme" class="primary-btn">保存当前外观与 CSS 为自定义主题</button>
-          </div>
         </main>
+
+        <!-- 右栏：常驻预览（B 站播放器外壳 + 时钟叠在上面 + 直接拖动定位）+ 保存按钮 -->
+        <aside class="preview-column" aria-label="时钟预览与位置">
+            <section class="preview-banner" id="previewBanner">
+                <!-- CSS 还原的 B 站播放器外壳：纯装饰，aria-hidden 让屏幕阅读器跳过 -->
+                <div class="shell-top" aria-hidden="true">
+                    <span class="shell-avatar"></span>
+                    <span class="shell-up">UP 主 · 示例视频标题</span>
+                    <span class="shell-follow">关注</span>
+                </div>
+                <div class="shell-video" aria-hidden="true"></div>
+                <div class="shell-bottom" aria-hidden="true">
+                    <span class="shell-play"></span>
+                    <span class="shell-time">00:00</span>
+                    <span class="shell-progress"><span class="shell-progress-fill"></span></span>
+                    <span class="shell-dur">12:34</span>
+                    <span class="shell-vol"></span>
+                    <span class="shell-fs"></span>
+                </div>
+
+                <!-- 真正的预览时钟：拖动它调整在播放器画面里的位置 -->
+                <div class="preview-clock bpx-player-top-clock" id="previewClock">00:00:00</div>
+                <span class="preview-tag">实时预览</span>
+                <span class="preview-hint">拖动时钟调整位置</span>
+                <button type="button" id="resetPosition" class="preview-reset" title="重置为居中">居中</button>
+            </section>
+
+            <!-- 保存按钮紧贴预览旁，作为预览栏的一部分 -->
+            <button type="button" id="saveCustomTheme" class="primary-btn">保存当前外观与 CSS 为自定义主题</button>
+        </aside>
     </div>
 
     <script src="shared.js"></script>
