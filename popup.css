@@ -207,22 +207,24 @@ label:last-child { margin-bottom: 0; }
 .color-row {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
 }
 
 .swatches {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex: none;
+    flex-wrap: nowrap;
+    gap: 4px;
 }
 
 .swatch {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
+    flex: none;
     padding: 0;
     border: 1px solid var(--border-hi);
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
     transition: border-color 0.14s var(--ease),
                 box-shadow 0.14s var(--ease),
@@ -249,9 +251,11 @@ label:last-child { margin-bottom: 0; }
     box-shadow: var(--ring);
 }
 
-.hex-input {
-    width: 84px;
-    margin-left: auto;
+/* 用 .color-row 提升特异性，压过通用 input[type="text"]{width:100%} (0,1,1)，
+   否则 Hex 输入会被拉满 color-row，与 nowrap 色块叠加后挤出 popup。 */
+.color-row .hex-input {
+    width: 80px;
+    flex: none;
 }
 
 .hex-input[aria-invalid="true"] {

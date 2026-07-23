@@ -1,5 +1,5 @@
 // DEFAULTS / pad / formatTime / makeClockPart / hexToRgba /
-// renderClockLayout / migrateRemovedTheme / THEME_STYLE_KEYS / REMOVED_THEME_IDS
+// renderClockLayout / migrateRemovedTheme / THEME_STYLE_KEYS / THEME_CSS_KEYS / REMOVED_THEME_IDS
 // 由 shared.js 提供（popup.html 在本脚本之前 <script> 引入）。
 //
 // 这是「快速调整」子集：预览 + 外观基础项（字号/颜色/透明度/粗体）+ 显示开关。
@@ -35,18 +35,28 @@ function normalizeHex(raw) {
 
 function applyToPreview() {
     var el = $('previewClock');
-    el.style.fontSize = config.fontSize + 'px';
-    el.style.color = config.color;
-    el.style.fontWeight = config.bold ? 'bold' : 'normal';
-    el.style.fontFamily = config.fontFamily;
-    el.style.textShadow = config.textShadow;
-    el.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
-    el.style.border = config.borderWidth + 'px solid ' + hexToRgba(config.borderColor, config.borderOpacity / 100);
-    el.style.boxSizing = 'border-box';
-    // 圆角背景：与 biclock.js 保持一致，按字号比例缩放。
-    el.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
-    el.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
     refreshPreviewText();
+
+    // 外观双模式：cssMode 时清掉外观类 inline style，用户 CSS 成唯一来源
+    // （无需 !important）；否则照常把外观灌成 inline。与 biclock.js 同源，
+    // 预览与真实播放器视觉表现一致。
+    if (config.customCssEnabled && config.customCss) {
+        APPEARANCE_INLINE_KEYS.forEach(function (k) {
+            el.style.removeProperty(k);
+        });
+    } else {
+        el.style.fontSize = config.fontSize + 'px';
+        el.style.color = config.color;
+        el.style.fontWeight = config.bold ? 'bold' : 'normal';
+        el.style.fontFamily = config.fontFamily;
+        el.style.textShadow = config.textShadow;
+        el.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+        el.style.border = config.borderWidth + 'px solid ' + hexToRgba(config.borderColor, config.borderOpacity / 100);
+        el.style.boxSizing = 'border-box';
+        // 圆角背景：与 biclock.js 保持一致，按字号比例缩放。
+        el.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
+        el.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
+    }
     // 用户 CSS 在布局文本之后注入，让选择器在预览里也能命中。
     // 注意：popup 不再提供 customCss 的编辑入口（移到 options 页），
     // 但仍读 storage 里的值反映到预览，保证两边视觉一致。

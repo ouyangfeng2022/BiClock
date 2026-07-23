@@ -1,5 +1,5 @@
 // DEFAULTS / pad / formatTime / makeClockPart / hexToRgba /
-// renderClockLayout / migrateRemovedTheme / THEME_STYLE_KEYS / REMOVED_THEME_IDS
+// renderClockLayout / migrateRemovedTheme / THEME_STYLE_KEYS / THEME_CSS_KEYS / REMOVED_THEME_IDS
 // 由 shared.js 提供（manifest content_scripts 在本脚本之前注入 shared.js）。
 
 var config = {};
@@ -23,21 +23,12 @@ var timer = null;
 
 
 function applyStyles() {
-    clock.style.fontSize = config.fontSize + 'px';
-    clock.style.color = config.color;
-    clock.style.fontWeight = config.bold ? 'bold' : 'normal';
-    clock.style.fontFamily = config.fontFamily;
-    clock.style.textShadow = config.textShadow;
-    clock.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
-    clock.style.border = config.borderWidth + 'px solid ' + hexToRgba(config.borderColor, config.borderOpacity / 100);
-    clock.style.boxSizing = 'border-box';
-    // 圆角背景：按字号比例缩放，不同字号下弧度协调一致。
-    clock.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
-    clock.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
-    // 用 fixed 定位 + 相对播放器容器的视口坐标：Bilibili 的 .bpx-player-container
-    // 不建立定位上下文，挂在容器里用 absolute 会以错误的祖先为参照，位置漂移。
-    // fixed 直接相对视口，再把 (posX, posY) 比例换算成容器在视口里的真实像素，
-    // 这样无论普通/宽屏/网页全屏/浏览器全屏，时钟都落在视频画面内。
+    // 定位始终由 JS 计算（用户在 options 页拖拽 posX/posY 设定位置），
+    // 不受外观模式影响：用 fixed 定位 + 相对播放器容器的视口坐标。Bilibili 的
+    // .bpx-player-container 不建立定位上下文，挂在容器里用 absolute 会以错误的
+    // 祖先为参照，位置漂移。fixed 直接相对视口，再把 (posX, posY) 比例换算成
+    // 容器在视口里的真实像素，这样无论普通/宽屏/网页全屏/浏览器全屏，时钟都
+    // 落在视频画面内。
     clock.style.position = 'fixed';
     var container = document.getElementsByClassName('bpx-player-container')[0];
     var rect = container ? container.getBoundingClientRect() : null;
@@ -55,6 +46,29 @@ function applyStyles() {
     // posX=0 → 不偏移（左贴左），posX=1 → 偏移整身宽（右贴右），
     // 0.5 → 偏移半身（居中）。不测量像素，让 posY=0 能真正贴顶。
     clock.style.transform = 'translate(' + (config.posX * -100) + '%, ' + (config.posY * -100) + '%)';
+
+    // 外观双模式：cssMode 时清掉外观类 inline style，用户 CSS 成唯一来源
+    // （无需 !important）；否则照常把外观灌成 inline。
+    // updateClock() 每秒 tick 都会重跑这里，所以两种模式之间切换不会留下残留，
+    // 用户也不会看到「inline 又回来盖住 CSS」的闪烁。
+    if (config.customCssEnabled && config.customCss) {
+        APPEARANCE_INLINE_KEYS.forEach(function (k) {
+            clock.style.removeProperty(k);
+        });
+    } else {
+        clock.style.fontSize = config.fontSize + 'px';
+        clock.style.color = config.color;
+        clock.style.fontWeight = config.bold ? 'bold' : 'normal';
+        clock.style.fontFamily = config.fontFamily;
+        clock.style.textShadow = config.textShadow;
+        clock.style.backgroundColor = hexToRgba(config.backgroundColor, config.bgOpacity / 100);
+        clock.style.border = config.borderWidth + 'px solid ' + hexToRgba(config.borderColor, config.borderOpacity / 100);
+        clock.style.boxSizing = 'border-box';
+        // 圆角背景：按字号比例缩放，不同字号下弧度协调一致。
+        clock.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
+        clock.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
+    }
+
     // 用户自定义 CSS：disabled 或空串时清空（不删节点，避免反复创建）。
     applyCustomCss();
 }

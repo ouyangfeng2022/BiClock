@@ -36,13 +36,15 @@ var DEFAULTS = {
     // 这样不同分辨率的屏幕都能正确还原，而不是写死像素。
     posX: 0.5,
     posY: 0.04,
-    // 用户在 popup 里保存的自定义主题列表；仅 popup 读写，内容脚本不消费。
-    // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 12 个外观键。
+    // 用户在 options 页保存的自定义主题列表；仅 options 页读写，内容脚本不消费。
+    // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 12 个外观键
+    // + THEME_CSS_KEYS 的 2 个 CSS 键（customCss / customCssEnabled）。
     // id 形如 "custom_<timestamp>"，作为 clockStyle 标记当前激活的自定义主题。
     customThemes: [],
-    // 自定义 CSS：用户在 popup 里写的任意 CSS，通过 <style> 注入叠加到时钟节点上，
+    // 自定义 CSS：用户在 options 页写的任意 CSS，通过 <style> 注入叠加到时钟节点上，
     // 实现内置主题/外观键做不到的视觉效果（动画、阴影、渐变 等）。
-    // 不在 THEME_STYLE_KEYS 里，与主题解耦：切主题不动它，主题卡也不带它。
+    // 语义：预设主题不带 CSS（切回预设会清空当前 CSS）；自定义主题把当前 CSS
+    // 作为快照存进主题卡，切回该主题时整体恢复（包括 CSS）。详见 THEME_CSS_KEYS。
     // customCssEnabled 关掉即不注入；空串视为未填写。
     customCss: '',
     customCssEnabled: false
@@ -56,6 +58,27 @@ var THEME_STYLE_KEYS = [
     'fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold',
     'fontFamily', 'textShadow', 'borderColor', 'borderOpacity',
     'borderWidth', 'accentColor', 'clockLayout'
+];
+
+// 自定义 CSS 快照键：保存/恢复自定义主题时随 THEME_STYLE_KEYS 一起带走，
+// 让自定义主题成为「一套完整外观（含 CSS）」。
+// 预设主题（THEMES）不带这两个键 —— applyTheme 切到预设主题时会显式把
+// config.customCss 置空、customCssEnabled 置 false，呈现纯净外观。
+// 内容脚本 biclock.js 不引用本常量：它只消费最终的 config.customCss /
+// config.customCssEnabled，无论是手填还是从主题恢复，都走同一条注入路径。
+var THEME_CSS_KEYS = ['customCss', 'customCssEnabled'];
+
+// 「外观类」inline style 属性清单：biclock.js / popup.js / options.js 三处
+// applyStyles / applyToPreview 共用，避免三份清单漂移。
+//
+// 设计：自定义 CSS 启用时（cssMode = customCssEnabled && customCss），
+// JS 不再把这些属性灌成 inline style，而是逐项 removeProperty 清掉，
+// 让用户 CSS 成为外观的唯一来源（无需 !important）。
+// 注意：position / left / top / transform / zIndex / userSelect 不在此列——
+// 它们属于定位/交互层，CSS 模式下仍由 JS 计算，用户 CSS 只专注外观。
+var APPEARANCE_INLINE_KEYS = [
+    'color', 'backgroundColor', 'fontWeight', 'fontFamily', 'fontSize',
+    'textShadow', 'border', 'padding', 'borderRadius', 'boxSizing'
 ];
 
 function pad(n) {
