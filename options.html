@@ -12,15 +12,23 @@
     </header>
 
     <div class="options-layout">
-        <!-- 左栏：滚动控制面板 -->
+        <!-- 左栏：分区导航（sticky，scroll-spy 高亮当前可见分区） -->
+        <nav class="options-nav" aria-label="设置分区">
+            <a class="nav-item" href="#sec-theme"><span class="nav-icon" aria-hidden="true">◐</span>主题</a>
+            <a class="nav-item" href="#sec-appearance"><span class="nav-icon" aria-hidden="true">◑</span>外观与显示</a>
+            <a class="nav-item" href="#sec-css"><span class="nav-icon" aria-hidden="true">‹/›</span>自定义 CSS</a>
+            <a class="nav-item" href="#sec-about"><span class="nav-icon" aria-hidden="true">ⓘ</span>关于</a>
+        </nav>
+
+        <!-- 中栏：滚动控制面板 -->
         <main class="options-main">
-          <fieldset class="theme-fieldset">
+          <fieldset class="theme-fieldset" id="sec-theme">
             <legend>主题</legend>
             <div class="theme-grid" id="themeGrid" role="group" aria-label="时钟主题"></div>
             <p class="theme-hint" id="themeHint">预设主题不带 CSS；自定义主题会保存当前外观与 CSS。</p>
           </fieldset>
 
-          <section class="card-group" aria-label="外观与显示">
+          <section class="card-group" id="sec-appearance" aria-label="外观与显示">
             <fieldset>
                 <legend>外观</legend>
 
@@ -127,7 +135,7 @@
             </fieldset>
           </section>
 
-          <fieldset class="css-fieldset">
+          <fieldset class="css-fieldset" id="sec-css">
             <legend>自定义 CSS</legend>
             <p class="section-intro">
                 启用后，扩展不再向时钟节点注入外观相关的 inline style，你写的 CSS 成为外观的唯一来源——颜色、背景、字号、字体、边框、动画都由你定义，<strong>无需 <code>!important</code></strong>。位置仍由左侧拖拽面板控制，复杂布局（指针表盘、翻页等）的内部结构仍由扩展生成；你的 CSS 只需专注外观本身。保存自定义主题时，CSS 会随外观一起存进主题卡；切换主题时一并恢复。
@@ -249,7 +257,7 @@
             </section>
           </fieldset>
 
-          <fieldset class="about-fieldset">
+          <fieldset class="about-fieldset" id="sec-about">
             <legend>关于</legend>
             <p class="about-desc">
                 BiClock 是一个轻量的 Manifest V3 浏览器扩展，在 Bilibili 视频播放器顶部叠加显示当前时间。纯原生 JS，零依赖、零构建，同一套代码同时支持 Chrome / Edge / Firefox。

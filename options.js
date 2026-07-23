@@ -703,6 +703,58 @@ function initCopyButtons() {
     });
 }
 
+// 左侧导航的 scroll-spy：用 IntersectionObserver 跟踪四个分区，
+// 把当前落在"活跃区"（视口中部一带）最靠上的分区对应的 .nav-item 高亮。
+// 活跃区设为视口 20% ~ 70% 这一段（rootMargin 上 -20% / 下 -70%），
+// 这样只有当分区真正进入阅读区时才计为"当前"，避免滚动中导航频繁抖动。
+// 全部分区都不在活跃区时（页面顶部或底部）兜底取第一个，保持总有一项高亮。
+function initNavSpy() {
+    var sectionIds = ['sec-theme', 'sec-appearance', 'sec-css', 'sec-about'];
+    var sections = sectionIds.map(function (id) { return $(id); }).filter(Boolean);
+    var items = document.querySelectorAll('.nav-item');
+    if (!sections.length || !items.length) return;
+
+    var visible = {};
+    var currentId = null;
+
+    function pick() {
+        // 在可见集合里取文档顺序最靠前的那一个
+        var picked = null;
+        sections.forEach(function (sec) {
+            if (!visible[sec.id]) return;
+            if (!picked || sec.compareDocumentPosition(picked) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                picked = sec;
+            }
+        });
+        // 兜底：活跃区空了，回落到第一个分区，避免导航全部熄灭
+        if (!picked) picked = sections[0];
+        if (picked.id === currentId) return;
+        currentId = picked.id;
+        items.forEach(function (item) {
+            item.classList.toggle('is-active', item.getAttribute('href') === '#' + currentId);
+        });
+    }
+
+    // 老浏览器没有 IntersectionObserver 时静默降级：只高亮第一项，
+    // 不影响锚点跳转（<a href="#..."> + scroll-behavior:smooth 自带）。
+    if (typeof IntersectionObserver === 'undefined') {
+        items[0].classList.add('is-active');
+        return;
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            visible[entry.target.id] = entry.isIntersecting;
+        });
+        pick();
+    }, {
+        rootMargin: '-20% 0px -70% 0px',
+        threshold: 0
+    });
+
+    sections.forEach(function (sec) { observer.observe(sec); });
+}
+
 function init() {
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
@@ -739,6 +791,7 @@ function init() {
     initPositionPanel();
     initSaveCustomTheme();
     initCopyButtons();
+    initNavSpy();
 
     setInterval(refreshPreviewText, 1000);
 }

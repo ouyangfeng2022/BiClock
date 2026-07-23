@@ -49,7 +49,7 @@ html {
 }
 
 body {
-    max-width: 1040px;
+    max-width: 1240px;
     margin: 0 auto;
     padding: 32px 28px 56px;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
@@ -119,13 +119,15 @@ body {
 }
 
 /* ============================================================
-   两栏布局：左侧滚动控制面板，右侧 sticky 预览（含位置拖动 + 保存按钮）
+   三栏布局：左侧 sticky 分区导航 / 中部滚动控制面板 /
+   右侧 sticky 预览（含位置拖动 + 保存按钮）
    预览栏垂直居中固定，宽度比之前略大，让 B 站播放器外壳背景更突出、
    时钟在视觉上相对更小、更贴近真实播放器中的观感。
+   导航栏窄而高，跟随滚动高亮当前分区（见 options.js initNavSpy）。
    ============================================================ */
 .options-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+    grid-template-columns: 200px minmax(0, 1fr) minmax(0, 460px);
     gap: 24px;
     align-items: start;
 }
@@ -137,6 +139,89 @@ body {
     display: flex;
     flex-direction: column;
     gap: 14px;
+}
+
+/* ============================================================
+   分区导航（左栏，sticky）：锚点跳转 + scroll-spy 高亮
+   仿 AdGuard 设置页：无外框、贴边、图标 + 文字、hover 浅灰、
+   active 粉色 soft 底 + 左侧粉色竖条。
+   ============================================================ */
+.options-nav {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    /* 不加边框/背景，直接贴在页面 bg 上，像 AdGuard 那样与内容融合 */
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    line-height: 1.4;
+    position: relative;
+    transition: background 0.14s var(--ease),
+                color 0.14s var(--ease);
+}
+
+.nav-icon {
+    flex: none;
+    width: 18px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--ink-3);
+    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    transition: color 0.14s var(--ease);
+}
+
+.nav-item:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+}
+
+.nav-item:hover .nav-icon {
+    color: var(--ink-2);
+}
+
+.nav-item:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+.nav-item.is-active {
+    background: var(--pink-soft);
+    color: var(--pink-hi);
+    font-weight: 600;
+}
+
+.nav-item.is-active .nav-icon {
+    color: var(--pink);
+}
+
+/* active 项左侧的粉色竖条强调（AdGuard 风格的条状高亮） */
+.nav-item.is-active::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--pink);
+}
+
+/* 锚点跳转时不被顶部吸附遮挡 */
+:where(#sec-theme, #sec-appearance, #sec-css, #sec-about) {
+    scroll-margin-top: 16px;
 }
 
 /* ============================================================
@@ -1411,9 +1496,46 @@ pre.docs-code code {
 
 /* ============================================================
    响应式
-   - 中等宽度：两栏折回单栏（预览在上、控制在下），取消预览 sticky
-   - 更窄：card-group 也折回单列
+   - 较宽以下（≤1100px）：三栏 → 两栏，导航转横向 tab 条贴在
+     控制面板上方（不再 sticky），预览栏保持原位
+   - 中等宽度（≤920px）：两栏折回单栏（预览在上、控制在下），
+     取消预览 sticky；导航横向条继续留在最顶
+   - 更窄（≤620px）：card-group 也折回单列
    ============================================================ */
+@media (max-width: 1100px) {
+    .options-layout {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+        gap: 20px;
+    }
+
+    /* 导航从左栏竖列变成横跨顶部的横向 tab 条（带底部分割线，像 toolbar） */
+    .options-nav {
+        position: static;
+        grid-column: 1 / -1;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 0 0 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .nav-item {
+        flex: none;
+    }
+
+    /* 横向模式下 active 竖条改到底部，更符合 tab 视觉 */
+    .nav-item.is-active::before {
+        left: 12px;
+        right: 12px;
+        top: auto;
+        bottom: -1px;
+        width: auto;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+        background: var(--pink);
+    }
+}
+
 @media (max-width: 920px) {
     .options-layout {
         grid-template-columns: minmax(0, 1fr);
