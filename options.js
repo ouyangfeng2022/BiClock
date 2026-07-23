@@ -245,14 +245,35 @@ function onInput(event) {
 
 // ---- 位置控制（集成在预览 banner 里）----
 // 直接在预览 banner（B 站播放器外壳）上拖动时钟来设定位置。
-// 点击 banner 任意位置 = 把时钟中心移到该点；按住时钟拖动 = 跟随指针。
+// 点击 banner 空白处 = 把时钟移到该点（click-to-place）；按住时钟拖动 =
+// 指针贴住时钟的相对位置不变、整体跟随。点中时钟本身不会让它跳动——
+// 只有真的拖动时才跟随，避免每次点击时钟都位移一下。
 // posX/posY 存为 0..1 比例，biclock.js 在真实播放器里按视口尺寸换算成像素。
 
-function setPositionFromPointer(clientX, clientY) {
+// 拖动时让"指针落在时钟上的相对位置"保持不变：记录 mousedown 时
+// 指针相对时钟左上角的偏移（grabOffsetX/Y，单位 px），mousemove 时从
+// 指针坐标减去它再换算成比例，时钟就不会"跳"到指针处。click-to-place
+// （点空白处）不用这个偏移，直接以指针为目标点。
+var grabOffsetX = 0;
+var grabOffsetY = 0;
+
+// 指针坐标 → posX/posY 比例。关键：定位是 edge-aligned（left/top 百分比 +
+// transform 按自身尺寸反向偏移），所以时钟真正可移动的范围是 banner 减去
+// 自身尺寸：renderedLeft = posX * (bannerW - ownW)。换算分母必须用
+// (bannerW - ownW) / (bannerH - ownH)，否则 mousedown 记录的偏移在第一次
+// mousemove 时被错误的比例"对不上"，时钟会先抖一下再开始跟随。
+// offsetX/Y 是指针相对时钟左上角的偏移（拖动用），click-to-place 传 0。
+function setPositionFromPointer(clientX, clientY, offsetX, offsetY) {
     var banner = $('previewBanner');
+    var clock = $('previewClock');
     var rect = banner.getBoundingClientRect();
-    var x = (clientX - rect.left) / rect.width;
-    var y = (clientY - rect.top) / rect.height;
+    var ownW = clock.offsetWidth;
+    var ownH = clock.offsetHeight;
+    // 时钟尺寸接近 banner 时（极端情况）退化为整 banner 范围，避免除以 0。
+    var spanX = Math.max(1, rect.width - ownW);
+    var spanY = Math.max(1, rect.height - ownH);
+    var x = (clientX - rect.left - (offsetX || 0)) / spanX;
+    var y = (clientY - rect.top - (offsetY || 0)) / spanY;
     x = Math.max(0, Math.min(1, x));
     y = Math.max(0, Math.min(1, y));
     config.posX = x;
@@ -267,7 +288,7 @@ function initPositionPanel() {
 
     function onMove(e) {
         e.preventDefault();
-        setPositionFromPointer(e.clientX, e.clientY);
+        setPositionFromPointer(e.clientX, e.clientY, grabOffsetX, grabOffsetY);
     }
 
     function onUp() {
@@ -281,8 +302,21 @@ function initPositionPanel() {
         // 点到「重置为居中」按钮时不触发拖动（按钮自己处理 click）。
         if (e.target.closest('.preview-reset')) return;
         e.preventDefault();
+        var onClock = e.target.closest('#previewClock');
+        if (onClock) {
+            // 点在时钟上：记录指针相对时钟左上角的偏移，拖动时减掉它，
+            // 让时钟"贴住"指针而不是跳到指针处。mousedown 本身不移动时钟，
+            // 所以单纯点击（没有拖动）时钟不会发生任何位移。
+            var clockRect = clock.getBoundingClientRect();
+            grabOffsetX = e.clientX - clockRect.left;
+            grabOffsetY = e.clientY - clockRect.top;
+        } else {
+            // 点在 banner 空白处：click-to-place，立即把时钟左上角对到指针处。
+            grabOffsetX = 0;
+            grabOffsetY = 0;
+            setPositionFromPointer(e.clientX, e.clientY);
+        }
         clock.classList.add('dragging');
-        setPositionFromPointer(e.clientX, e.clientY);
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onUp);
     }
