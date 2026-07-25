@@ -233,7 +233,7 @@ function buildMenuItems() {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            chrome.storage.local.set(item.apply);
+            safeStorageSet(item.apply);
             // 三个选项都不立即关闭菜单，靠 storage.onChanged 触发 stopTimer()/startTimer()
             // 自然收尾：「关闭时钟」会让整个时钟+叉号被摘下（菜单随后被 hideMenu 摘）；
             // 选项 1/2 改开关后菜单保持展开，方便用户连续调整。
@@ -341,7 +341,7 @@ function initClockDrag() {
         // 持久化最终位置：写入 chrome.storage.local 后，
         // options 预览栏下次打开会用这个新位置；同标签页的 storage.onChanged
         // 会回调把 config 同样的值写一遍（幂等），无副作用。
-        chrome.storage.local.set({ posX: config.posX, posY: config.posY });
+        safeStorageSet({ posX: config.posX, posY: config.posY });
     }
     function onClick(e) {
         // 时钟自己消费 click：阻止它冒泡到 Bilibili 的视频区，否则一次拖动收尾
@@ -474,13 +474,35 @@ function run() {
     }
 }
 
+// 安全写入 chrome.storage.local：扩展被重载后，旧标签页里残留的内容脚本
+// 仍会跑（直到标签页刷新），此时它的 chrome.* 引用已失效，任何调用都会抛
+// "Extension context invalidated"。包装一层 try/catch，让当下操作（拖动落点、
+// 关闭菜单）不因存储写入失败而中断 —— 数据暂留内存，下次刷新标签页自然丢，
+// 不影响用户当前会话。
+function safeStorageSet(obj) {
+    try {
+        if (chrome && chrome.storage && chrome.storage.local) {
+            chrome.storage.local.set(obj);
+        }
+    } catch (e) {
+        // 扩展上下文已失效（用户重载了扩展但没刷新本标签页）；静默降级。
+    }
+}
+
 function init() {
+    // 扩展被重载后，旧标签页里残留的内容脚本仍会跑一次 init()，但 chrome.*
+    // 引用已失效。这种情况下静默退出，等用户刷新标签页加载新版本。
+    try {
+        if (!chrome || !chrome.storage || !chrome.storage.local) return;
+    } catch (e) {
+        return;
+    }
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
         // 内容脚本可能在没打开 popup 时被加载，故迁移结果需自行写回存储，
         // 避免每次加载都重复迁移。onPersist 由 shared 版本在改完 config 后回调。
         migrateRemovedTheme(config, function (cfg) {
-            chrome.storage.local.set(cfg);
+            safeStorageSet(cfg);
         });
         // popup 修改后实时生效：无需刷新页面
         chrome.storage.onChanged.addListener(function (changes, area) {
