@@ -227,6 +227,15 @@ function fillForm() {
     updateSwatchSelection();
     updateThemeSelection();
     updateHelpActiveStates();
+    applyHiddenState();
+}
+
+// 关闭时钟（hiddenForever=true）时把主题 / 外观 / CSS / 预览 / 保存按钮
+// 全部折叠，预览栏换成占位卡片，导航对应项置灰不可点。靠 body 上的
+// data-clock-disabled 属性 + options.css 的属性选择器统一驱动，
+// 比 JS 逐个 toggle classList 简洁、且不会有中间态闪烁。
+function applyHiddenState() {
+    document.body.dataset.clockDisabled = config.hiddenForever ? 'true' : 'false';
 }
 
 function onInput(event) {
@@ -243,6 +252,8 @@ function onInput(event) {
     updateSwatchSelection();
     updateThemeSelection();
     updateHelpActiveStates();
+    // hiddenForever 切换后由 applyHiddenState 折叠/展开下方设置。
+    applyHiddenState();
 }
 
 // ---- 位置控制（集成在预览 banner 里）----
@@ -712,7 +723,7 @@ function initCopyButtons() {
 // 这样只有当分区真正进入阅读区时才计为"当前"，避免滚动中导航频繁抖动。
 // 全部分区都不在活跃区时（页面顶部或底部）兜底取第一个，保持总有一项高亮。
 function initNavSpy() {
-    var sectionIds = ['sec-theme', 'sec-appearance', 'sec-css', 'sec-about'];
+    var sectionIds = ['sec-display', 'sec-theme', 'sec-appearance', 'sec-css', 'sec-about'];
     var sections = sectionIds.map(function (id) { return $(id); }).filter(Boolean);
     var items = document.querySelectorAll('.nav-item');
     if (!sections.length || !items.length) return;

@@ -141,6 +141,43 @@ h1 {
     /* font-size / color / background / weight 由 popup.js 动态写入 */
 }
 
+/* 关闭时钟状态下的占位条：默认隐藏，body[data-clock-disabled="true"] 时显示。
+   占据与 .preview 相似的视觉位置（顶部窄条），让用户一眼明白为什么没东西可调。 */
+.preview-disabled {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--ink-3);
+    box-shadow: inset 0 0 0 1px var(--border);
+    font-size: 12px;
+    text-align: center;
+}
+
+.preview-disabled-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex: none;
+    border-radius: 50%;
+    border: 1px solid var(--border-hi);
+    color: var(--ink-3);
+    font-size: 12px;
+    line-height: 1;
+}
+
+.preview-disabled-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 /* ============================================================
    Section：去分割线，靠 legend 字重 + 间距做层级
    ============================================================ */
@@ -812,6 +849,35 @@ input[type="checkbox"]:focus-visible {
     outline: none;
     border-radius: 2px;
     box-shadow: var(--ring);
+}
+
+/* 「关闭时钟」开关行：在显示分区底部，关闭态下用稍重的边框强调
+   它是「唯一能切回来的入口」。 */
+.toggle-line-disable {
+    padding: 5px 8px;
+    margin-top: 2px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+body[data-clock-disabled="true"] .toggle-line-disable {
+    border-color: var(--border-hi);
+    background: var(--surface-2);
+}
+
+/* ============================================================
+   关闭时钟状态（hiddenForever=true）：
+   折叠预览与外观 fieldset；占位条登场。
+   「显示」fieldset 与底部「更多设置」提示始终保留，
+   让用户能重新开启时钟 / 跳到完整设置页。
+   ============================================================ */
+body[data-clock-disabled="true"] .is-clock-config {
+    display: none;
+}
+
+body[data-clock-disabled="true"] .preview-disabled {
+    display: flex;
 }
 
 /* ============================================================

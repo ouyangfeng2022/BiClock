@@ -106,7 +106,7 @@ function installChromeMock(page) {
                 // 但提供 stub 防止页面加载阶段任何试探性调用抛错。
                 openOptionsPage() {},
                 getManifest() {
-                    return { version: '3.2' };
+                    return { version: '3.3' };
                 },
             },
         };

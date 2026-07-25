@@ -14,149 +14,149 @@
     <div class="options-layout">
         <!-- 左栏：分区导航（sticky，scroll-spy 高亮当前可见分区） -->
         <nav class="options-nav" aria-label="设置分区">
+            <a class="nav-item" href="#sec-display"><span class="nav-icon" aria-hidden="true">◍</span>显示</a>
             <a class="nav-item" href="#sec-theme"><span class="nav-icon" aria-hidden="true">◐</span>主题</a>
-            <a class="nav-item" href="#sec-appearance"><span class="nav-icon" aria-hidden="true">◑</span>外观与显示</a>
+            <a class="nav-item" href="#sec-appearance"><span class="nav-icon" aria-hidden="true">◑</span>外观</a>
             <a class="nav-item" href="#sec-css"><span class="nav-icon" aria-hidden="true">‹/›</span>自定义 CSS</a>
             <a class="nav-item" href="#sec-about"><span class="nav-icon" aria-hidden="true">ⓘ</span>关于</a>
         </nav>
 
         <!-- 中栏：滚动控制面板 -->
         <main class="options-main">
-          <fieldset class="theme-fieldset" id="sec-theme">
+          <fieldset class="display-fieldset" id="sec-display">
+            <legend class="legend-tip">
+                显示
+                <span class="help-tip" tabindex="0" role="button" aria-label="显示设置说明">
+                    <span class="help-icon" aria-hidden="true">?</span>
+                    <span class="help-bubble">
+                        <span class="help-item" data-help-key="fullscreenOnly">
+                            <span class="help-item-title">仅全屏显示</span>
+                            <span class="help-item-line" data-state="on">
+                                <span class="help-tag">开</span>
+                                <span class="help-item-text">仅在全屏播放下显示</span>
+                            </span>
+                            <span class="help-item-line" data-state="off">
+                                <span class="help-tag">关</span>
+                                <span class="help-item-text">页面存在视频窗口即显示</span>
+                            </span>
+                        </span>
+                        <span class="help-item" data-help-key="alwaysShow">
+                            <span class="help-item-title">常驻显示</span>
+                            <span class="help-item-line" data-state="on">
+                                <span class="help-tag">开</span>
+                                <span class="help-item-text">始终显示</span>
+                            </span>
+                            <span class="help-item-line" data-state="off">
+                                <span class="help-tag">关</span>
+                                <span class="help-item-text">随进度条隐藏</span>
+                            </span>
+                        </span>
+                        <span class="help-item" data-help-key="hiddenForever">
+                            <span class="help-item-title">关闭时钟</span>
+                            <span class="help-item-line" data-state="on">
+                                <span class="help-tag">开</span>
+                                <span class="help-item-text">一律不显示时钟</span>
+                            </span>
+                            <span class="help-item-line" data-state="off">
+                                <span class="help-tag">关</span>
+                                <span class="help-item-text">按其他开关判断</span>
+                            </span>
+                        </span>
+                    </span>
+                </span>
+            </legend>
+
+            <div class="toggle-line">
+                <span class="toggle-line-text">仅全屏显示</span>
+                <span class="toggle">
+                    <input type="checkbox" id="fullscreenOnly">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </div>
+
+            <div class="toggle-line">
+                <span class="toggle-line-text">常驻显示</span>
+                <span class="toggle">
+                    <input type="checkbox" id="modeAlways">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </div>
+
+            <div class="toggle-line toggle-line-disable">
+                <span class="toggle-line-text">关闭时钟</span>
+                <span class="toggle">
+                    <input type="checkbox" id="hiddenForever">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </div>
+            <p class="display-hint">「关闭时钟」开启后，下方主题 / 外观 / CSS 等设置会自动折叠，仅保留本开关以便重新启用。</p>
+          </fieldset>
+
+          <fieldset class="theme-fieldset is-clock-config" id="sec-theme">
             <legend>主题</legend>
             <div class="theme-grid" id="themeGrid" role="group" aria-label="时钟主题"></div>
             <p class="theme-hint" id="themeHint">预设主题不带 CSS；自定义主题会保存当前外观与 CSS。</p>
           </fieldset>
 
-          <section class="card-group" id="sec-appearance" aria-label="外观与显示">
-            <fieldset>
-                <legend>外观</legend>
+          <fieldset class="is-clock-config" id="sec-appearance">
+            <legend>外观</legend>
 
-                <div class="grid-2">
-                    <label class="field field-number">
-                        <span class="field-label">字体大小</span>
-                        <span class="input-unit">
-                            <input type="number" id="fontSize" min="8" max="120" step="1">
-                            <span class="unit">px</span>
-                        </span>
-                    </label>
-
-                    <div class="field field-toggle">
-                        <span class="field-label">粗体</span>
-                        <span class="toggle">
-                            <input type="checkbox" id="bold">
-                            <span class="toggle-track" aria-hidden="true">
-                                <span class="toggle-thumb"></span>
-                            </span>
-                        </span>
-                    </div>
-                </div>
-
-                <div class="field field-color">
-                    <span class="field-label">文字颜色</span>
-                    <div class="color-row">
-                        <div class="swatches" id="colorSwatches" role="group" aria-label="文字颜色色块"></div>
-                        <input type="text" id="colorHex" class="hex-input"
-                               maxlength="7" spellcheck="false" placeholder="#ffffff"
-                               aria-label="文字颜色 Hex 值" aria-invalid="false">
-                    </div>
-                </div>
-
-                <div class="field field-color">
-                    <span class="field-label">背景颜色</span>
-                    <div class="color-row">
-                        <div class="swatches" id="bgColorSwatches" role="group" aria-label="背景颜色色块"></div>
-                        <input type="text" id="bgColorHex" class="hex-input"
-                               maxlength="7" spellcheck="false" placeholder="#fb7299"
-                               aria-label="背景颜色 Hex 值" aria-invalid="false">
-                    </div>
-                </div>
-
-                <label class="row-stacked">
-                    <span class="row-head">
-                        透明度
-                        <span class="unit value-display" id="bgOpacityValue">100%</span>
+            <div class="grid-2">
+                <label class="field field-number">
+                    <span class="field-label">字体大小</span>
+                    <span class="input-unit">
+                        <input type="number" id="fontSize" min="8" max="120" step="1">
+                        <span class="unit">px</span>
                     </span>
-                    <input type="range" id="bgOpacity" class="opacity-range" min="0" max="100" step="1">
                 </label>
-            </fieldset>
 
-            <fieldset>
-                <legend class="legend-tip">
-                    显示
-                    <span class="help-tip" tabindex="0" role="button" aria-label="显示设置说明">
-                        <span class="help-icon" aria-hidden="true">?</span>
-                        <span class="help-bubble">
-                            <span class="help-item" data-help-key="fullscreenOnly">
-                                <span class="help-item-title">仅全屏显示</span>
-                                <span class="help-item-line" data-state="on">
-                                    <span class="help-tag">开</span>
-                                    <span class="help-item-text">仅在全屏播放下显示</span>
-                                </span>
-                                <span class="help-item-line" data-state="off">
-                                    <span class="help-tag">关</span>
-                                    <span class="help-item-text">页面存在视频窗口即显示</span>
-                                </span>
-                            </span>
-                            <span class="help-item" data-help-key="alwaysShow">
-                                <span class="help-item-title">常驻显示</span>
-                                <span class="help-item-line" data-state="on">
-                                    <span class="help-tag">开</span>
-                                    <span class="help-item-text">始终显示</span>
-                                </span>
-                                <span class="help-item-line" data-state="off">
-                                    <span class="help-tag">关</span>
-                                    <span class="help-item-text">随进度条隐藏</span>
-                                </span>
-                            </span>
-                            <span class="help-item" data-help-key="hiddenForever">
-                                <span class="help-item-title">关闭时钟</span>
-                                <span class="help-item-line" data-state="on">
-                                    <span class="help-tag">开</span>
-                                    <span class="help-item-text">一律不显示时钟</span>
-                                </span>
-                                <span class="help-item-line" data-state="off">
-                                    <span class="help-tag">关</span>
-                                    <span class="help-item-text">按其他开关判断</span>
-                                </span>
-                            </span>
-                        </span>
-                    </span>
-                </legend>
-
-                <div class="toggle-line">
-                    <span class="toggle-line-text">仅全屏显示</span>
+                <div class="field field-toggle">
+                    <span class="field-label">粗体</span>
                     <span class="toggle">
-                        <input type="checkbox" id="fullscreenOnly">
+                        <input type="checkbox" id="bold">
                         <span class="toggle-track" aria-hidden="true">
                             <span class="toggle-thumb"></span>
                         </span>
                     </span>
                 </div>
+            </div>
 
-                <div class="toggle-line">
-                    <span class="toggle-line-text">常驻显示</span>
-                    <span class="toggle">
-                        <input type="checkbox" id="modeAlways">
-                        <span class="toggle-track" aria-hidden="true">
-                            <span class="toggle-thumb"></span>
-                        </span>
-                    </span>
+            <div class="field field-color">
+                <span class="field-label">文字颜色</span>
+                <div class="color-row">
+                    <div class="swatches" id="colorSwatches" role="group" aria-label="文字颜色色块"></div>
+                    <input type="text" id="colorHex" class="hex-input"
+                           maxlength="7" spellcheck="false" placeholder="#ffffff"
+                           aria-label="文字颜色 Hex 值" aria-invalid="false">
                 </div>
+            </div>
 
-                <div class="toggle-line">
-                    <span class="toggle-line-text">关闭时钟</span>
-                    <span class="toggle">
-                        <input type="checkbox" id="hiddenForever">
-                        <span class="toggle-track" aria-hidden="true">
-                            <span class="toggle-thumb"></span>
-                        </span>
-                    </span>
+            <div class="field field-color">
+                <span class="field-label">背景颜色</span>
+                <div class="color-row">
+                    <div class="swatches" id="bgColorSwatches" role="group" aria-label="背景颜色色块"></div>
+                    <input type="text" id="bgColorHex" class="hex-input"
+                           maxlength="7" spellcheck="false" placeholder="#fb7299"
+                           aria-label="背景颜色 Hex 值" aria-invalid="false">
                 </div>
-            </fieldset>
-          </section>
+            </div>
 
-          <fieldset class="css-fieldset" id="sec-css">
+            <label class="row-stacked">
+                <span class="row-head">
+                    透明度
+                    <span class="unit value-display" id="bgOpacityValue">100%</span>
+                </span>
+                <input type="range" id="bgOpacity" class="opacity-range" min="0" max="100" step="1">
+            </label>
+          </fieldset>
+
+          <fieldset class="css-fieldset is-clock-config" id="sec-css">
             <legend>自定义 CSS</legend>
             <p class="section-intro">
                 启用后，扩展不再向时钟节点注入外观相关的 inline style，你写的 CSS 成为外观的唯一来源——颜色、背景、字号、字体、边框、动画都由你定义，<strong>无需 <code>!important</code></strong>。位置仍由左侧拖拽面板控制，复杂布局（指针表盘、翻页等）的内部结构仍由扩展生成；你的 CSS 只需专注外观本身。保存自定义主题时，CSS 会随外观一起存进主题卡；切换主题时一并恢复。
@@ -284,7 +284,7 @@
                 BiClock 是一个轻量的 Manifest V3 浏览器扩展，在 Bilibili 视频播放器顶部叠加显示当前时间。纯原生 JS，零依赖、零构建，同一套代码同时支持 Chrome / Edge / Firefox。
             </p>
             <p class="about-meta">
-                版本 <span id="versionTag">3.2</span> · MIT License ·
+                版本 <span id="versionTag">3.3</span> · MIT License ·
                 <a href="https://github.com/ouyangfeng2022/BiClock" target="_blank" rel="noopener">源代码</a> ·
                 <a href="https://github.com/ouyangfeng2022/BiClock/issues" target="_blank" rel="noopener">反馈问题</a> ·
                 <a href="https://github.com/ouyangfeng2022/BiClock#readme" target="_blank" rel="noopener">使用文档</a>
@@ -294,7 +294,7 @@
 
         <!-- 右栏：常驻预览（B 站播放器外壳 + 时钟叠在上面 + 直接拖动定位）+ 保存按钮 -->
         <aside class="preview-column" aria-label="时钟预览与位置">
-            <section class="preview-banner" id="previewBanner">
+            <section class="preview-banner is-clock-config" id="previewBanner">
                 <!-- CSS 还原的 B 站播放器外壳：纯装饰，aria-hidden 让屏幕阅读器跳过 -->
                 <div class="shell-top" aria-hidden="true">
                     <span class="shell-avatar"></span>
@@ -318,8 +318,18 @@
                 <button type="button" id="resetPosition" class="preview-reset" title="重置为居中">居中</button>
             </section>
 
+            <!-- 关闭时钟状态下的占位：默认隐藏，body[data-clock-disabled="true"] 时显示 -->
+            <section class="preview-disabled" aria-hidden="true">
+                <div class="preview-disabled-icon" aria-hidden="true">⏻</div>
+                <div class="preview-disabled-title">时钟已关闭</div>
+                <div class="preview-disabled-desc">
+                    在「显示 → 关闭时钟」处关闭后，所有外观 / 主题 / CSS 设置都会折叠。<br>
+                    重新开启该开关即可恢复。
+                </div>
+            </section>
+
             <!-- 保存按钮紧贴预览旁，作为预览栏的一部分 -->
-            <button type="button" id="saveCustomTheme" class="primary-btn">保存当前外观与 CSS 为自定义主题</button>
+            <button type="button" id="saveCustomTheme" class="primary-btn is-clock-config">保存当前外观与 CSS 为自定义主题</button>
         </aside>
     </div>
 

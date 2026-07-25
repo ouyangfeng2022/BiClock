@@ -132,6 +132,15 @@ function fillForm() {
     $('hiddenForever').checked = !!config.hiddenForever;
     updateSwatchSelection();
     updateHelpActiveStates();
+    applyHiddenState();
+}
+
+// 关闭时钟（hiddenForever=true）时把预览与外观 fieldset 折叠，
+// 占位条登场。靠 body 上的 data-clock-disabled 属性 + popup.css 的
+// 属性选择器统一驱动。与 options.js 同源、各维护一份（不抽公共，
+// 符合项目两边独立维护 popup/options 的约定）。
+function applyHiddenState() {
+    document.body.dataset.clockDisabled = config.hiddenForever ? 'true' : 'false';
 }
 
 function onInput(event) {
@@ -146,6 +155,8 @@ function onInput(event) {
     save();
     updateSwatchSelection();
     updateHelpActiveStates();
+    // hiddenForever 切换后由 applyHiddenState 折叠/展开预览与外观。
+    applyHiddenState();
 }
 
 // ---- 颜色色块 + Hex 输入 ----

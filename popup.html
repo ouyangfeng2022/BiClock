@@ -13,61 +13,15 @@
         </button>
     </header>
 
-    <div class="preview" id="preview">
+    <div class="preview is-clock-config" id="preview">
         <div class="preview-clock bpx-player-top-clock" id="previewClock">00:00:00</div>
     </div>
 
-    <fieldset>
-        <legend>外观</legend>
-
-        <div class="grid-2">
-            <label class="field field-number">
-                <span class="field-label">字体大小</span>
-                <span class="input-unit">
-                    <input type="number" id="fontSize" min="8" max="120" step="1">
-                    <span class="unit">px</span>
-                </span>
-            </label>
-
-            <div class="field field-toggle">
-                <span class="field-label">粗体</span>
-                <span class="toggle">
-                    <input type="checkbox" id="bold">
-                    <span class="toggle-track" aria-hidden="true">
-                        <span class="toggle-thumb"></span>
-                    </span>
-                </span>
-            </div>
-        </div>
-
-        <div class="field field-color">
-            <span class="field-label">文字颜色</span>
-            <div class="color-row">
-                <div class="swatches" id="colorSwatches" role="group" aria-label="文字颜色色块"></div>
-                <input type="text" id="colorHex" class="hex-input"
-                       maxlength="7" spellcheck="false" placeholder="#ffffff"
-                       aria-label="文字颜色 Hex 值" aria-invalid="false">
-            </div>
-        </div>
-
-        <div class="field field-color">
-            <span class="field-label">背景颜色</span>
-            <div class="color-row">
-                <div class="swatches" id="bgColorSwatches" role="group" aria-label="背景颜色色块"></div>
-                <input type="text" id="bgColorHex" class="hex-input"
-                       maxlength="7" spellcheck="false" placeholder="#fb7299"
-                       aria-label="背景颜色 Hex 值" aria-invalid="false">
-            </div>
-        </div>
-
-        <label class="row-stacked">
-            <span class="row-head">
-                透明度
-                <span class="unit value-display" id="bgOpacityValue">100%</span>
-            </span>
-            <input type="range" id="bgOpacity" class="opacity-range" min="0" max="100" step="1">
-        </label>
-    </fieldset>
+    <!-- 关闭时钟状态下的占位：默认隐藏，body[data-clock-disabled="true"] 时显示 -->
+    <div class="preview-disabled" aria-hidden="true">
+        <span class="preview-disabled-icon" aria-hidden="true">⏻</span>
+        <span class="preview-disabled-text">时钟已关闭 · 在「显示 → 关闭时钟」处重新开启</span>
+    </div>
 
     <fieldset>
         <legend class="legend-tip">
@@ -132,7 +86,7 @@
             </span>
         </div>
 
-        <div class="toggle-line">
+        <div class="toggle-line toggle-line-disable">
             <span class="toggle-line-text">关闭时钟</span>
             <span class="toggle">
                 <input type="checkbox" id="hiddenForever">
@@ -141,6 +95,58 @@
                 </span>
             </span>
         </div>
+    </fieldset>
+
+    <fieldset class="is-clock-config">
+        <legend>外观</legend>
+
+        <div class="grid-2">
+            <label class="field field-number">
+                <span class="field-label">字体大小</span>
+                <span class="input-unit">
+                    <input type="number" id="fontSize" min="8" max="120" step="1">
+                    <span class="unit">px</span>
+                </span>
+            </label>
+
+            <div class="field field-toggle">
+                <span class="field-label">粗体</span>
+                <span class="toggle">
+                    <input type="checkbox" id="bold">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </div>
+        </div>
+
+        <div class="field field-color">
+            <span class="field-label">文字颜色</span>
+            <div class="color-row">
+                <div class="swatches" id="colorSwatches" role="group" aria-label="文字颜色色块"></div>
+                <input type="text" id="colorHex" class="hex-input"
+                       maxlength="7" spellcheck="false" placeholder="#ffffff"
+                       aria-label="文字颜色 Hex 值" aria-invalid="false">
+            </div>
+        </div>
+
+        <div class="field field-color">
+            <span class="field-label">背景颜色</span>
+            <div class="color-row">
+                <div class="swatches" id="bgColorSwatches" role="group" aria-label="背景颜色色块"></div>
+                <input type="text" id="bgColorHex" class="hex-input"
+                       maxlength="7" spellcheck="false" placeholder="#fb7299"
+                       aria-label="背景颜色 Hex 值" aria-invalid="false">
+            </div>
+        </div>
+
+        <label class="row-stacked">
+            <span class="row-head">
+                透明度
+                <span class="unit value-display" id="bgOpacityValue">100%</span>
+            </span>
+            <input type="range" id="bgOpacity" class="opacity-range" min="0" max="100" step="1">
+        </label>
     </fieldset>
 
     <p class="more-hint">
