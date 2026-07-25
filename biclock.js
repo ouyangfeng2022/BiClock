@@ -7,10 +7,13 @@ var config = {};
 var clock = document.createElement('div');
 clock.className = 'bpx-player-top-clock';
 clock.style.position = 'absolute';
-// 用户无法在浏览器全屏里点击时钟（会退出全屏），所以位置改在 popup 面板里调整。
 // 高 z-index 避免被 Bilibili 的控件层盖住。
 clock.style.zIndex = '9999';
 clock.style.userSelect = 'none';
+// 暗示可拖动：现代浏览器在浏览器全屏里点击页面内容不会退出全屏（只有 Esc 退出），
+// 所以位置既能在 options 预览栏拖动设定，也能在真实播放器里直接按住时钟拖动微调。
+// 与 options.css 的 .preview-clock 用同一组光标（grab/grabbing），跨场景一致。
+clock.style.cursor = 'grab';
 
 // 用户自定义 CSS 通过 <style> 注入：textContent 随 config 重写。
 // 挂到 document.documentElement（不挂 head：内容脚本运行时 head 可能尚未就绪，
@@ -81,6 +84,89 @@ function applyCustomCss() {
         config.customCssEnabled && config.customCss ? config.customCss : '';
 }
 
+// 真实播放器里的时钟拖动：与 options.js 预览栏拖动同源。
+// 按住时钟左键即可拖动；松开后写回 chrome.storage.local，与 options 预览栏
+// 共用同一份 posX/posY，所以两边的位置永远一致。显示行为完全保持原样：
+// 鼠标触发模式下控件隐藏仍会摘下时钟，再次显示时落在最新位置。
+//
+// 拖动期间 updateClock() 每秒 tick 仍会 appendChild + applyStyles ——
+// appendChild 复用同一节点不会产生副本；applyStyles 从 config.posX/posY
+// 重算位置，而我们拖动时正是把它写进 config，所以每秒 tick 反而把刚拖到
+// 的位置稳定住，不会跳回原位。
+//
+// grabOffset：与 options.js 同思路，记录 mousedown 时指针相对时钟左上角的
+// 偏移，让拖动时"指针贴住时钟的同一处"而不是"时钟跳到指针处"。纯点击
+// （按下即松开、无 mousemove）不会移动时钟，位置不变。
+var grabOffsetX = 0;
+var grabOffsetY = 0;
+var dragging = false;
+
+function setPositionFromPointer(clientX, clientY, offsetX, offsetY) {
+    var container = document.getElementsByClassName('bpx-player-container')[0];
+    if (!container) return;
+    var rect = container.getBoundingClientRect();
+    var ownW = clock.offsetWidth;
+    var ownH = clock.offsetHeight;
+    // edge-aligned：定位是 left/top + transform 按自身尺寸反向偏移，
+    // 所以时钟真正可移动范围是容器减去自身尺寸，分母必须用 spanX/Y，
+    // 否则首次 mousemove 会因比例错位让时钟先抖一下再开始跟随。
+    var spanX = Math.max(1, rect.width - ownW);
+    var spanY = Math.max(1, rect.height - ownH);
+    var x = (clientX - rect.left - (offsetX || 0)) / spanX;
+    var y = (clientY - rect.top - (offsetY || 0)) / spanY;
+    x = Math.max(0, Math.min(1, x));
+    y = Math.max(0, Math.min(1, y));
+    config.posX = x;
+    config.posY = y;
+    // 立即重应用位置，不等下一秒 tick：拖动响应跟手。
+    applyStyles();
+}
+
+function initClockDrag() {
+    function onMove(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        clock.style.cursor = 'grabbing';
+        setPositionFromPointer(e.clientX, e.clientY, grabOffsetX, grabOffsetY);
+    }
+    function onUp(e) {
+        if (!dragging) return;
+        dragging = false;
+        clock.style.cursor = 'grab';
+        // 拦截 mouseup 的冒泡，与 onDown 对称：避免 Bilibili 把 mousedown+mouseup
+        // 合成的 click 解释为"点视频暂停"。
+        e.stopPropagation();
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        // 持久化最终位置：写入 chrome.storage.local 后，
+        // options 预览栏下次打开会用这个新位置；同标签页的 storage.onChanged
+        // 会回调把 config 同样的值写一遍（幂等），无副作用。
+        chrome.storage.local.set({ posX: config.posX, posY: config.posY });
+    }
+    function onClick(e) {
+        // 时钟自己消费 click：阻止它冒泡到 Bilibili 的视频区，否则一次拖动收尾
+        // （或单纯点一下时钟）会被 B 站误判为点击视频区域而暂停 / 恢复播放。
+        // 不阻止同一 frame 的其它 listener（capture 阶段），只切断冒泡。
+        e.stopPropagation();
+    }
+    function onDown(e) {
+        if (e.button !== 0) return;
+        // 只有时钟自己消费这次按下：Bilibili 播放器的全局鼠标监听不应被触发，
+        // 例如误判用户在视频区域点击而隐藏控件。stopPropagation 切断冒泡，
+        // preventDefault 阻止选区/拖拽幽灵图等默认副作用。
+        e.preventDefault();
+        e.stopPropagation();
+        var clockRect = clock.getBoundingClientRect();
+        grabOffsetX = e.clientX - clockRect.left;
+        grabOffsetY = e.clientY - clockRect.top;
+        dragging = true;
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    }
+    clock.addEventListener('mousedown', onDown);
+    clock.addEventListener('click', onClick);
+}
+
 
 function startTimer() {
     stopTimer();
@@ -143,6 +229,7 @@ function run() {
     if (!targetDiv) {
         return;
     }
+    initClockDrag();
     var observer = new MutationObserver(function (mutations) {
         // 任意属性变化后都用 shouldShow() 统一判断，避免漏掉 data-screen
         // 与 data-ctrl-hidden 之间谁先谁后的顺序问题。
