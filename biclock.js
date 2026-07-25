@@ -153,6 +153,12 @@ function applyCustomCss() {
 var grabOffsetX = 0;
 var grabOffsetY = 0;
 var dragging = false;
+// 鼠标是否悬停在时钟上：鼠标触发模式下，B 站会因鼠标静止超时而隐藏控件
+// （data-ctrl-hidden=true），时钟跟着消失；时钟一没，鼠标瞬间又"落回"视频
+// 区，B 站又把控件显示回来——如此往复形成抖动，用户根本没法把鼠标停在
+// 叉号上点它。悬停时把时钟"钉"住（shouldShow 增加此例外），离开后再回归
+// 自然显隐。
+var clockHovered = false;
 
 function setPositionFromPointer(clientX, clientY, offsetX, offsetY) {
     var container = document.getElementsByClassName('bpx-player-container')[0];
@@ -189,11 +195,31 @@ function setPositionFromPointer(clientX, clientY, offsetX, offsetY) {
 // 也避免冒泡到 Bilibili 播放器被误判为「点视频暂停」。
 
 function buildMenuItems() {
-    var items = [
-        { text: '改为仅全屏显示', apply: { fullscreenOnly: true } },
-        { text: '改为随进度条显示', apply: { alwaysShow: false } },
-        { text: '关闭时钟',         apply: { hiddenForever: true } }
-    ];
+    // 每次打开菜单都重建：菜单面板节点本身是单例，但项要根据当前状态（如
+    // 是否处于全屏）动态决定，否则在全屏下显示「改为仅全屏显示」既无意义
+    // （当前已是全屏，开启 fullscreenOnly 时钟仍显示，无可见变化）又会被
+    // 误以为是损坏的菜单项。
+    while (menuPanel.firstChild) menuPanel.removeChild(menuPanel.firstChild);
+    var container = document.getElementsByClassName('bpx-player-container')[0];
+    var screenAttr = container ? container.getAttribute('data-screen') : '';
+    // 用多个信号综合判断"当前是否处于全屏"：任一为真即视为全屏。
+    // - document.fullscreenElement：Fullscreen API 标准信号（浏览器原生全屏）。
+    // - data-screen === 'full'：B 站属性，'full' = 浏览器原生全屏。
+    // - data-screen === 'web'：B 站"网页全屏"，用户体感也是"全屏"。
+    // 不同浏览器/版本里单一信号可能失灵（如 Firefox 某些场景 fullscreenElement
+    // 时序晚），多信号 OR 兜底，确保全屏下不会误显该项。
+    var inFullscreen = document.fullscreenElement != null
+        || screenAttr === 'full'
+        || screenAttr === 'web';
+    // fullscreenOnly 已开启时，再点也不会改变 config，同样隐藏。
+    var alreadyFsOnly = !!config.fullscreenOnly;
+    var items = [];
+    // 仅在「非全屏 且 fullscreenOnly 未开启」时提供「改为仅全屏显示」。
+    if (!inFullscreen && !alreadyFsOnly) {
+        items.push({ text: '改为仅全屏显示', apply: { fullscreenOnly: true } });
+    }
+    items.push({ text: '改为随进度条显示', apply: { alwaysShow: false } });
+    items.push({ text: '关闭时钟',         apply: { hiddenForever: true } });
     items.forEach(function (item) {
         var btn = document.createElement('button');
         btn.type = 'button';
@@ -262,7 +288,17 @@ function positionMenu() {
 }
 
 function showMenu() {
-    if (!menuPanel.parentNode) document.body.appendChild(menuPanel);
+    if (!menuPanel.parentNode) {
+        // 浏览器全屏（Fullscreen API）下只有全屏元素的后代可见，
+        // 挂 document.body 会被全屏层盖住、菜单看不到（叉号点击像无效）。
+        // 时钟挂在 .bpx-player-container 且全屏下能显示，说明 container 在
+        // 全屏树内；菜单挂到同一处即可。container 无 transform（否则时钟
+        // 自身的 position: fixed 也会漂），菜单的 fixed 定位仍然相对视口。
+        var container = document.getElementsByClassName('bpx-player-container')[0];
+        (container || document.body).appendChild(menuPanel);
+    }
+    // 每次展开都重建菜单项：根据当前是否全屏决定是否显示「改为仅全屏显示」。
+    buildMenuItems();
     positionMenu();
 }
 
@@ -272,17 +308,18 @@ function hideMenu() {
 }
 
 function initCloseMenu() {
-    // 构建菜单项一次（菜单面板节点本身是单例）。
-    buildMenuItems();
+    // 菜单项在每次 showMenu() 时按当前状态重建，这里不再预构建。
 
     // 悬停逻辑：closeBtn 是 clock 子节点，鼠标在 clock 内部移动不会触发 clock.mouseleave
     // （mouseleave 不冒泡，且只在离开整个 clock 含子节点时触发），所以无需 hoverCount。
     // 拖动期间强制隐去；菜单展开期间强制保留 0.55。
     clock.addEventListener('mouseenter', function () {
+        clockHovered = true;
         if (dragging) return;
         closeBtn.style.opacity = '0.55';
     });
     clock.addEventListener('mouseleave', function () {
+        clockHovered = false;
         if (menuPanel.style.display !== 'none') return;
         closeBtn.style.opacity = '0';
     });
@@ -419,6 +456,11 @@ function shouldShow() {
         return false;
     }
     if (config.alwaysShow) return true;
+    // 鼠标触发模式下的悬停守护：鼠标正在时钟上时，即便 B 站把控件隐藏了
+    // （data-ctrl-hidden=true，鼠标静止超时），也保持时钟可见。否则会出现
+    // 控件隐藏→时钟消失→鼠标"落回"视频区→控件再显→时钟再显 的抖动循环，
+    // 让叉号根本无法被点中。仅对 hover 生效；一旦鼠标离开时钟回归自然显隐。
+    if (clockHovered) return true;
     return targetDiv.getAttribute('data-ctrl-hidden') === 'false';
 }
 
