@@ -109,6 +109,17 @@
                                     <span class="help-item-text">随进度条隐藏</span>
                                 </span>
                             </span>
+                            <span class="help-item" data-help-key="hiddenForever">
+                                <span class="help-item-title">永久隐藏</span>
+                                <span class="help-item-line" data-state="on">
+                                    <span class="help-tag">开</span>
+                                    <span class="help-item-text">一律不显示时钟</span>
+                                </span>
+                                <span class="help-item-line" data-state="off">
+                                    <span class="help-tag">关</span>
+                                    <span class="help-item-text">按其他开关判断</span>
+                                </span>
+                            </span>
                         </span>
                     </span>
                 </legend>
@@ -127,6 +138,16 @@
                     <span class="toggle-line-text">常驻显示</span>
                     <span class="toggle">
                         <input type="checkbox" id="modeAlways">
+                        <span class="toggle-track" aria-hidden="true">
+                            <span class="toggle-thumb"></span>
+                        </span>
+                    </span>
+                </div>
+
+                <div class="toggle-line">
+                    <span class="toggle-line-text">永久隐藏</span>
+                    <span class="toggle">
+                        <input type="checkbox" id="hiddenForever">
                         <span class="toggle-track" aria-hidden="true">
                             <span class="toggle-thumb"></span>
                         </span>

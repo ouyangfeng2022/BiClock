@@ -194,6 +194,7 @@ function readFromForm() {
     config.bold = $('bold').checked;
     config.fullscreenOnly = $('fullscreenOnly').checked;
     config.alwaysShow = $('modeAlways').checked;
+    config.hiddenForever = $('hiddenForever').checked;
     // customCssEnabled 是 toggle，沿用 onInput 路径，故也由 readFromForm 读回。
     // customCss（textarea）由专用 input 绑定直接写 config，不经 readFromForm。
     config.customCssEnabled = $('customCssEnabled').checked;
@@ -220,6 +221,7 @@ function fillForm() {
     $('bold').checked = config.bold;
     $('fullscreenOnly').checked = config.fullscreenOnly !== false;
     $('modeAlways').checked = !!config.alwaysShow;
+    $('hiddenForever').checked = !!config.hiddenForever;
     $('customCss').value = config.customCss || '';
     $('customCssEnabled').checked = !!config.customCssEnabled;
     updateSwatchSelection();
@@ -627,7 +629,8 @@ function updateThemeSelection() {
 function updateHelpActiveStates() {
     var map = [
         { key: 'fullscreenOnly', on: config.fullscreenOnly !== false },
-        { key: 'alwaysShow',     on: !!config.alwaysShow }
+        { key: 'alwaysShow',     on: !!config.alwaysShow },
+        { key: 'hiddenForever',  on: !!config.hiddenForever }
     ];
     map.forEach(function (m) {
         var item = document.querySelector('.help-item[data-help-key="' + m.key + '"]');
@@ -768,7 +771,7 @@ function init() {
         applyToPreview();
     });
 
-    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'customCssEnabled'];
+    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'customCssEnabled', 'hiddenForever'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);

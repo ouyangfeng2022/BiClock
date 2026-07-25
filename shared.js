@@ -32,6 +32,10 @@ var DEFAULTS = {
     // 显示模式：false = 鼠标触发（默认，仅在控件可见时显示），
     // true = 常驻（进入浏览器全屏后一直显示，不随控件隐藏）。
     alwaysShow: false,
+    // 永久隐藏：true = 一律不显示时钟，无视 fullscreenOnly / alwaysShow。
+    // 由播放器右上角「×」关闭菜单触发，也可在 popup/options「显示」分区手动关闭恢复。
+    // 三个可见性开关 AND 串联：hiddenForever=false 是显示的必要条件。
+    hiddenForever: false,
     // 位置由 options 页的预览拖拽控制；posX/posY 是相对播放器容器的 0..1 比例
     // （edge-aligned：translate 按自身尺寸反向偏移，posX=0 左贴左，1 右贴右，
     // 0.5 水平居中；posY 同理），这样不同分辨率的屏幕都能正确还原而非写死像素。

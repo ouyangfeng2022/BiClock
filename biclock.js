@@ -22,6 +22,50 @@ var customCssStyle = document.createElement('style');
 customCssStyle.id = 'biclock-custom-css';
 document.documentElement.appendChild(customCssStyle);
 
+// 时钟右上角的「×」关闭按钮与弹出菜单：与 clock 同级的兄弟节点，
+// 不放进 clock 子节点（renderClockLayout 每秒 replaceChildren 会清掉子节点），
+// 由 updateClock() 统一 append + applyCloseMenuPosition() 跟随时钟定位。
+// 三个节点由 stopTimer() 一并摘下，保持「不可见时 DOM 里无残留」不变量。
+var closeBtn = document.createElement('button');
+closeBtn.type = 'button';
+closeBtn.className = 'bpx-clock-close';
+closeBtn.setAttribute('aria-label', '关闭时钟');
+closeBtn.textContent = '×';
+// fixed 定位与 clock 同源：每秒 tick 由 applyCloseMenuPosition() 重算 left/top。
+closeBtn.style.position = 'fixed';
+closeBtn.style.zIndex = '10000';
+closeBtn.style.width = '20px';
+closeBtn.style.height = '20px';
+closeBtn.style.lineHeight = '18px';
+closeBtn.style.textAlign = 'center';
+closeBtn.style.padding = '0';
+closeBtn.style.border = '0';
+closeBtn.style.borderRadius = '50%';
+closeBtn.style.background = 'rgba(0, 0, 0, 0.62)';
+closeBtn.style.color = '#ffffff';
+closeBtn.style.fontSize = '15px';
+closeBtn.style.fontWeight = '700';
+closeBtn.style.cursor = 'pointer';
+closeBtn.style.opacity = '0';
+closeBtn.style.transition = 'opacity 0.12s ease';
+closeBtn.style.pointerEvents = 'auto';
+
+var menuPanel = document.createElement('div');
+menuPanel.className = 'bpx-clock-menu';
+menuPanel.style.position = 'fixed';
+menuPanel.style.zIndex = '10000';
+menuPanel.style.minWidth = '188px';
+menuPanel.style.padding = '6px';
+menuPanel.style.border = '1px solid rgba(0, 0, 0, 0.08)';
+menuPanel.style.borderRadius = '8px';
+menuPanel.style.background = '#ffffff';
+menuPanel.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.18)';
+menuPanel.style.color = '#172033';
+menuPanel.style.fontSize = '13px';
+menuPanel.style.fontFamily = 'system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif';
+menuPanel.style.lineHeight = '1.45';
+menuPanel.style.display = 'none';
+
 var timer = null;
 
 
@@ -101,6 +145,11 @@ var grabOffsetX = 0;
 var grabOffsetY = 0;
 var dragging = false;
 
+// 鼠标是否停留在 clock 或 closeBtn 上（initCloseMenu 维护）。
+// onUp 在拖动结束时根据它恢复叉号可见性 —— 拖动期间强制隐去叉号，
+// 但拖动结束后若指针仍在时钟上，应立即恢复显示，避免要等下次 mouseenter。
+var hoverCount = 0;
+
 function setPositionFromPointer(clientX, clientY, offsetX, offsetY) {
     var container = document.getElementsByClassName('bpx-player-container')[0];
     if (!container) return;
@@ -122,6 +171,157 @@ function setPositionFromPointer(clientX, clientY, offsetX, offsetY) {
     applyStyles();
 }
 
+// ---- 「×」关闭按钮 + 菜单面板 ----
+//
+// 与 clock 同级（兄弟节点），由 updateClock() 统一挂载/摘除、applyCloseMenuPosition()
+// 跟随时钟左上角重算 left/top。叉号默认 opacity:0，鼠标进入时钟区域显示，离开隐藏。
+// 点叉号展开菜单：三个可见性开关的快捷入口（写 chrome.storage.local 后由 storage.onChanged
+// 回调统一收尾，与设置页手动改开关走同一路径）。点菜单外或 Esc 收起菜单。
+//
+// 拖动期间（dragging=true）叉号自动隐去；菜单展开期间不允许拖动。
+//
+// 所有 mousedown/click 都 stopPropagation + preventDefault：避免触发时钟自身的拖动
+// 起始点（onDown 监听在 clock 上，叉号在 clock 内部，e.target 会落在叉号上），
+// 也避免冒泡到 Bilibili 播放器被误判为「点视频暂停」。
+
+function buildMenuItems() {
+    var items = [
+        { text: '改为仅全屏显示', desc: '关掉「仅全屏显示」的快捷入口', apply: { fullscreenOnly: true } },
+        { text: '改为随进度条显示', desc: '关掉「常驻显示」的快捷入口', apply: { alwaysShow: false } },
+        { text: '永久隐藏',          desc: '可在设置页「显示」分区关闭', apply: { hiddenForever: true } }
+    ];
+    items.forEach(function (item) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'bpx-clock-menu-item';
+        btn.style.display = 'block';
+        btn.style.width = '100%';
+        btn.style.padding = '7px 10px';
+        btn.style.border = '0';
+        btn.style.borderRadius = '5px';
+        btn.style.background = 'transparent';
+        btn.style.color = '#172033';
+        btn.style.font = 'inherit';
+        btn.style.fontSize = '13px';
+        btn.style.textAlign = 'left';
+        btn.style.cursor = 'pointer';
+        btn.textContent = item.text;
+        // 第三个选项（永久隐藏）单独染色，提示语义更重。
+        if (item.apply.hiddenForever) {
+            btn.style.color = '#dc2626';
+        }
+        // hover 用 mouseover/mouseout 实现以兼容性更好；不依赖 :hover。
+        btn.addEventListener('mouseover', function () {
+            if (!item.apply.hiddenForever) {
+                btn.style.background = 'oklch(97.2% 0.004 350)';
+                btn.style.color = '#fb7299';
+            } else {
+                btn.style.background = 'oklch(96.5% 0.03 25)';
+            }
+        });
+        btn.addEventListener('mouseout', function () {
+            btn.style.background = 'transparent';
+            btn.style.color = item.apply.hiddenForever ? '#dc2626' : '#172033';
+        });
+        btn.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            chrome.storage.local.set(item.apply);
+            // 三个选项都不会立即关闭菜单，靠 storage.onChanged 触发 stopTimer()/startTimer()
+            // 自然收尾：选项 3 永久隐藏会让整个时钟+叉号+菜单被摘下；
+            // 选项 1/2 改开关后菜单保持展开，方便用户连续调整。
+        });
+        menuPanel.appendChild(btn);
+    });
+}
+
+function applyCloseMenuPosition() {
+    // 叉号贴在时钟右上角外侧（top: -8px; right: -8px → left/top 用时钟 left+宽-偏移）。
+    var clockRect = clock.getBoundingClientRect();
+    var size = 20;
+    var offset = 6;
+    closeBtn.style.left = (clockRect.right - size + offset).toFixed(1) + 'px';
+    closeBtn.style.top = (clockRect.top - offset).toFixed(1) + 'px';
+    // 菜单展开在叉号下方，左对齐时钟右边缘（避免出右边界则向左展开）。
+    if (menuPanel.style.display !== 'none') {
+        var menuW = menuPanel.offsetWidth || 188;
+        var menuH = menuPanel.offsetHeight || 100;
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+        var left = clockRect.right - menuW;
+        if (left < 8) left = clockRect.left;
+        if (left + menuW > vw - 8) left = vw - 8 - menuW;
+        var top = clockRect.bottom + 6;
+        if (top + menuH > vh - 8) top = clockRect.top - menuH - 6;
+        menuPanel.style.left = left.toFixed(1) + 'px';
+        menuPanel.style.top = top.toFixed(1) + 'px';
+    }
+}
+
+function showMenu() {
+    menuPanel.style.display = 'block';
+    applyCloseMenuPosition();
+}
+
+function hideMenu() {
+    menuPanel.style.display = 'none';
+}
+
+function initCloseMenu() {
+    // 构建菜单项一次（菜单面板节点本身是单例）。
+    buildMenuItems();
+
+    // 鼠标进入时钟/叉号任一区域 → 显示叉号；都离开 → 隐藏叉号。
+    // 用 hoverCount 跨节点跟踪（模块级变量，onUp 也读它恢复可见性）：
+    // clock 与 closeBtn 是兄弟节点，鼠标从 clock 移到 closeBtn 会先触发
+    // clock.mouseleave（count--）再触发 closeBtn.mouseenter（count++），
+    // 若简单按单个节点的 enter/leave 切换会瞬间 opacity:0→1 闪烁。
+    // 拖动期间（dragging=true）强制隐去；菜单展开期间强制保留。
+    hoverCount = 0;
+    function enter() {
+        hoverCount++;
+        if (dragging) return;
+        closeBtn.style.opacity = '1';
+    }
+    function leave() {
+        hoverCount = Math.max(0, hoverCount - 1);
+        if (hoverCount === 0 && menuPanel.style.display === 'none') {
+            closeBtn.style.opacity = '0';
+        }
+    }
+    clock.addEventListener('mouseenter', enter);
+    clock.addEventListener('mouseleave', leave);
+    closeBtn.addEventListener('mouseenter', enter);
+    closeBtn.addEventListener('mouseleave', leave);
+
+    // 叉号点击：切换菜单可见性；mousedown 拦截拖动起点。
+    closeBtn.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+    closeBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (menuPanel.style.display === 'none') showMenu(); else hideMenu();
+    });
+
+    // 菜单展开时点其它地方 / 按 Esc 收起。
+    document.addEventListener('mousedown', function (e) {
+        if (menuPanel.style.display === 'none') return;
+        if (e.target === closeBtn || e.target.closest('.bpx-clock-menu')) return;
+        hideMenu();
+    }, true);
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && menuPanel.style.display !== 'none') {
+            hideMenu();
+        }
+    });
+}
+
 function initClockDrag() {
     function onMove(e) {
         if (!dragging) return;
@@ -133,6 +333,8 @@ function initClockDrag() {
         if (!dragging) return;
         dragging = false;
         clock.style.cursor = 'grab';
+        // 拖动结束：若指针仍在时钟/叉号上（hoverCount>0）恢复叉号可见。
+        if (hoverCount > 0) closeBtn.style.opacity = '1';
         // 拦截 mouseup 的冒泡，与 onDown 对称：避免 Bilibili 把 mousedown+mouseup
         // 合成的 click 解释为"点视频暂停"。
         e.stopPropagation();
@@ -151,6 +353,11 @@ function initClockDrag() {
     }
     function onDown(e) {
         if (e.button !== 0) return;
+        // 点在「×」关闭按钮或菜单面板内时，让 initCloseMenu 自己处理，
+        // 不进入拖动状态（否则叉号点击会被误判为拖动起点）。
+        if (e.target === closeBtn || e.target.closest('.bpx-clock-menu') || e.target.closest('.bpx-clock-close')) return;
+        // 菜单展开期间不允许开始拖动（避免拖动+菜单同时操作造成混乱）。
+        if (menuPanel.style.display !== 'none') return;
         // 只有时钟自己消费这次按下：Bilibili 播放器的全局鼠标监听不应被触发，
         // 例如误判用户在视频区域点击而隐藏控件。stopPropagation 切断冒泡，
         // preventDefault 阻止选区/拖拽幽灵图等默认副作用。
@@ -160,6 +367,9 @@ function initClockDrag() {
         grabOffsetX = e.clientX - clockRect.left;
         grabOffsetY = e.clientY - clockRect.top;
         dragging = true;
+        // 拖动期间隐藏叉号（避免它跟着时钟飘动）；菜单收起保证一致。
+        closeBtn.style.opacity = '0';
+        hideMenu();
         document.addEventListener('mousemove', onMove);
         document.addEventListener('mouseup', onUp);
     }
@@ -184,6 +394,15 @@ function stopTimer() {
     if (clock.parentNode) {
         clock.parentNode.removeChild(clock);
     }
+    // 「×」关闭按钮与菜单面板是 clock 的兄弟节点，一并摘下，
+    // 保持「不可见时 DOM 里无残留」不变量；菜单自然收起。
+    if (closeBtn.parentNode) {
+        closeBtn.parentNode.removeChild(closeBtn);
+    }
+    hideMenu();
+    if (menuPanel.parentNode) {
+        menuPanel.parentNode.removeChild(menuPanel);
+    }
 }
 
 // 是否显示时钟的统一判官。
@@ -201,6 +420,9 @@ function stopTimer() {
 function shouldShow() {
     var targetDiv = document.getElementsByClassName('bpx-player-container')[0];
     if (!targetDiv) return false;
+    // 永久隐藏是最高优先级闸门：用户从「×」菜单选了「永久隐藏」或手动开了
+    // 设置页的开关后，无视 fullscreenOnly / alwaysShow，一律不显示。
+    if (config.hiddenForever) return false;
     if (config.fullscreenOnly && targetDiv.getAttribute('data-screen') !== 'full') {
         return false;
     }
@@ -222,6 +444,10 @@ function updateClock() {
     // 根容器稳定，避开这个问题。鼠标触发模式下控件隐藏时 stopTimer() 会立刻
     // 把节点摘下，所以无需依赖顶栏的显隐来带走时钟。
     container.appendChild(clock);
+    // 「×」关闭按钮与菜单面板跟随时钟挂载，按位置同步。
+    if (!closeBtn.parentNode) container.appendChild(closeBtn);
+    if (!menuPanel.parentNode) container.appendChild(menuPanel);
+    applyCloseMenuPosition();
 }
 
 function run() {
@@ -230,6 +456,7 @@ function run() {
         return;
     }
     initClockDrag();
+    initCloseMenu();
     var observer = new MutationObserver(function (mutations) {
         // 任意属性变化后都用 shouldShow() 统一判断，避免漏掉 data-screen
         // 与 data-ctrl-hidden 之间谁先谁后的顺序问题。
@@ -268,9 +495,10 @@ function init() {
             Object.keys(changes).forEach(function (key) {
                 config[key] = changes[key].newValue;
             });
-            // 显示相关开关（alwaysShow / fullscreenOnly）切换不会触发播放器属性变化，
-            // 需要主动按当前状态重启/停止定时器，否则切换后要等下次控件动作才生效。
-            if ('alwaysShow' in changes || 'fullscreenOnly' in changes) {
+            // 显示相关开关（alwaysShow / fullscreenOnly / hiddenForever）切换
+            // 不会触发播放器属性变化，需要主动按当前状态重启/停止定时器，
+            // 否则切换后要等下次控件动作才生效。
+            if ('alwaysShow' in changes || 'fullscreenOnly' in changes || 'hiddenForever' in changes) {
                 if (shouldShow()) {
                     startTimer();
                 } else {

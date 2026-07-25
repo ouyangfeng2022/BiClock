@@ -105,6 +105,7 @@ function readFromForm() {
     config.bold = $('bold').checked;
     config.fullscreenOnly = $('fullscreenOnly').checked;
     config.alwaysShow = $('modeAlways').checked;
+    config.hiddenForever = $('hiddenForever').checked;
 }
 
 // 把当前 backgroundColor + bgOpacity 写入透明度滑条的 --clock-bg，
@@ -128,6 +129,7 @@ function fillForm() {
     $('bold').checked = config.bold;
     $('fullscreenOnly').checked = config.fullscreenOnly !== false;
     $('modeAlways').checked = !!config.alwaysShow;
+    $('hiddenForever').checked = !!config.hiddenForever;
     updateSwatchSelection();
     updateHelpActiveStates();
 }
@@ -193,7 +195,8 @@ function updateSwatchSelection() {
 function updateHelpActiveStates() {
     var map = [
         { key: 'fullscreenOnly', on: config.fullscreenOnly !== false },
-        { key: 'alwaysShow',     on: !!config.alwaysShow }
+        { key: 'alwaysShow',     on: !!config.alwaysShow },
+        { key: 'hiddenForever',  on: !!config.hiddenForever }
     ];
     map.forEach(function (m) {
         var item = document.querySelector('.help-item[data-help-key="' + m.key + '"]');
@@ -251,7 +254,7 @@ function init() {
     });
 
     // 颜色字段由 bindHexInput 单独处理（含校验逻辑），其余字段走统一的 onInput。
-    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways'];
+    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'hiddenForever'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);
