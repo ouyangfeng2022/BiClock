@@ -510,6 +510,10 @@ body {
     padding: 18px 20px;
     margin: 0;
     background: var(--surface);
+    /* grid item 默认 min-width: auto，内部有不可换行长内容（HTML 模板示例的
+       长 SVG 行）时会撑爆列宽，与右栏预览重叠。强制 0 让内容靠自身 overflow
+       内部消化。配合 pre.docs-code 的 min-width: 0 双保险。*/
+    min-width: 0;
 }
 
 legend {
@@ -1455,6 +1459,11 @@ pre.docs-code {
     padding: 12px 14px;
     overflow-x: auto;
     background: var(--surface);
+    /* HTML 模板示例里有不可换行的长行（SVG 属性串），pre 默认 min-width: auto
+       会用最长行的 min-content 撑爆父级 fieldset，进而把 .options-main 中间列
+       撑进预览栏。强制 0 让 pre 由父级宽度反推，超出靠 overflow-x: auto 内部滚动。*/
+    min-width: 0;
+    max-width: 100%;
 }
 
 pre.docs-code code {
