@@ -105,7 +105,9 @@ function readFromForm() {
     config.bold = $('bold').checked;
     config.fullscreenOnly = $('fullscreenOnly').checked;
     config.alwaysShow = $('modeAlways').checked;
-    config.hiddenForever = $('hiddenForever').checked;
+    // UI 上呈现的是「启用时钟」总开关，底层存储键仍是 hiddenForever（反向）。
+    // 反向语义：勾上启用 = hiddenForever=false；取消勾选 = hiddenForever=true。
+    config.hiddenForever = !$('clockEnabled').checked;
 }
 
 // 把当前 backgroundColor + bgOpacity 写入透明度滑条的 --clock-bg，
@@ -129,7 +131,8 @@ function fillForm() {
     $('bold').checked = config.bold;
     $('fullscreenOnly').checked = config.fullscreenOnly !== false;
     $('modeAlways').checked = !!config.alwaysShow;
-    $('hiddenForever').checked = !!config.hiddenForever;
+    // 总开关反向：启用时钟 = !hiddenForever
+    $('clockEnabled').checked = !config.hiddenForever;
     updateSwatchSelection();
     updateHelpActiveStates();
     applyHiddenState();
@@ -200,14 +203,13 @@ function updateSwatchSelection() {
     });
 }
 
-// 同步"显示"气泡里每个开关项的当前态：选中档加 data-active 满色，
-// 另一档调淡。fullscreenOnly 与表单一致用 !== false（默认 true），
-// alwaysShow 用 !!（默认 false）。
 function updateHelpActiveStates() {
     var map = [
+        // 总开关在 UI 上是「启用时钟」（与 hiddenForever 反向）；
+        // help-bubble 的 data-help-key 也跟着 UI 改名，这里 on 用 !hiddenForever。
+        { key: 'clockEnabled',   on: !config.hiddenForever },
         { key: 'fullscreenOnly', on: config.fullscreenOnly !== false },
-        { key: 'alwaysShow',     on: !!config.alwaysShow },
-        { key: 'hiddenForever',  on: !!config.hiddenForever }
+        { key: 'alwaysShow',     on: !!config.alwaysShow }
     ];
     map.forEach(function (m) {
         var item = document.querySelector('.help-item[data-help-key="' + m.key + '"]');
@@ -265,7 +267,7 @@ function init() {
     });
 
     // 颜色字段由 bindHexInput 单独处理（含校验逻辑），其余字段走统一的 onInput。
-    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'hiddenForever'];
+    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'clockEnabled'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);

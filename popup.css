@@ -851,25 +851,80 @@ input[type="checkbox"]:focus-visible {
     box-shadow: var(--ring);
 }
 
-/* 「关闭时钟」开关行：在显示分区底部，关闭态下用稍重的边框强调
-   它是「唯一能切回来的入口」。 */
-.toggle-line-disable {
-    padding: 5px 8px;
-    margin-top: 2px;
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    border: 1px solid var(--border);
+/* ============================================================
+   显示分区独有：L1 总开关（启用时钟）+ L2 子项分组（显示模式）。
+   关闭时钟（=总开关未勾选）时，L2 与下方所有 is-clock-config 一起折叠。
+   ============================================================ */
+
+/* L1 总开关：横排「标签 + 描述 + toggle」。
+   不加边框 / 不加底色 —— 用更大的字号、字重、间距建立层级。 */
+.master-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 0 12px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
 }
 
-body[data-clock-disabled="true"] .toggle-line-disable {
-    border-color: var(--border-hi);
-    background: var(--surface-2);
+.master-toggle-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.master-toggle-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.master-toggle-desc {
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--ink-3);
+}
+
+/* 总开关用更大的 toggle（50×30）拉开与子项的视觉差距 */
+.master-toggle-switch {
+    width: 50px;
+    height: 30px;
+    flex: none;
+}
+
+.master-toggle-switch .toggle-thumb {
+    width: 22px;
+    height: 22px;
+}
+
+.master-toggle-switch > input[type="checkbox"]:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(20px);
+}
+
+.master-toggle-switch > input[type="checkbox"]:checked:active ~ .toggle-track .toggle-thumb {
+    transform: translateX(20px) scale(0.92);
+}
+
+/* L2 子项分组：标题 + 普通 toggle 行 */
+.sub-group {
+    padding-top: 10px;
+}
+
+.sub-group-title {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 /* ============================================================
-   关闭时钟状态（hiddenForever=true）：
-   折叠预览与外观 fieldset；占位条登场。
-   「显示」fieldset 与底部「更多设置」提示始终保留，
+   关闭时钟状态（hiddenForever=true，即总开关未勾选）：
+   折叠显示模式 + 预览 + 外观；占位条登场。
+   「显示」分区里的总开关与底部「更多设置」提示始终保留，
    让用户能重新开启时钟 / 跳到完整设置页。
    ============================================================ */
 body[data-clock-disabled="true"] .is-clock-config {

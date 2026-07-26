@@ -29,6 +29,17 @@
                 <span class="help-tip" tabindex="0" role="button" aria-label="显示设置说明">
                     <span class="help-icon" aria-hidden="true">?</span>
                     <span class="help-bubble">
+                        <span class="help-item" data-help-key="clockEnabled">
+                            <span class="help-item-title">启用时钟</span>
+                            <span class="help-item-line" data-state="on">
+                                <span class="help-tag">开</span>
+                                <span class="help-item-text">按下方显示模式判断是否显示</span>
+                            </span>
+                            <span class="help-item-line" data-state="off">
+                                <span class="help-tag">关</span>
+                                <span class="help-item-text">一律不显示时钟，所有相关设置折叠</span>
+                            </span>
+                        </span>
                         <span class="help-item" data-help-key="fullscreenOnly">
                             <span class="help-item-title">仅全屏显示</span>
                             <span class="help-item-line" data-state="on">
@@ -51,51 +62,47 @@
                                 <span class="help-item-text">随进度条隐藏</span>
                             </span>
                         </span>
-                        <span class="help-item" data-help-key="hiddenForever">
-                            <span class="help-item-title">关闭时钟</span>
-                            <span class="help-item-line" data-state="on">
-                                <span class="help-tag">开</span>
-                                <span class="help-item-text">一律不显示时钟</span>
-                            </span>
-                            <span class="help-item-line" data-state="off">
-                                <span class="help-tag">关</span>
-                                <span class="help-item-text">按其他开关判断</span>
-                            </span>
-                        </span>
                     </span>
                 </span>
             </legend>
 
-            <div class="toggle-line">
-                <span class="toggle-line-text">仅全屏显示</span>
-                <span class="toggle">
-                    <input type="checkbox" id="fullscreenOnly">
+            <!-- L1 总开关：启用时钟（与 hiddenForever 反向；勾上即代表"开"）。 -->
+            <label class="master-toggle">
+                <span class="master-toggle-label">
+                    <span class="master-toggle-name">启用时钟</span>
+                    <span class="master-toggle-desc">关闭后，所有显示 / 主题 / 外观 / CSS 设置都会折叠</span>
+                </span>
+                <span class="toggle master-toggle-switch">
+                    <input type="checkbox" id="clockEnabled">
                     <span class="toggle-track" aria-hidden="true">
                         <span class="toggle-thumb"></span>
                     </span>
                 </span>
-            </div>
+            </label>
 
-            <div class="toggle-line">
-                <span class="toggle-line-text">常驻显示</span>
-                <span class="toggle">
-                    <input type="checkbox" id="modeAlways">
-                    <span class="toggle-track" aria-hidden="true">
-                        <span class="toggle-thumb"></span>
+            <!-- L2 显示模式：作为总开关下的子项，关闭时钟时一并折叠。 -->
+            <div class="sub-group is-clock-config">
+                <h3 class="sub-group-title">显示模式</h3>
+                <div class="toggle-line">
+                    <span class="toggle-line-text">仅全屏显示</span>
+                    <span class="toggle">
+                        <input type="checkbox" id="fullscreenOnly">
+                        <span class="toggle-track" aria-hidden="true">
+                            <span class="toggle-thumb"></span>
+                        </span>
                     </span>
-                </span>
-            </div>
+                </div>
 
-            <div class="toggle-line toggle-line-disable">
-                <span class="toggle-line-text">关闭时钟</span>
-                <span class="toggle">
-                    <input type="checkbox" id="hiddenForever">
-                    <span class="toggle-track" aria-hidden="true">
-                        <span class="toggle-thumb"></span>
+                <div class="toggle-line">
+                    <span class="toggle-line-text">常驻显示</span>
+                    <span class="toggle">
+                        <input type="checkbox" id="modeAlways">
+                        <span class="toggle-track" aria-hidden="true">
+                            <span class="toggle-thumb"></span>
+                        </span>
                     </span>
-                </span>
+                </div>
             </div>
-            <p class="display-hint">「关闭时钟」开启后，下方主题 / 外观 / CSS 等设置会自动折叠，仅保留本开关以便重新启用。</p>
           </fieldset>
 
           <fieldset class="theme-fieldset is-clock-config" id="sec-theme">

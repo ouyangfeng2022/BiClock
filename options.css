@@ -1511,44 +1511,85 @@ pre.docs-code code {
 }
 
 /* ============================================================
-   显示分区独有：底部一行小字提示「关闭时钟」会折叠其它设置。
-   放在外观/主题等 is-clock-config 之外，关闭态下也保留可见。
+   显示分区独有：L1 总开关（启用时钟）+ L2 子项分组（显示模式）。
+   关闭时钟（=总开关未勾选）时，L2 与下方所有 is-clock-config 一起折叠。
    ============================================================ */
 .display-fieldset {
     background: var(--surface-2);
 }
 
-.display-hint {
-    margin: 10px 0 0;
-    padding: 8px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--ink-3);
+/* L1 总开关：横排「标签 + 描述 + toggle」。
+   不加边框 / 不加底色 —— 用更大的字号、字重、间距建立层级，
+   而不是用视觉装饰（避免 AI tell 的"卡片里塞卡片"）。 */
+.master-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 4px 0 18px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}
+
+.master-toggle-label {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.master-toggle-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.master-toggle-desc {
     font-size: 12px;
-    line-height: 1.55;
+    line-height: 1.5;
+    color: var(--ink-3);
 }
 
-/* 「关闭时钟」开关行：在显示分区底部，关闭态下用稍重的边框强调
-   它是「唯一能切回来的入口」。 */
-.toggle-line-disable {
-    padding: 6px 10px;
-    margin-top: 4px;
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    border: 1px solid var(--border);
+/* 总开关用更大的 toggle（52×32）拉开与子项的视觉差距 */
+.master-toggle-switch {
+    width: 52px;
+    height: 32px;
+    flex: none;
 }
 
-body[data-clock-disabled="true"] .toggle-line-disable {
-    border-color: var(--border-hi);
-    background: var(--surface-2);
+.master-toggle-switch .toggle-thumb {
+    width: 24px;
+    height: 24px;
+}
+
+.master-toggle-switch > input[type="checkbox"]:checked ~ .toggle-track .toggle-thumb {
+    transform: translateX(20px);
+}
+
+.master-toggle-switch > input[type="checkbox"]:checked:active ~ .toggle-track .toggle-thumb {
+    transform: translateX(20px) scale(0.92);
+}
+
+/* L2 子项分组：标题 + 普通 toggle 行 */
+.sub-group {
+    padding-top: 14px;
+}
+
+.sub-group-title {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-3);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 /* ============================================================
-   关闭时钟状态（hiddenForever=true）：
-   - 折叠所有「时钟生效后才有意义」的设置（主题/外观/CSS/预览/保存）
+   关闭时钟状态（hiddenForever=true，即总开关未勾选）：
+   - 折叠所有「时钟生效后才有意义」的设置（显示模式 / 主题 / 外观 / CSS / 预览 / 保存）
    - 占位面板登场
    - 侧栏对应导航项置灰不可点（保留布局）
-   仅「显示」分区与「关于」始终可用，让用户能重新开启时钟。
+   仅「显示」分区里的总开关与「关于」始终可用，让用户能重新开启时钟。
    ============================================================ */
 body[data-clock-disabled="true"] .is-clock-config {
     display: none;
