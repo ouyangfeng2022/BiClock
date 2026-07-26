@@ -220,7 +220,7 @@ body {
 }
 
 /* 锚点跳转时不被顶部吸附遮挡 */
-:where(#sec-display, #sec-theme, #sec-appearance, #sec-css, #sec-about) {
+:where(#sec-display, #sec-theme, #sec-appearance, #sec-css, #sec-html, #sec-about) {
     scroll-margin-top: 16px;
 }
 
@@ -1601,7 +1601,8 @@ body[data-clock-disabled="true"] .preview-disabled {
 
 body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-theme"],
 body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-appearance"],
-body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-css"] {
+body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-css"],
+body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-html"] {
     opacity: 0.4;
     pointer-events: none;
     cursor: not-allowed;

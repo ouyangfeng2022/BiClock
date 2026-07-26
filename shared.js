@@ -46,7 +46,8 @@ var DEFAULTS = {
     posY: 0,
     // 用户在 options 页保存的自定义主题列表；仅 options 页读写，内容脚本不消费。
     // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 12 个外观键
-    // + THEME_CSS_KEYS 的 2 个 CSS 键（customCss / customCssEnabled）。
+    // + THEME_CSS_KEYS 的 4 个非外观键（customCss / customCssEnabled /
+    // customHtml / customHtmlEnabled）。
     // id 形如 "custom_<timestamp>"，作为 clockStyle 标记当前激活的自定义主题。
     customThemes: [],
     // 自定义 CSS：用户在 options 页写的任意 CSS，通过 <style> 注入叠加到时钟节点上，
@@ -55,7 +56,15 @@ var DEFAULTS = {
     // 作为快照存进主题卡，切回该主题时整体恢复（包括 CSS）。详见 THEME_CSS_KEYS。
     // customCssEnabled 关掉即不注入；空串视为未填写。
     customCss: '',
-    customCssEnabled: false
+    customCssEnabled: false,
+    // 自定义 HTML 模板：用户写一段 HTML（含 {{hh}} {{mm}} {{ss}} {{time}} 占位符），
+    // 扩展首次/模板变化时把 HTML 解析为 DOM 子树挂到时钟节点，每秒 tick 只更新占位符
+    // 文本，不再 replaceChildren——所以模板里的装饰元素（小狗、图标、容器）会保留。
+    // 与 CSS 模式互斥：customHtml 启用时 customCss 不注入，外观由模板内联 style 或
+    // <style> 自理。预设主题不带 HTML（切回预设会清空）；自定义主题作为快照随外观
+    // 一起存进主题卡。详见 THEME_CSS_KEYS 与 applyHtmlTemplate。
+    customHtml: '',
+    customHtmlEnabled: false
 };
 
 // 已下线、不再有主题卡的旧主题 id。打开旧版本遗留的存储时需要回退到默认。
@@ -70,22 +79,24 @@ var THEME_STYLE_KEYS = [
     'borderWidth', 'accentColor', 'clockLayout'
 ];
 
-// 自定义 CSS 快照键：保存/恢复自定义主题时随 THEME_STYLE_KEYS 一起带走，
-// 让自定义主题成为「一套完整外观（含 CSS）」。
-// 预设主题（THEMES）不带这两个键 —— applyTheme 切到预设主题时会显式把
-// config.customCss 置空、customCssEnabled 置 false，呈现纯净外观。
-// 内容脚本 biclock.js 不引用本常量：它只消费最终的 config.customCss /
-// config.customCssEnabled，无论是手填还是从主题恢复，都走同一条注入路径。
-var THEME_CSS_KEYS = ['customCss', 'customCssEnabled'];
+// 自定义主题快照键：保存/恢复自定义主题时随 THEME_STYLE_KEYS 一起带走，
+// 让自定义主题成为「一套完整外观（含 CSS + HTML 模板）」。
+// 预设主题（THEMES）不带这四个键 —— applyTheme 切到预设主题时会显式把
+// customCss / customHtml 置空、对应 *Enabled 置 false，呈现纯净外观。
+// 内容脚本 biclock.js 不引用本常量：它只消费最终的 config.customCss 等，
+// 无论是手填还是从主题恢复，都走同一条注入路径。
+// 常量名沿用 THEME_CSS_KEYS（历史命名），但语义已扩到「自定义主题随带的非外观键」。
+var THEME_CSS_KEYS = ['customCss', 'customCssEnabled', 'customHtml', 'customHtmlEnabled'];
 
 // 「外观类」inline style 属性清单：biclock.js / popup.js / options.js 三处
 // applyStyles / applyToPreview 共用，避免三份清单漂移。
 //
-// 设计：自定义 CSS 启用时（cssMode = customCssEnabled && customCss），
-// JS 不再把这些属性灌成 inline style，而是逐项 removeProperty 清掉，
-// 让用户 CSS 成为外观的唯一来源（无需 !important）。
+// 设计：CSS 模式（customCssEnabled && customCss）或 HTML 模板
+// （customHtmlEnabled && customHtml）启用时，JS 不再把这些属性灌成 inline style，
+// 而是逐项 removeProperty 清掉，让用户 CSS / HTML 模板成为外观的唯一来源
+// （无需 !important）。
 // 注意：position / left / top / transform / zIndex / userSelect 不在此列——
-// 它们属于定位/交互层，CSS 模式下仍由 JS 计算，用户 CSS 只专注外观。
+// 它们属于定位/交互层，三种模式下都由 JS 计算，用户 CSS / HTML 只专注外观。
 var APPEARANCE_INLINE_KEYS = [
     'color', 'backgroundColor', 'fontWeight', 'fontFamily', 'fontSize',
     'textShadow', 'border', 'padding', 'borderRadius', 'boxSizing'
@@ -125,9 +136,17 @@ function hexToRgba(hex, alpha) {
 // prefix 决定子节点 className 前缀：
 //   - popup 预览用 'clock'（与 popup.css 选择器对齐）
 //   - 内容脚本用 'bpx-player-clock'（与 B 站播放器命名空间对齐）
+//
+// HTML 模板模式（style.customHtmlEnabled && style.customHtml）下走 applyHtmlTemplate，
+// 不进入下方任何分支——DOM 子树由用户模板决定，每秒 tick 只更新占位符文本。
 function renderClockLayout(el, time, style, prefix) {
-    var parts = time.split(':');
     style = style || {};
+    // HTML 模板模式优先：与 CSS 模式互斥，独立渲染路径。
+    if (style.customHtmlEnabled && style.customHtml) {
+        applyHtmlTemplate(el, style.customHtml, time);
+        return;
+    }
+    var parts = time.split(':');
     prefix = prefix || 'clock';
     el.replaceChildren();
     el.style.display = 'inline-flex';
@@ -328,6 +347,133 @@ function renderClockLayout(el, time, style, prefix) {
         el.style.borderRadius = '999px';
     }
     el.appendChild(makeClockPart(prefix + '-single-time', time));
+}
+
+// HTML 模板模式渲染：把用户写的 HTML 字符串解析成 DOM 子树挂到时钟节点，
+// 时间用 {{hh}} {{mm}} {{ss}} {{time}} 占位符表示。
+//
+// 核心差异：与其它布局分支不同——本函数**仅在模板文本变化时**才 replaceChildren
+// 重建子树；每秒 tick 检测到模板未变时，只遍历缓存下来的占位符 span 列表，
+// 更新它们的 textContent。这样用户模板里的装饰元素（小狗图、SVG、容器）会被保留，
+// 不会被每秒一次的 replaceChildren 清掉。
+//
+// 占位符识别：TreeWalker 遍历文本节点，正则切分
+//   /{{\s*(hh|mm|ss|time)\s*}}/i
+// 把非占位符段保留为 textNode、占位符段替换为
+//   <span data-biclock-part="hh|mm|ss|time">当前值</span>
+// 同一占位符可多次出现，故缓存为数组。
+//
+// diff 状态挂在 el._biclockLastHtml（上次渲染的 HTML 字符串）；占位符 span 引用
+// 挂在 el._biclockParts（{ hh: [...], mm: [...], ss: [...], time: [...] }）。
+// el 由调用方复用（renderClockLayout 的同一个时钟节点），所以这两个字段持久存在。
+//
+// 注意：用户模板里写的 <script> 不会执行（template.content 的 script 标准不跑），
+// 这是浏览器内置行为，安全。
+function applyHtmlTemplate(el, html, time) {
+    var lastHtml = el._biclockLastHtml;
+    var parts = el._biclockParts;
+
+    // 模板未变 → 跳过重建，只刷新占位符。
+    if (lastHtml === html && parts) {
+        updateHtmlTemplateTime(parts, time);
+        return;
+    }
+
+    // 模板变化（或首次渲染）→ 重建整棵子树。
+    var tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    // replaceChildren 接受多个节点参数；template.content.childNodes 是 NodeList，
+    // 用 apply 展开成数组传入。cloneNode 防止后续修改影响原 template。
+    el.replaceChildren.apply(el, Array.prototype.slice.call(tpl.content.childNodes));
+
+    // 重置布局 inline 样式（与 renderClockLayout 公共前置一致），让外观 CSS 选择器
+    // 命中、且不会被上一布局分支（如 analog 的 flexDirection）干扰。
+    el.style.display = 'inline-flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
+    el.style.lineHeight = '1.2';
+    el.style.flexDirection = 'row';
+    el.style.overflow = 'visible';
+    el.style.gap = '0';
+
+    // 切换到非 inline-flex 也可：模板自带的布局（grid / absolute 子元素等）需要
+    // 由用户 CSS 决定；这里保留默认，让用户用 CSS 覆盖即可。
+
+    // TreeWalker 找所有文本节点，把 {{hh}} 等占位符替换成 span。
+    var collected = { hh: [], mm: [], ss: [], time: [] };
+    var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    var textNodes = [];
+    while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+    }
+    textNodes.forEach(function (node) {
+        splitPlaceholders(node, collected);
+    });
+
+    el._biclockParts = collected;
+    el._biclockLastHtml = html;
+    updateHtmlTemplateTime(collected, time);
+}
+
+// 把一个文本节点里的 {{hh}}/{{mm}}/{{ss}}/{{time}} 占位符切出来：
+// 非占位符段保留为 textNode，占位符段替换为 span（带 data-biclock-part 属性）。
+// 同一文本节点可有多个占位符；新创建的 span/textNode 推入 collected。
+function splitPlaceholders(textNode, collected) {
+    var text = textNode.nodeValue || '';
+    // 同时捕获 4 种占位符 + 之间的普通文本。
+    var regex = /\{\{\s*(hh|mm|ss|time)\s*\}\}/gi;
+    var match;
+    var lastIndex = 0;
+    var ranges = [];
+    while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            ranges.push({ kind: 'text', value: text.slice(lastIndex, match.index) });
+        }
+        ranges.push({ kind: 'part', name: match[1].toLowerCase() });
+        lastIndex = regex.lastIndex;
+    }
+    if (lastIndex < text.length) {
+        ranges.push({ kind: 'text', value: text.slice(lastIndex) });
+    }
+    // 没有占位符 → 原节点不动。
+    if (ranges.length === 0) return;
+
+    var parent = textNode.parentNode;
+    if (!parent) return;
+    var insertBefore = textNode.nextSibling;
+    parent.removeChild(textNode);
+    ranges.forEach(function (range) {
+        if (range.kind === 'text') {
+            parent.insertBefore(document.createTextNode(range.value), insertBefore);
+        } else {
+            var span = document.createElement('span');
+            span.setAttribute('data-biclock-part', range.name);
+            span.textContent = '';
+            collected[range.name].push(span);
+            parent.insertBefore(span, insertBefore);
+        }
+    });
+}
+
+// 每秒 tick 调用：把缓存下来的占位符 span 列表批量更新到当前时间。
+// time 形如 "HH:MM:SS"；split 后分别灌进 hh/mm/ss，time 占位符灌完整串。
+function updateHtmlTemplateTime(parts, time) {
+    var segments = time.split(':');
+    var values = {
+        hh: segments[0],
+        mm: segments[1],
+        ss: segments[2],
+        time: time
+    };
+    Object.keys(parts).forEach(function (name) {
+        var nodes = parts[name] || [];
+        var value = values[name];
+        for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].textContent !== value) {
+                nodes[i].textContent = value;
+            }
+        }
+    });
 }
 
 // 已下线的主题：把 config 里残留的外观字段回退到 DEFAULTS 值，并把

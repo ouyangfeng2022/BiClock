@@ -103,11 +103,17 @@ function applyStyles() {
     // 0.5 → 偏移半身（居中）。不测量像素，让 posY=0 能真正贴顶。
     clock.style.transform = 'translate(' + (config.posX * -100) + '%, ' + (config.posY * -100) + '%)';
 
-    // 外观双模式：cssMode 时清掉外观类 inline style，用户 CSS 成唯一来源
-    // （无需 !important）；否则照常把外观灌成 inline。
-    // updateClock() 每秒 tick 都会重跑这里，所以两种模式之间切换不会留下残留，
-    // 用户也不会看到「inline 又回来盖住 CSS」的闪烁。
-    if (config.customCssEnabled && config.customCss) {
+    // 外观三模式：HTML 模板 / CSS 模式启用时清掉外观类 inline style，让用户
+    // 模板或 CSS 成为唯一来源（无需 !important）；否则照常把外观灌成 inline。
+    // HTML 模式与 CSS 模式互斥：customHtml 启用时优先走 HTML 模式分支，
+    // applyCustomCss 同步判断，确保旧 customCss 不会在 HTML 模式下漏注入。
+    // updateClock() 每秒 tick 都会重跑这里，所以三种模式之间切换不会留下残留，
+    // 用户也不会看到「inline 又回来盖住模板/CSS」的闪烁。
+    if (config.customHtmlEnabled && config.customHtml) {
+        APPEARANCE_INLINE_KEYS.forEach(function (k) {
+            clock.style.removeProperty(k);
+        });
+    } else if (config.customCssEnabled && config.customCss) {
         APPEARANCE_INLINE_KEYS.forEach(function (k) {
             clock.style.removeProperty(k);
         });
@@ -125,7 +131,8 @@ function applyStyles() {
         clock.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
     }
 
-    // 用户自定义 CSS：disabled 或空串时清空（不删节点，避免反复创建）。
+    // 用户自定义 CSS：HTML 模式或 CSS 关闭/空串时清空（不删节点，避免反复创建）。
+    // HTML 模式启用时 customCss 不注入——外观由模板内联 style 或 <style> 自理。
     applyCustomCss();
 }
 
@@ -133,8 +140,11 @@ function applyStyles() {
 // 用户写的 CSS 作用域是整个 B 站页面，但选择器前缀 .bpx-player-top-clock /
 // .bpx-player-clock-* 只有时钟节点匹配；用户用 !important 才能覆盖 inline style。
 function applyCustomCss() {
-    customCssStyle.textContent =
-        config.customCssEnabled && config.customCss ? config.customCss : '';
+    // 仅当 CSS 模式启用（customCssEnabled && customCss）且 HTML 模式未启用时才注入。
+    // HTML 模式优先：customHtml 启用时 customCss 失活，外观由模板内联 style / <style> 自理。
+    var htmlModeActive = config.customHtmlEnabled && config.customHtml;
+    var cssModeActive = config.customCssEnabled && config.customCss && !htmlModeActive;
+    customCssStyle.textContent = cssModeActive ? config.customCss : '';
 }
 
 // 真实播放器里的时钟拖动：与 options.js 预览栏拖动同源。

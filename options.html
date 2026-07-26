@@ -18,6 +18,7 @@
             <a class="nav-item" href="#sec-theme"><span class="nav-icon" aria-hidden="true">◐</span>主题</a>
             <a class="nav-item" href="#sec-appearance"><span class="nav-icon" aria-hidden="true">◑</span>外观</a>
             <a class="nav-item" href="#sec-css"><span class="nav-icon" aria-hidden="true">‹/›</span>自定义 CSS</a>
+            <a class="nav-item" href="#sec-html"><span class="nav-icon" aria-hidden="true">‹›</span>HTML 模板</a>
             <a class="nav-item" href="#sec-about"><span class="nav-icon" aria-hidden="true">ⓘ</span>关于</a>
         </nav>
 
@@ -270,13 +271,110 @@
             </section>
           </fieldset>
 
+          <fieldset class="css-fieldset html-fieldset is-clock-config" id="sec-html">
+            <legend>自定义 HTML 模板</legend>
+            <p class="section-intro">
+                启用后，扩展不再每秒重建时钟子树——你写的 HTML 直接作为时钟内容，里面的装饰元素（小狗、图标、容器）都会保留。时间用占位符 <code>{{hh}}</code> <code>{{mm}}</code> <code>{{ss}}</code> <code>{{time}}</code> 表示，每秒只更新占位符的文本，<strong>不会清空其它内容</strong>。与 CSS 模式互斥（启用 HTML 时上方 CSS 不生效）；外观由模板里的内联 <code>style</code> 或 <code>&lt;style&gt;</code> 自理，<strong>无需 <code>!important</code></strong>。位置仍由预览拖拽控制。
+            </p>
+
+            <div class="toggle-line">
+                <span class="toggle-line-text">启用</span>
+                <span class="toggle">
+                    <input type="checkbox" id="customHtmlEnabled">
+                    <span class="toggle-track" aria-hidden="true">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                </span>
+            </div>
+
+            <textarea id="customHtml" class="css-input" rows="8" spellcheck="false"
+                      placeholder="<div class='dog-clock'>&#10;  <span class='dog-time'>{{time}}</span>&#10;</div>"></textarea>
+
+            <section class="docs">
+                <h2>HTML 模板说明</h2>
+                <p>
+                    模板里写任意 HTML 结构，扩展把 <code>{{hh}}</code> / <code>{{mm}}</code> / <code>{{ss}}</code> / <code>{{time}}</code> 替换成当前时/分/秒/完整时间，<strong>每秒只更新占位符</strong>，模板里的其它元素原样保留。同一占位符可多次出现。未识别的 <code>{{...}}</code> 原样当文本保留。
+                </p>
+                <p class="docs-hint">
+                    注意：模板里的 <code>&lt;script&gt;</code> 不会执行（浏览器对 <code>template</code> 内容的内置行为）；<code>&lt;img&gt;</code> 等会真的发起网络请求，请自行负责。HTML 模板启用时上方「自定义 CSS」失活——外观请在模板内用内联 <code>style</code> 或 <code>&lt;style&gt;</code> 自理。
+                </p>
+
+                <h3>占位符</h3>
+                <div class="docs-selector-grid">
+                    <div class="docs-selector-row"><code>{{hh}}</code><span>当前小时（两位，24 小时制）</span></div>
+                    <div class="docs-selector-row"><code>{{mm}}</code><span>当前分钟（两位）</span></div>
+                    <div class="docs-selector-row"><code>{{ss}}</code><span>当前秒（两位）</span></div>
+                    <div class="docs-selector-row"><code>{{time}}</code><span>完整 HH:MM:SS</span></div>
+                </div>
+
+                <h3>示例</h3>
+                <p class="docs-hint">点击「复制」可直接粘贴到上面的输入框试用。复制后记得勾「启用」。</p>
+
+                <div class="docs-card">
+                    <div class="docs-card-head">
+                        <span class="docs-card-title">最简卡片</span>
+                        <button type="button" class="copy-btn" data-copy="html-minimal">复制</button>
+                    </div>
+                    <pre class="docs-code" id="code-html-minimal"><code>&lt;style&gt;
+.dog-clock {
+  font-family: ui-monospace, monospace;
+  font-size: 30px;
+  color: #fff;
+  background: #fb7299;
+  border-radius: 8px;
+  padding: 4px 14px;
+}
+&lt;/style&gt;
+&lt;div class="dog-clock"&gt;{{time}}&lt;/div&gt;</code></pre>
+                </div>
+
+                <div class="docs-card">
+                    <div class="docs-card-head">
+                        <span class="docs-card-title">小狗抱时钟（SVG 装饰）</span>
+                        <button type="button" class="copy-btn" data-copy="html-dog">复制</button>
+                    </div>
+                    <pre class="docs-code" id="code-html-dog"><code>&lt;style&gt;
+.dog-clock {
+  position: relative;
+  width: 180px; height: 160px;
+  display: flex; align-items: flex-start;
+  justify-content: center;
+  padding-top: 14px;
+}
+.dog-clock .time {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+&lt;/style&gt;
+&lt;div class="dog-clock"&gt;
+  &lt;svg viewBox="0 0 180 160" width="180" height="160"
+       style="position:absolute;inset:0;pointer-events:none"&gt;
+    &lt;ellipse cx="90" cy="150" rx="70" ry="8" fill="rgba(0,0,0,.15)"/&gt;
+    &lt;circle cx="90" cy="58" r="34" fill="#fb7299"/&gt;
+    &lt;circle cx="62" cy="40" r="14" fill="#fb7299"/&gt;
+    &lt;circle cx="118" cy="40" r="14" fill="#fb7299"/&gt;
+    &lt;circle cx="62" cy="38" r="6" fill="#e85a85"/&gt;
+    &lt;circle cx="118" cy="38" r="6" fill="#e85a85"/&gt;
+    &lt;circle cx="80" cy="56" r="3" fill="#1f2937"/&gt;
+    &lt;circle cx="100" cy="56" r="3" fill="#1f2937"/&gt;
+    &lt;ellipse cx="90" cy="66" rx="5" ry="3.5" fill="#1f2937"/&gt;
+    &lt;ellipse cx="90" cy="100" rx="46" ry="34" fill="#fb7299"/&gt;
+  &lt;/svg&gt;
+  &lt;span class="time"&gt;{{time}}&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+                </div>
+            </section>
+          </fieldset>
+
           <fieldset class="about-fieldset" id="sec-about">
             <legend>关于</legend>
             <p class="about-desc">
                 BiClock 是一个轻量的 Manifest V3 浏览器扩展，在 Bilibili 视频播放器顶部叠加显示当前时间。纯原生 JS，零依赖、零构建，同一套代码同时支持 Chrome / Edge / Firefox。
             </p>
             <p class="about-meta">
-                版本 <span id="versionTag">3.3</span> · MIT License ·
+                版本 <span id="versionTag">3.4</span> · MIT License ·
                 <a href="https://github.com/ouyangfeng2022/BiClock" target="_blank" rel="noopener">源代码</a> ·
                 <a href="https://github.com/ouyangfeng2022/BiClock/issues" target="_blank" rel="noopener">反馈问题</a> ·
                 <a href="https://github.com/ouyangfeng2022/BiClock#readme" target="_blank" rel="noopener">使用文档</a>
@@ -321,7 +419,7 @@
             </section>
 
             <!-- 保存按钮紧贴预览旁，作为预览栏的一部分 -->
-            <button type="button" id="saveCustomTheme" class="primary-btn is-clock-config">保存当前外观与 CSS 为自定义主题</button>
+            <button type="button" id="saveCustomTheme" class="primary-btn is-clock-config">保存当前外观为自定义主题</button>
         </aside>
     </div>
 
