@@ -297,6 +297,11 @@ function renderClockLayout(el, time, style, prefix) {
     if (style.clockLayout === 'calendar') {
         var date = new Date();
         el.style.flexDirection = 'column';
+        // renderClockLayout 默认写了 justifyContent: 'center'，对没有固定高度的
+        // 真实时钟 / 预览节点无副作用（主轴无多余空间）；但主题小样 .theme-sample
+        // 是固定高度容器，column 布局下会让日期条与时间上下留白、日期条悬空，
+        // 故这里改回 flex-start 让内容贴顶。
+        el.style.justifyContent = 'flex-start';
         el.style.gap = '0';
         el.style.padding = '0';
         el.style.overflow = 'hidden';
