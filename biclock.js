@@ -15,13 +15,6 @@ clock.style.userSelect = 'none';
 // 与 options.css 的 .preview-clock 用同一组光标（grab/grabbing），跨场景一致。
 clock.style.cursor = 'grab';
 
-// 用户自定义 CSS 通过 <style> 注入：textContent 随 config 重写。
-// 挂到 document.documentElement（不挂 head：内容脚本运行时 head 可能尚未就绪，
-// documentElement 一定在）。节点只创建一次，反复更新 textContent。
-var customCssStyle = document.createElement('style');
-customCssStyle.id = 'biclock-custom-css';
-document.documentElement.appendChild(customCssStyle);
-
 // 时钟右上角的「×」关闭按钮：作为 clock 的子节点，用 absolute 贴在右上角外侧。
 // 这样天然跟随时钟（位置无需每秒重算）、天然随显隐（stopTimer 摘 clock 时一起走）。
 // renderClockLayout 每秒 replaceChildren 会清掉子节点，所以 updateClock() 在
@@ -103,17 +96,11 @@ function applyStyles() {
     // 0.5 → 偏移半身（居中）。不测量像素，让 posY=0 能真正贴顶。
     clock.style.transform = 'translate(' + (config.posX * -100) + '%, ' + (config.posY * -100) + '%)';
 
-    // 外观三模式：HTML 模板 / CSS 模式启用时清掉外观类 inline style，让用户
-    // 模板或 CSS 成为唯一来源（无需 !important）；否则照常把外观灌成 inline。
-    // HTML 模式与 CSS 模式互斥：customHtml 启用时优先走 HTML 模式分支，
-    // applyCustomCss 同步判断，确保旧 customCss 不会在 HTML 模式下漏注入。
-    // updateClock() 每秒 tick 都会重跑这里，所以三种模式之间切换不会留下残留，
-    // 用户也不会看到「inline 又回来盖住模板/CSS」的闪烁。
+    // 外观两模式：HTML 模板启用时清掉外观类 inline style，让用户模板成为
+    // 唯一来源（无需 !important）；否则照常把外观灌成 inline。
+    // updateClock() 每秒 tick 都会重跑这里，所以两种模式之间切换不会留下残留，
+    // 用户也不会看到「inline 又回来盖住模板」的闪烁。
     if (config.customHtmlEnabled && config.customHtml) {
-        APPEARANCE_INLINE_KEYS.forEach(function (k) {
-            clock.style.removeProperty(k);
-        });
-    } else if (config.customCssEnabled && config.customCss) {
         APPEARANCE_INLINE_KEYS.forEach(function (k) {
             clock.style.removeProperty(k);
         });
@@ -130,21 +117,6 @@ function applyStyles() {
         clock.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
         clock.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
     }
-
-    // 用户自定义 CSS：HTML 模式或 CSS 关闭/空串时清空（不删节点，避免反复创建）。
-    // HTML 模式启用时 customCss 不注入——外观由模板内联 style 或 <style> 自理。
-    applyCustomCss();
-}
-
-// 把 config.customCss 同步到 <style> 节点。
-// 用户写的 CSS 作用域是整个 B 站页面，但选择器前缀 .bpx-player-top-clock /
-// .bpx-player-clock-* 只有时钟节点匹配；用户用 !important 才能覆盖 inline style。
-function applyCustomCss() {
-    // 仅当 CSS 模式启用（customCssEnabled && customCss）且 HTML 模式未启用时才注入。
-    // HTML 模式优先：customHtml 启用时 customCss 失活，外观由模板内联 style / <style> 自理。
-    var htmlModeActive = config.customHtmlEnabled && config.customHtml;
-    var cssModeActive = config.customCssEnabled && config.customCss && !htmlModeActive;
-    customCssStyle.textContent = cssModeActive ? config.customCss : '';
 }
 
 // 真实播放器里的时钟拖动：与 options.js 预览栏拖动同源。

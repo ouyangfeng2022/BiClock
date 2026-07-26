@@ -17,8 +17,7 @@
             <a class="nav-item" href="#sec-display"><span class="nav-icon" aria-hidden="true">◍</span>显示</a>
             <a class="nav-item" href="#sec-theme"><span class="nav-icon" aria-hidden="true">◐</span>主题</a>
             <a class="nav-item" href="#sec-appearance"><span class="nav-icon" aria-hidden="true">◑</span>外观</a>
-            <a class="nav-item" href="#sec-css"><span class="nav-icon" aria-hidden="true">‹/›</span>自定义 CSS</a>
-            <a class="nav-item" href="#sec-html"><span class="nav-icon" aria-hidden="true">‹›</span>HTML 模板</a>
+            <a class="nav-item" href="#sec-html"><span class="nav-icon" aria-hidden="true">‹/›</span>自定义 HTML 模板</a>
             <a class="nav-item" href="#sec-about"><span class="nav-icon" aria-hidden="true">ⓘ</span>关于</a>
         </nav>
 
@@ -164,117 +163,10 @@
             </label>
           </fieldset>
 
-          <fieldset class="css-fieldset is-clock-config" id="sec-css">
-            <legend>自定义 CSS</legend>
-            <p class="section-intro">
-                启用后，扩展不再向时钟节点注入外观相关的 inline style，你写的 CSS 成为外观的唯一来源——颜色、背景、字号、字体、边框、动画都由你定义，<strong>无需 <code>!important</code></strong>。位置仍由左侧拖拽面板控制，复杂布局（指针表盘、翻页等）的内部结构仍由扩展生成；你的 CSS 只需专注外观本身。保存自定义主题时，CSS 会随外观一起存进主题卡；切换主题时一并恢复。
-            </p>
-
-            <div class="toggle-line">
-                <span class="toggle-line-text">启用</span>
-                <span class="toggle">
-                    <input type="checkbox" id="customCssEnabled">
-                    <span class="toggle-track" aria-hidden="true">
-                        <span class="toggle-thumb"></span>
-                    </span>
-                </span>
-            </div>
-
-            <textarea id="customCss" class="css-input" rows="8" spellcheck="false"
-                      placeholder=".bpx-player-top-clock {&#10;  font-size: 32px;&#10;  color: #fff;&#10;  background: #fb7299;&#10;  border-radius: 6px;&#10;  padding: 2px 10px;&#10;}"></textarea>
-
-            <section class="docs">
-                <h2>自定义 CSS 说明</h2>
-                <p>
-                    时钟节点带 <code>bpx-player-top-clock</code> 类，子元素按布局形态命名为
-                    <code>bpx-player-clock-*</code>。以下选择器覆盖所有内置布局形态。
-                </p>
-
-                <h3>可用选择器</h3>
-                <div class="docs-selector-grid">
-                    <div class="docs-selector-row"><code>.bpx-player-top-clock</code><span>时钟容器（所有布局都有）</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-single-time</code><span>基础数字布局的数字</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-segment</code><span>分舱数码的每一段数字舱</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-rec-dot</code><span>录像时间码的红点</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-rec-label</code><span>录像时间码的 "REC" 字样</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-rec-time</code><span>录像时间码的时间数字</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-corner-left</code><span>边角框的左侧框</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-corner-right</code><span>边角框的右侧框</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-corner-time</code><span>边角框中间的时间数字</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-dial</code><span>指针表盘的圆盘</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-tick</code><span>指针表盘的刻度</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-marker</code><span>指针表盘的 12/3/6/9 数字</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-hand</code><span>指针表盘的指针（共 3 根）</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-analog-pin</code><span>指针表盘的中心轴</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-flip-card</code><span>翻页时钟的每一格翻牌</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-hud-tag</code><span>科幻 HUD 的 "TIME" 标签</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-hud-time</code><span>科幻 HUD 的时间数字</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-calendar-header</code><span>日历桌牌的日期条</span></div>
-                    <div class="docs-selector-row"><code>.bpx-player-clock-calendar-time</code><span>日历桌牌的时间数字</span></div>
-                </div>
-
-                <h3>示例</h3>
-                <p class="docs-hint">点击「复制」可直接粘贴到上面的输入框试用。启用后这些 CSS 即为外观唯一来源，无需 <code>!important</code>。</p>
-
-                <div class="docs-card">
-                    <div class="docs-card-head">
-                        <span class="docs-card-title">霓虹光晕终端风</span>
-                        <button type="button" class="copy-btn" data-copy="neon">复制</button>
-                    </div>
-                    <pre class="docs-code" id="code-neon"><code>.bpx-player-top-clock {
-  font-family: ui-monospace, "Roboto Mono", monospace;
-  font-size: 30px;
-  color: #5eead4;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  border-radius: 4px;
-  padding: 4px 12px;
-  text-shadow:
-    0 0 0.18em rgba(94, 234, 212, 0.9),
-    0 0 0.42em rgba(94, 234, 212, 0.6);
-}</code></pre>
-                </div>
-
-                <div class="docs-card">
-                    <div class="docs-card-head">
-                        <span class="docs-card-title">脉冲呼吸动画</span>
-                        <button type="button" class="copy-btn" data-copy="pulse">复制</button>
-                    </div>
-                    <pre class="docs-code" id="code-pulse"><code>@keyframes biclock-pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.55; }
-}
-
-.bpx-player-top-clock {
-  font-size: 34px;
-  color: #ffffff;
-  background: rgba(251, 114, 153, 0.85);
-  border-radius: 8px;
-  padding: 2px 12px;
-  animation: biclock-pulse 2s ease-in-out infinite;
-}</code></pre>
-                </div>
-
-                <div class="docs-card">
-                    <div class="docs-card-head">
-                        <span class="docs-card-title">描边数字（透明背景）</span>
-                        <button type="button" class="copy-btn" data-copy="stroke">复制</button>
-                    </div>
-                    <pre class="docs-code" id="code-stroke"><code>.bpx-player-top-clock {
-  font-size: 40px;
-  font-weight: 800;
-  color: transparent;
-  background: transparent;
-  -webkit-text-stroke: 2px #ffffff;
-  text-stroke: 2px #ffffff;
-}</code></pre>
-                </div>
-            </section>
-          </fieldset>
-
-          <fieldset class="css-fieldset html-fieldset is-clock-config" id="sec-html">
+          <fieldset class="css-fieldset is-clock-config" id="sec-html">
             <legend>自定义 HTML 模板</legend>
             <p class="section-intro">
-                启用后，扩展不再每秒重建时钟子树——你写的 HTML 直接作为时钟内容，里面的装饰元素（小狗、图标、容器）都会保留。时间用占位符 <code>{{hh}}</code> <code>{{mm}}</code> <code>{{ss}}</code> <code>{{time}}</code> 表示，每秒只更新占位符的文本，<strong>不会清空其它内容</strong>。与 CSS 模式互斥（启用 HTML 时上方 CSS 不生效）；外观由模板里的内联 <code>style</code> 或 <code>&lt;style&gt;</code> 自理，<strong>无需 <code>!important</code></strong>。位置仍由预览拖拽控制。
+                启用后，扩展不再每秒重建时钟子树——你写的 HTML 直接作为时钟内容，里面的装饰元素（小狗、图标、容器）都会保留。时间用占位符 <code>{{hh}}</code> <code>{{mm}}</code> <code>{{ss}}</code> <code>{{time}}</code> 表示，每秒只更新占位符的文本，<strong>不会清空其它内容</strong>。外观由模板里的内联 <code>style</code> 或 <code>&lt;style&gt;</code> 自理，<strong>无需 <code>!important</code></strong>。位置仍由预览拖拽控制。
             </p>
 
             <div class="toggle-line">
@@ -296,7 +188,7 @@
                     模板里写任意 HTML 结构，扩展把 <code>{{hh}}</code> / <code>{{mm}}</code> / <code>{{ss}}</code> / <code>{{time}}</code> 替换成当前时/分/秒/完整时间，<strong>每秒只更新占位符</strong>，模板里的其它元素原样保留。同一占位符可多次出现。未识别的 <code>{{...}}</code> 原样当文本保留。
                 </p>
                 <p class="docs-hint">
-                    注意：模板里的 <code>&lt;script&gt;</code> 不会执行（浏览器对 <code>template</code> 内容的内置行为）；<code>&lt;img&gt;</code> 等会真的发起网络请求，请自行负责。HTML 模板启用时上方「自定义 CSS」失活——外观请在模板内用内联 <code>style</code> 或 <code>&lt;style&gt;</code> 自理。
+                    注意：模板里的 <code>&lt;script&gt;</code> 不会执行（浏览器对 <code>template</code> 内容的内置行为）；<code>&lt;img&gt;</code> 等会真的发起网络请求，请自行负责。外观请在模板内用内联 <code>style</code> 或 <code>&lt;style&gt;</code> 自理。
                 </p>
 
                 <h3>占位符</h3>
@@ -374,7 +266,7 @@
                 BiClock 是一个轻量的 Manifest V3 浏览器扩展，在 Bilibili 视频播放器顶部叠加显示当前时间。纯原生 JS，零依赖、零构建，同一套代码同时支持 Chrome / Edge / Firefox。
             </p>
             <p class="about-meta">
-                版本 <span id="versionTag">3.4</span> · MIT License ·
+                版本 <span id="versionTag">3.5</span> · MIT License ·
                 <a href="https://github.com/ouyangfeng2022/BiClock" target="_blank" rel="noopener">源代码</a> ·
                 <a href="https://github.com/ouyangfeng2022/BiClock/issues" target="_blank" rel="noopener">反馈问题</a> ·
                 <a href="https://github.com/ouyangfeng2022/BiClock#readme" target="_blank" rel="noopener">使用文档</a>

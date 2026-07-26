@@ -89,10 +89,9 @@ function applyToPreview() {
     // 与 biclock.js 在真实播放器里的定位方式一致（相对容器的百分比）。
     updatePreviewPosition();
 
-    // 外观三模式：HTML 模板 / CSS 模式启用时清掉外观类 inline style，让用户
-    // 模板或 CSS 成唯一来源（无需 !important）；否则照常把外观灌成 inline。
-    // 与 biclock.js 同源，预览与真实播放器视觉表现一致。HTML 模式优先于 CSS 模式
-    // （两者互斥），applyPreviewCustomCss 同步判断。
+    // 外观两模式：HTML 模板启用时清掉外观类 inline style，让用户模板成唯一来源
+    // （无需 !important）；否则照常把外观灌成 inline。与 biclock.js 同源，
+    // 预览与真实播放器视觉表现一致。
     // 注意调用顺序：必须先写 inline 外观，再调用 refreshPreviewText()
     // （renderClockLayout），与 biclock.js 的 applyStyles() → renderClockLayout()
     // 一致。形态主题（analog / segments / flip / corner / calendar 等）会在
@@ -102,10 +101,6 @@ function applyToPreview() {
     // setInterval(refreshPreviewText, 1000) 只跑 renderClockLayout 不再写 inline，
     // 盒子又消失，表现为点击主题后"一秒后样式跳变"。
     if (config.customHtmlEnabled && config.customHtml) {
-        APPEARANCE_INLINE_KEYS.forEach(function (k) {
-            el.style.removeProperty(k);
-        });
-    } else if (config.customCssEnabled && config.customCss) {
         APPEARANCE_INLINE_KEYS.forEach(function (k) {
             el.style.removeProperty(k);
         });
@@ -121,8 +116,6 @@ function applyToPreview() {
         el.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
         el.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
     }
-    // 用户 CSS 在布局文本之后注入，让选择器在预览里也能命中。
-    applyPreviewCustomCss();
     // 最后渲染布局：让形态主题对 el 背景/边框/padding 的清理成为最终态，
     // 与每秒 setInterval 的单独 refreshPreviewText() 渲染路径完全等价。
     refreshPreviewText();
@@ -146,17 +139,6 @@ function refreshPreviewText() {
     renderClockLayout($('previewClock'), formatTime(new Date()), config, 'bpx-player-clock');
 }
 
-// 用户 CSS 注入：与 biclock.js 同源，挂一个 <style> 节点到 document.head，
-// textContent 随当前 config 重写。HTML 模式启用 / CSS 关闭 / 空串时清空
-// （不删节点，避免反复创建）。HTML 模式与 CSS 模式互斥，HTML 启用时 customCss 失活。
-function applyPreviewCustomCss() {
-    var style = document.getElementById('preview-custom-css');
-    if (!style) return;
-    var htmlModeActive = config.customHtmlEnabled && config.customHtml;
-    var cssModeActive = config.customCssEnabled && config.customCss && !htmlModeActive;
-    style.textContent = cssModeActive ? config.customCss : '';
-}
-
 function save() {
     chrome.storage.local.set(config);
 }
@@ -177,9 +159,8 @@ function readFromForm() {
     // UI 上呈现的是「启用时钟」总开关，底层存储键仍是 hiddenForever（反向）。
     // 反向语义：勾上启用 = hiddenForever=false；取消勾选 = hiddenForever=true。
     config.hiddenForever = !$('clockEnabled').checked;
-    // customCssEnabled / customHtmlEnabled 是 toggle，沿用 onInput 路径，故也由 readFromForm 读回。
-    // customCss / customHtml（textarea）由专用 input 绑定直接写 config，不经 readFromForm。
-    config.customCssEnabled = $('customCssEnabled').checked;
+    // customHtmlEnabled 是 toggle，沿用 onInput 路径，故也由 readFromForm 读回。
+    // customHtml（textarea）由专用 input 绑定直接写 config，不经 readFromForm。
     config.customHtmlEnabled = $('customHtmlEnabled').checked;
 }
 
@@ -206,8 +187,6 @@ function fillForm() {
     $('modeAlways').checked = !!config.alwaysShow;
     // 总开关反向：启用时钟 = !hiddenForever
     $('clockEnabled').checked = !config.hiddenForever;
-    $('customCss').value = config.customCss || '';
-    $('customCssEnabled').checked = !!config.customCssEnabled;
     $('customHtml').value = config.customHtml || '';
     $('customHtmlEnabled').checked = !!config.customHtmlEnabled;
     updateSwatchSelection();
@@ -228,7 +207,7 @@ function onInput(event) {
     readFromForm();
     // 显示范围与常驻开关不属于主题视觉，不应把已选主题标成"自定义"。
     // 外观键与 CSS 启用开关属于主题视觉，编辑即视为偏离当前主题。
-    if (!event || ['fontSize', 'bgOpacity', 'bold', 'customCssEnabled', 'customHtmlEnabled'].indexOf(event.target.id) !== -1) {
+    if (!event || ['fontSize', 'bgOpacity', 'bold', 'customHtmlEnabled'].indexOf(event.target.id) !== -1) {
         config.clockStyle = 'custom';
     }
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
@@ -331,9 +310,9 @@ function initPositionPanel() {
     });
 }
 
-// 底部「保存当前外观与 CSS 为自定义主题」按钮：保存 12 个外观键 + CSS 快照，
-// 让自定义主题成为「一套完整外观（含 CSS）」。CSS 文本本身已自动保存到
-// config.customCss，这里额外把它快照进主题卡，以便日后一键切换恢复。
+// 底部「保存当前外观为自定义主题」按钮：保存 12 个外观键 + HTML 模板快照，
+// 让自定义主题成为「一套完整外观（含 HTML 模板）」。HTML 模板文本本身已自动
+// 保存到 config.customHtml，这里额外把它快照进主题卡，以便日后一键切换恢复。
 function initSaveCustomTheme() {
     $('saveCustomTheme').addEventListener('click', saveCurrentAsCustomTheme);
 }
@@ -385,13 +364,9 @@ function applyTheme(theme) {
     });
     var isPreset = THEMES.some(function (t) { return t.id === theme.id; });
     if (isPreset) {
-        config.customCss = '';
-        config.customCssEnabled = false;
         config.customHtml = '';
         config.customHtmlEnabled = false;
     } else {
-        config.customCss = theme.customCss || '';
-        config.customCssEnabled = !!theme.customCssEnabled;
         config.customHtml = theme.customHtml || '';
         config.customHtmlEnabled = !!theme.customHtmlEnabled;
     }
@@ -535,7 +510,7 @@ function saveCurrentAsCustomTheme() {
     THEME_STYLE_KEYS.forEach(function (key) {
         theme[key] = config[key];
     });
-    // CSS 作为快照随主题保存：自定义主题 = 一套完整外观（含 CSS）。
+    // HTML 模板作为快照随主题保存：自定义主题 = 一套完整外观（含 HTML 模板）。
     THEME_CSS_KEYS.forEach(function (key) {
         theme[key] = config[key];
     });
@@ -622,8 +597,8 @@ function updateThemeSelection() {
     } else {
         var isPreset = THEMES.some(function (t) { return t.id === activeId; });
         hint.textContent = isPreset
-            ? '当前为预设主题：不带 CSS / HTML 模板，切回时不会恢复自定义内容。'
-            : '当前为自定义主题：外观与 CSS / HTML 模板已一并恢复。';
+            ? '当前为预设主题：不带 HTML 模板，切回时不会恢复自定义内容。'
+            : '当前为自定义主题：外观与 HTML 模板已一并恢复。';
     }
 }
 
@@ -715,7 +690,7 @@ function initCopyButtons() {
 // 这样只有当分区真正进入阅读区时才计为"当前"，避免滚动中导航频繁抖动。
 // 全部分区都不在活跃区时（页面顶部或底部）兜底取第一个，保持总有一项高亮。
 function initNavSpy() {
-    var sectionIds = ['sec-display', 'sec-theme', 'sec-appearance', 'sec-css', 'sec-html', 'sec-about'];
+    var sectionIds = ['sec-display', 'sec-theme', 'sec-appearance', 'sec-html', 'sec-about'];
     var sections = sectionIds.map(function (id) { return $(id); }).filter(Boolean);
     var items = document.querySelectorAll('.nav-item');
     if (!sections.length || !items.length) return;
@@ -774,7 +749,7 @@ function init() {
         applyToPreview();
     });
 
-    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'customCssEnabled', 'customHtmlEnabled', 'clockEnabled'];
+    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'customHtmlEnabled', 'clockEnabled'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);
@@ -782,17 +757,6 @@ function init() {
     bindHexInput('colorHex', 'color');
     bindHexInput('bgColorHex', 'backgroundColor');
 
-    var previewStyle = document.createElement('style');
-    previewStyle.id = 'preview-custom-css';
-    document.head.appendChild(previewStyle);
-    $('customCss').addEventListener('input', function () {
-        config.customCss = $('customCss').value;
-        // CSS 现在是自定义主题的一部分；手动编辑即偏离任何已保存主题。
-        config.clockStyle = 'custom';
-        applyToPreview();
-        save();
-        updateThemeSelection();
-    });
     $('customHtml').addEventListener('input', function () {
         config.customHtml = $('customHtml').value;
         // HTML 模板也是自定义主题的一部分；手动编辑即偏离任何已保存主题。

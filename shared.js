@@ -46,23 +46,14 @@ var DEFAULTS = {
     posY: 0,
     // 用户在 options 页保存的自定义主题列表；仅 options 页读写，内容脚本不消费。
     // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 12 个外观键
-    // + THEME_CSS_KEYS 的 4 个非外观键（customCss / customCssEnabled /
-    // customHtml / customHtmlEnabled）。
+    // + THEME_CSS_KEYS 的 2 个 HTML 模板键（customHtml / customHtmlEnabled）。
     // id 形如 "custom_<timestamp>"，作为 clockStyle 标记当前激活的自定义主题。
     customThemes: [],
-    // 自定义 CSS：用户在 options 页写的任意 CSS，通过 <style> 注入叠加到时钟节点上，
-    // 实现内置主题/外观键做不到的视觉效果（动画、阴影、渐变 等）。
-    // 语义：预设主题不带 CSS（切回预设会清空当前 CSS）；自定义主题把当前 CSS
-    // 作为快照存进主题卡，切回该主题时整体恢复（包括 CSS）。详见 THEME_CSS_KEYS。
-    // customCssEnabled 关掉即不注入；空串视为未填写。
-    customCss: '',
-    customCssEnabled: false,
     // 自定义 HTML 模板：用户写一段 HTML（含 {{hh}} {{mm}} {{ss}} {{time}} 占位符），
     // 扩展首次/模板变化时把 HTML 解析为 DOM 子树挂到时钟节点，每秒 tick 只更新占位符
     // 文本，不再 replaceChildren——所以模板里的装饰元素（小狗、图标、容器）会保留。
-    // 与 CSS 模式互斥：customHtml 启用时 customCss 不注入，外观由模板内联 style 或
-    // <style> 自理。预设主题不带 HTML（切回预设会清空）；自定义主题作为快照随外观
-    // 一起存进主题卡。详见 THEME_CSS_KEYS 与 applyHtmlTemplate。
+    // 外观由模板里的内联 style 或 <style> 自理。预设主题不带 HTML（切回预设会清空）；
+    // 自定义主题作为快照随外观一起存进主题卡。详见 THEME_CSS_KEYS 与 applyHtmlTemplate。
     customHtml: '',
     customHtmlEnabled: false
 };
@@ -80,23 +71,25 @@ var THEME_STYLE_KEYS = [
 ];
 
 // 自定义主题快照键：保存/恢复自定义主题时随 THEME_STYLE_KEYS 一起带走，
-// 让自定义主题成为「一套完整外观（含 CSS + HTML 模板）」。
-// 预设主题（THEMES）不带这四个键 —— applyTheme 切到预设主题时会显式把
-// customCss / customHtml 置空、对应 *Enabled 置 false，呈现纯净外观。
-// 内容脚本 biclock.js 不引用本常量：它只消费最终的 config.customCss 等，
-// 无论是手填还是从主题恢复，都走同一条注入路径。
-// 常量名沿用 THEME_CSS_KEYS（历史命名），但语义已扩到「自定义主题随带的非外观键」。
-var THEME_CSS_KEYS = ['customCss', 'customCssEnabled', 'customHtml', 'customHtmlEnabled'];
+// 让自定义主题成为「一套完整外观（含 HTML 模板）」。
+// 预设主题（THEMES）不带这两个键 —— applyTheme 切到预设主题时会显式把
+// customHtml 置空、customHtmlEnabled 置 false，呈现纯净外观。
+// 内容脚本 biclock.js 不引用本常量：它只消费最终的 config.customHtml /
+// config.customHtmlEnabled，无论是手填还是从主题恢复，都走同一条注入路径。
+// 常量名沿用 THEME_CSS_KEYS（历史命名，原为「自定义 CSS 快照键」，
+// CSS 模式删除后只剩 HTML 模板键，但保留名字避免全局重命名）。
+var THEME_CSS_KEYS = ['customHtml', 'customHtmlEnabled'];
 
 // 「外观类」inline style 属性清单：biclock.js / popup.js / options.js 三处
 // applyStyles / applyToPreview 共用，避免三份清单漂移。
 //
-// 设计：CSS 模式（customCssEnabled && customCss）或 HTML 模板
-// （customHtmlEnabled && customHtml）启用时，JS 不再把这些属性灌成 inline style，
+// 设计：HTML 模板（customHtmlEnabled && customHtml）启用时，JS 不再把这些属性
+// 灌成 inline style，而是逐项 removeProperty 清掉，让用户 HTML 模板成为外观的
+// 唯一来源（无需 !important）。
 // 而是逐项 removeProperty 清掉，让用户 CSS / HTML 模板成为外观的唯一来源
 // （无需 !important）。
 // 注意：position / left / top / transform / zIndex / userSelect 不在此列——
-// 它们属于定位/交互层，三种模式下都由 JS 计算，用户 CSS / HTML 只专注外观。
+// 它们属于定位/交互层，两种模式下都由 JS 计算，用户 HTML 模板只专注外观。
 var APPEARANCE_INLINE_KEYS = [
     'color', 'backgroundColor', 'fontWeight', 'fontFamily', 'fontSize',
     'textShadow', 'border', 'padding', 'borderRadius', 'boxSizing'

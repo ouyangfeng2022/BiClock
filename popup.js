@@ -36,10 +36,9 @@ function normalizeHex(raw) {
 function applyToPreview() {
     var el = $('previewClock');
 
-    // 外观三模式：HTML 模板 / CSS 模式启用时清掉外观类 inline style，让用户
-    // 模板或 CSS 成唯一来源（无需 !important）；否则照常把外观灌成 inline。
-    // 与 biclock.js 同源，预览与真实播放器视觉表现一致。HTML 模式优先于 CSS 模式
-    // （两者互斥），applyPreviewCustomCss 同步判断。
+    // 外观两模式：HTML 模板启用时清掉外观类 inline style，让用户模板成唯一来源
+    // （无需 !important）；否则照常把外观灌成 inline。与 biclock.js 同源，
+    // 预览与真实播放器视觉表现一致。
     // 注意调用顺序：必须先写 inline 外观，再调用 refreshPreviewText()
     // （renderClockLayout），与 biclock.js 的 applyStyles() → renderClockLayout()
     // 一致。形态主题（analog / segments / flip / corner / calendar 等）会在
@@ -49,10 +48,6 @@ function applyToPreview() {
     // setInterval(refreshPreviewText, 1000) 只跑 renderClockLayout 不再写 inline，
     // 盒子又消失，表现为点击主题后"一秒后样式跳变"。详见 options.js 同名函数。
     if (config.customHtmlEnabled && config.customHtml) {
-        APPEARANCE_INLINE_KEYS.forEach(function (k) {
-            el.style.removeProperty(k);
-        });
-    } else if (config.customCssEnabled && config.customCss) {
         APPEARANCE_INLINE_KEYS.forEach(function (k) {
             el.style.removeProperty(k);
         });
@@ -69,10 +64,6 @@ function applyToPreview() {
         el.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
         el.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
     }
-    // 用户 CSS 在布局文本之后注入，让选择器在预览里也能命中。
-    // 注意：popup 不再提供 customCss 的编辑入口（移到 options 页），
-    // 但仍读 storage 里的值反映到预览，保证两边视觉一致。
-    applyPreviewCustomCss();
     // 最后渲染布局：让形态主题对 el 背景/边框/padding 的清理成为最终态，
     // 与每秒 setInterval 的单独 refreshPreviewText() 渲染路径完全等价。
     refreshPreviewText();
@@ -82,18 +73,6 @@ function refreshPreviewText() {
     // 用与内容脚本一致的 prefix：preview clock 自身带 .bpx-player-top-clock，
     // 子元素用 .bpx-player-clock-* —— 这样用户写的选择器在预览与播放器里同源。
     renderClockLayout($('previewClock'), formatTime(new Date()), config, 'bpx-player-clock');
-}
-
-// 用户 CSS 注入：与 biclock.js 同源，挂一个 <style> 节点到 document.head，
-// textContent 随当前 config 重写。popup 只读不写 customCss / customHtml，
-// 但仍要让预览反映 options 页里写的内容，否则预览与真实时钟会不一致。
-// HTML 模式启用时 customCss 失活（互斥关系）。
-function applyPreviewCustomCss() {
-    var style = document.getElementById('preview-custom-css');
-    if (!style) return;
-    var htmlModeActive = config.customHtmlEnabled && config.customHtml;
-    var cssModeActive = config.customCssEnabled && config.customCss && !htmlModeActive;
-    style.textContent = cssModeActive ? config.customCss : '';
 }
 
 function save() {
@@ -265,8 +244,8 @@ function init() {
     chrome.storage.local.get(DEFAULTS, function (stored) {
         config = stored;
         migrateRemovedTheme(config, save);
-        // 保留所有键（包括 popup 不再编辑的 customThemes/customCss/customHtml/posX/posY/clockStyle），
-        // 它们驱动预览（applyPreviewCustomCss 用 customCss；renderClockLayout 用 customHtml）。
+        // 保留所有键（包括 popup 不再编辑的 customThemes/customHtml/posX/posY/clockStyle），
+        // 它们驱动预览（renderClockLayout 用 customHtml 走 HTML 模板分支）。
         // save() 不会覆盖 options 的并发编辑 —— save() 只在用户实际改动 popup 字段时调用。
         buildSwatches('colorSwatches', TEXT_SWATCHES, 'color');
         buildSwatches('bgColorSwatches', BG_SWATCHES, 'backgroundColor');
@@ -282,11 +261,6 @@ function init() {
     });
     bindHexInput('colorHex', 'color');
     bindHexInput('bgColorHex', 'backgroundColor');
-
-    // 预创建 <style> 用于注入用户 CSS 到 popup 预览（与 options 同源）。
-    var previewStyle = document.createElement('style');
-    previewStyle.id = 'preview-custom-css';
-    document.head.appendChild(previewStyle);
 
     // 跳转到完整设置页：header 按钮 + 底部提示链接共用同一入口。
     $('openOptions').addEventListener('click', openOptions);
