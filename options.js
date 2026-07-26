@@ -22,20 +22,6 @@ var THEMES = [
         accentColor: '#fb7299', clockLayout: 'single'
     },
     {
-        id: 'pods', name: '分舱数码', note: '三段独立数字舱',
-        fontSize: 30, color: '#eff6ff', backgroundColor: '#26354a', bgOpacity: 96, bold: true,
-        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
-        textShadow: 'none', borderColor: '#8db4e8', borderOpacity: 58, borderWidth: 1,
-        accentColor: '#8db4e8', clockLayout: 'segments'
-    },
-    {
-        id: 'capsule', name: '胶囊计时器', note: '圆润轻盈的横条',
-        fontSize: 30, color: '#ffe2a8', backgroundColor: '#17120b', bgOpacity: 92, bold: true,
-        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
-        textShadow: '0 1px 2px rgba(0, 0, 0, 0.45)', borderColor: '#ffe2a8', borderOpacity: 62, borderWidth: 1,
-        accentColor: '#ffe2a8', clockLayout: 'capsule'
-    },
-    {
         id: 'recording', name: '录像时间码', note: 'REC 播出状态条',
         fontSize: 29, color: '#ffffff', backgroundColor: '#171717', bgOpacity: 94, bold: true,
         fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
@@ -48,20 +34,6 @@ var THEMES = [
         fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
         textShadow: 'none', borderColor: '#aaa69c', borderOpacity: 82, borderWidth: 2,
         accentColor: '#a87078', clockLayout: 'analog'
-    },
-    {
-        id: 'flip', name: '翻页时钟', note: '复古翻牌数字',
-        fontSize: 31, color: '#f8fafc', backgroundColor: '#111827', bgOpacity: 97, bold: true,
-        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
-        textShadow: '0 1px 1px rgba(0, 0, 0, 0.8)', borderColor: '#475569', borderOpacity: 100, borderWidth: 1,
-        accentColor: '#94a3b8', clockLayout: 'flip'
-    },
-    {
-        id: 'hud', name: '科幻 HUD', note: '取景框状态读数',
-        fontSize: 28, color: '#a7f3d0', backgroundColor: '#06281f', bgOpacity: 52, bold: true,
-        fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
-        textShadow: '0 0 0.42em rgba(74, 222, 128, 0.7)', borderColor: '#4ade80', borderOpacity: 88, borderWidth: 1,
-        accentColor: '#4ade80', clockLayout: 'hud'
     },
     {
         id: 'calendar', name: '日历桌牌', note: '日期与时间卡片',

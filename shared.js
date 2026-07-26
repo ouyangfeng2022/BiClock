@@ -59,7 +59,9 @@ var DEFAULTS = {
 };
 
 // 已下线、不再有主题卡的旧主题 id。打开旧版本遗留的存储时需要回退到默认。
-var REMOVED_THEME_IDS = ['minimal', 'glass', 'neon', 'retro', 'corner'];
+// capsule 与 single 等价（仅多一个圆角）、pods / flip 重复（同为分段数字）、
+// hud 与 recording 重复（同为「标签 + 时间」状态条），故一并精简。
+var REMOVED_THEME_IDS = ['minimal', 'glass', 'neon', 'retro', 'corner', 'capsule', 'pods', 'hud', 'flip'];
 
 // 主题能够覆盖的外观字段（位置/显示开关等不归主题管）。
 var THEME_STYLE_KEYS = [
