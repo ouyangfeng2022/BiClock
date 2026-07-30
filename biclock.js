@@ -15,7 +15,7 @@ clock.style.userSelect = 'none';
 // 与 options.css 的 .preview-clock 用同一组光标（grab/grabbing），跨场景一致。
 clock.style.cursor = 'grab';
 
-// 时钟右上角的「×」关闭按钮：作为 clock 的子节点，用 absolute 贴在右上角外侧。
+// 时钟右上角的矢量关闭按钮：作为 clock 的子节点，用 absolute 贴在右上角外侧。
 // 这样天然跟随时钟（位置无需每秒重算）、天然随显隐（stopTimer 摘 clock 时一起走）。
 // renderClockLayout 每秒 replaceChildren 会清掉子节点，所以 updateClock() 在
 // renderClockLayout 之后再 appendChild(closeBtn) 把它补回来。
@@ -26,7 +26,19 @@ var closeBtn = document.createElement('button');
 closeBtn.type = 'button';
 closeBtn.className = 'bpx-clock-close';
 closeBtn.setAttribute('aria-label', '关闭时钟');
-closeBtn.textContent = '×';
+var closeIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+closeIcon.setAttribute('viewBox', '0 0 24 24');
+closeIcon.setAttribute('width', '12');
+closeIcon.setAttribute('height', '12');
+closeIcon.setAttribute('aria-hidden', 'true');
+closeIcon.setAttribute('focusable', 'false');
+closeIcon.style.display = 'block';
+closeIcon.style.pointerEvents = 'none';
+var closeIconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+closeIconPath.setAttribute('d', 'M6.7 5.3 12 10.6l5.3-5.3 1.4 1.4-5.3 5.3 5.3 5.3-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4 5.3-5.3-5.3-5.3z');
+closeIconPath.setAttribute('fill', 'currentColor');
+closeIcon.appendChild(closeIconPath);
+closeBtn.appendChild(closeIcon);
 closeBtn.style.position = 'absolute';
 closeBtn.style.top = '-8px';
 closeBtn.style.right = '-8px';
@@ -34,15 +46,13 @@ closeBtn.style.width = '16px';
 closeBtn.style.height = '16px';
 closeBtn.style.margin = '0';
 closeBtn.style.padding = '0';
-closeBtn.style.lineHeight = '15px';
-closeBtn.style.textAlign = 'center';
+closeBtn.style.display = 'flex';
+closeBtn.style.alignItems = 'center';
+closeBtn.style.justifyContent = 'center';
 closeBtn.style.border = '1px solid rgba(0, 0, 0, 0.18)';
 closeBtn.style.borderRadius = '50%';
 closeBtn.style.background = 'rgba(0, 0, 0, 0.45)';
 closeBtn.style.color = 'rgba(255, 255, 255, 0.85)';
-closeBtn.style.fontSize = '12px';
-closeBtn.style.fontWeight = '700';
-closeBtn.style.fontFamily = 'system-ui, sans-serif';
 closeBtn.style.cursor = 'pointer';
 closeBtn.style.opacity = '0';
 closeBtn.style.transition = 'opacity 0.14s ease';
