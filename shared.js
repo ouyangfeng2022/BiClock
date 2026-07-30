@@ -91,8 +91,12 @@ var THEME_CSS_KEYS = ['customHtml', 'customHtmlEnabled'];
 // 注意：position / left / top / transform / zIndex / userSelect 不在此列——
 // 它们属于定位/交互层，两种模式下都由 JS 计算，用户 HTML 模板只专注外观。
 var APPEARANCE_INLINE_KEYS = [
-    'color', 'backgroundColor', 'fontWeight', 'fontFamily', 'fontSize',
-    'textShadow', 'border', 'padding', 'borderRadius', 'boxSizing'
+    // CSSStyleDeclaration.removeProperty() 只接受 CSS 属性名，不能传
+    // backgroundColor / fontSize 这样的 JS 驼峰名；传驼峰名会静默失败，
+    // 使 HTML 模板模式残留原先的宿主背景、字体和圆角，且预览与真实页面
+    // 因各自基础样式不同而渲染不一致。
+    'color', 'background-color', 'font-weight', 'font-family', 'font-size',
+    'text-shadow', 'border', 'padding', 'border-radius', 'box-sizing'
 ];
 
 function pad(n) {

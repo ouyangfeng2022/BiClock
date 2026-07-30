@@ -226,35 +226,54 @@
                         <button type="button" class="copy-btn" data-copy="html-dog">复制</button>
                     </div>
                     <pre class="docs-code" id="code-html-dog"><code>&lt;style&gt;
-.dog-clock {
+/* 用宿主类限定，避免模板样式影响 B 站页面其它元素。 */
+.bpx-player-top-clock .dog-clock {
   position: relative;
-  width: 180px; height: 160px;
-  display: flex; align-items: flex-start;
-  justify-content: center;
-  padding-top: 14px;
+  width: 210px; height: 154px;
+  font-family: ui-rounded, system-ui, sans-serif;
 }
-.dog-clock .time {
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
+.bpx-player-top-clock .dog-card {
+  position: absolute; z-index: 1;
+  left: 35px; top: 66px;
+  width: 140px; padding: 12px 0;
+  border: 3px solid #f9b6ca;
+  border-radius: 18px;
+  background: #fff8fb;
+  box-shadow: 0 5px 0 #e85a85;
+  color: #e85a85;
+  font-size: 22px; font-weight: 800;
+  line-height: 1; text-align: center;
   font-variant-numeric: tabular-nums;
 }
+.bpx-player-top-clock .dog-art {
+  position: absolute; inset: 0;
+  width: 210px; height: 154px;
+  pointer-events: none;
+}
+.bpx-player-top-clock .dog-back { z-index: 0; }
+.bpx-player-top-clock .dog-paws { z-index: 2; }
 &lt;/style&gt;
 &lt;div class="dog-clock"&gt;
-  &lt;svg viewBox="0 0 180 160" width="180" height="160"
-       style="position:absolute;inset:0;pointer-events:none"&gt;
-    &lt;ellipse cx="90" cy="150" rx="70" ry="8" fill="rgba(0,0,0,.15)"/&gt;
-    &lt;circle cx="90" cy="58" r="34" fill="#fb7299"/&gt;
-    &lt;circle cx="62" cy="40" r="14" fill="#fb7299"/&gt;
-    &lt;circle cx="118" cy="40" r="14" fill="#fb7299"/&gt;
-    &lt;circle cx="62" cy="38" r="6" fill="#e85a85"/&gt;
-    &lt;circle cx="118" cy="38" r="6" fill="#e85a85"/&gt;
-    &lt;circle cx="80" cy="56" r="3" fill="#1f2937"/&gt;
-    &lt;circle cx="100" cy="56" r="3" fill="#1f2937"/&gt;
-    &lt;ellipse cx="90" cy="66" rx="5" ry="3.5" fill="#1f2937"/&gt;
-    &lt;ellipse cx="90" cy="100" rx="46" ry="34" fill="#fb7299"/&gt;
+  &lt;svg class="dog-art dog-back" viewBox="0 0 210 154" aria-hidden="true"&gt;
+    &lt;ellipse cx="105" cy="145" rx="74" ry="7" fill="rgba(31,41,55,.16)"/&gt;
+    &lt;ellipse cx="105" cy="108" rx="64" ry="42" fill="#fb7299"/&gt;
+    &lt;circle cx="105" cy="48" r="36" fill="#fb7299"/&gt;
+    &lt;circle cx="73" cy="24" r="16" fill="#fb7299"/&gt;
+    &lt;circle cx="137" cy="24" r="16" fill="#fb7299"/&gt;
+    &lt;circle cx="73" cy="22" r="7" fill="#e85a85"/&gt;
+    &lt;circle cx="137" cy="22" r="7" fill="#e85a85"/&gt;
+    &lt;circle cx="92" cy="48" r="3.5" fill="#1f2937"/&gt;
+    &lt;circle cx="118" cy="48" r="3.5" fill="#1f2937"/&gt;
+    &lt;ellipse cx="105" cy="59" rx="5.5" ry="4" fill="#1f2937"/&gt;
+    &lt;path d="M105 63v5m0 0c-5 5-10 1-10-2m10 2c5 5 10 1 10-2" fill="none" stroke="#1f2937" stroke-width="2.5" stroke-linecap="round"/&gt;
   &lt;/svg&gt;
-  &lt;span class="time"&gt;{{time}}&lt;/span&gt;
+  &lt;div class="dog-card"&gt;{{time}}&lt;/div&gt;
+  &lt;svg class="dog-art dog-paws" viewBox="0 0 210 154" aria-hidden="true"&gt;
+    &lt;path d="M52 105c-17 5-20 25-6 31 10 4 17-4 20-14l8-21z" fill="#fb7299"/&gt;
+    &lt;path d="M158 105c17 5 20 25 6 31-10 4-17-4-20-14l-8-21z" fill="#fb7299"/&gt;
+    &lt;ellipse cx="61" cy="118" rx="12" ry="9" fill="#ffc7d8" transform="rotate(-25 61 118)"/&gt;
+    &lt;ellipse cx="149" cy="118" rx="12" ry="9" fill="#ffc7d8" transform="rotate(25 149 118)"/&gt;
+  &lt;/svg&gt;
 &lt;/div&gt;</code></pre>
                 </div>
             </section>
