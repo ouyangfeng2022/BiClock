@@ -143,6 +143,11 @@ function renderClockLayout(el, time, style, prefix) {
         applyHtmlTemplate(el, style.customHtml, time);
         return;
     }
+    // 从 HTML 模板切回内置布局会 replaceChildren() 清空模板节点。
+    // 必须同时作废模板缓存；否则再次启用相同模板时 applyHtmlTemplate 会误以为
+    // 子树仍在，只更新已脱离 DOM 的旧 span，造成预览（和真实时钟）空白。
+    el._biclockLastHtml = null;
+    el._biclockParts = null;
     var parts = time.split(':');
     prefix = prefix || 'clock';
     el.replaceChildren();
