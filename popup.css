@@ -898,32 +898,42 @@ input[type="checkbox"]:focus-visible {
 }
 
 /* ============================================================
-   显示分区独有：L1 总开关（启用时钟）+ L2 子项分组（显示模式）。
-   关闭时钟（=总开关未勾选）时，L2 与下方所有 is-clock-config 一起折叠。
+   L1 总开关（启用时钟）：独立卡片，位于 popup 最高层级，
+   不属于任何分区——与 options 页一致。关闭后下方所有
+   is-clock-config 设置（显示 / 外观 / 预览）一并折叠，
+   只留这张卡片与底部「更多设置」始终可用。
    ============================================================ */
 
-/* L1 总开关：横排「标签 + 描述 + toggle」。
-   不加边框 / 不加底色 —— 用更大的字号、字重、间距建立层级。 */
-.master-toggle {
+.master-toggle-card {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 10px;
-    padding: 2px 0 12px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.master-toggle-eyebrow {
+    flex: none;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--pink-soft);
+    color: var(--pink-hi);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
 }
 
 .master-toggle-label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
     min-width: 0;
+    flex: 1 1 auto;
 }
 
 .master-toggle-name {
     font-size: 13.5px;
-    font-weight: 600;
+    font-weight: 650;
     color: var(--ink);
 }
 
@@ -949,7 +959,7 @@ input[type="checkbox"]:focus-visible {
 
 /* L2 子项分组：标题 + 普通 toggle 行 */
 .sub-group {
-    padding-top: 10px;
+    padding-top: 4px;
 }
 
 .sub-group-title {

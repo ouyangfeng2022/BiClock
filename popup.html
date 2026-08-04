@@ -23,23 +23,28 @@
         <span class="preview-disabled-text">时钟已关闭</span>
     </div>
 
-    <fieldset>
+    <!-- L1 总开关：启用时钟（与 hiddenForever 反向；勾上即代表"开"）。
+         独立卡片，位于 popup 最高层级，不属于任何分区——与 options 页一致，
+         这样关闭时钟后此卡片仍可用，用户能随时重新启用。 -->
+    <fieldset class="master-toggle-card">
+        <span class="master-toggle-eyebrow">总开关</span>
+        <span class="master-toggle-label">
+            <span class="master-toggle-name">启用时钟</span>
+        </span>
+        <label class="toggle master-toggle-switch">
+            <input type="checkbox" id="clockEnabled">
+            <span class="toggle-track" aria-hidden="true">
+                <span class="toggle-thumb"></span>
+            </span>
+        </label>
+    </fieldset>
+
+    <fieldset class="is-clock-config">
         <legend class="legend-tip">
             显示
             <span class="help-tip" tabindex="0" role="button" aria-label="显示设置说明">
                 <span class="help-icon" aria-hidden="true">?</span>
                 <span class="help-bubble">
-                    <span class="help-item" data-help-key="clockEnabled">
-                        <span class="help-item-title">启用时钟</span>
-                        <span class="help-item-line" data-state="on">
-                            <span class="help-tag">开</span>
-                            <span class="help-item-text">按下方显示模式判断是否显示</span>
-                        </span>
-                        <span class="help-item-line" data-state="off">
-                            <span class="help-tag">关</span>
-                            <span class="help-item-text">不显示时钟</span>
-                        </span>
-                    </span>
                     <span class="help-item" data-help-key="fullscreenOnly">
                         <span class="help-item-title">仅全屏显示</span>
                         <span class="help-item-line" data-state="on">
@@ -66,21 +71,8 @@
             </span>
         </legend>
 
-        <!-- L1 总开关：启用时钟（与 hiddenForever 反向；勾上即代表"开"）。 -->
-        <label class="master-toggle">
-            <span class="master-toggle-label">
-                <span class="master-toggle-name">启用时钟</span>
-            </span>
-            <span class="toggle master-toggle-switch">
-                <input type="checkbox" id="clockEnabled">
-                <span class="toggle-track" aria-hidden="true">
-                    <span class="toggle-thumb"></span>
-                </span>
-            </span>
-        </label>
-
-        <!-- L2 显示模式：关闭时钟时一并折叠。 -->
-        <div class="sub-group is-clock-config">
+        <!-- L2 显示模式：随整个显示分区折叠（分区本身带 is-clock-config）。 -->
+        <div class="sub-group">
             <h3 class="sub-group-title">显示模式</h3>
             <div class="toggle-line">
                 <span class="toggle-line-text">仅全屏显示</span>

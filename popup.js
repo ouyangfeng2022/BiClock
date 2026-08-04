@@ -212,9 +212,8 @@ function updateSwatchSelection() {
 
 function updateHelpActiveStates() {
     var map = [
-        // 总开关在 UI 上是「启用时钟」（与 hiddenForever 反向）；
-        // help-bubble 的 data-help-key 也跟着 UI 改名，这里 on 用 !hiddenForever。
-        { key: 'clockEnabled',   on: !config.hiddenForever },
+        // 总开关（启用时钟）在 popup 是裸卡片，没有 help-bubble，
+        // 所以这里只剩「显示」分区下的两项需要高亮当前态。
         { key: 'fullscreenOnly', on: config.fullscreenOnly !== false },
         { key: 'alwaysShow',     on: !!config.alwaysShow }
     ];
