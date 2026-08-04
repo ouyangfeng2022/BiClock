@@ -162,24 +162,26 @@
           </fieldset>
 
           <fieldset class="css-fieldset is-clock-config" id="sec-html">
-            <legend>自定义 HTML 模板</legend>
-            <label class="template-mode-toggle">
-                <span class="template-mode-copy">
-                    <span class="template-mode-name">启用自定义 HTML 模板</span>
+            <legend class="template-legend">
+                <span class="template-legend-copy">
+                    <span class="template-legend-name">自定义 HTML 模板</span>
+                    <span class="template-legend-desc">用自己的 HTML 和 CSS 完全接管时钟外观</span>
                 </span>
-                <span class="toggle">
-                    <input type="checkbox" id="customHtmlEnabled">
-                    <span class="toggle-track" aria-hidden="true">
-                        <span class="toggle-thumb"></span>
+                <label class="template-legend-toggle" title="启用 / 停用整个自定义 HTML 模板模块">
+                    <span class="toggle">
+                        <input type="checkbox" id="customHtmlEnabled">
+                        <span class="toggle-track" aria-hidden="true">
+                            <span class="toggle-thumb"></span>
+                        </span>
                     </span>
-                </span>
-            </label>
+                </label>
+            </legend>
 
             <div class="custom-html-content">
-            <div class="template-editor" data-empty="true">
+            <div class="template-editor" data-empty="true" data-dirty="false">
                 <div class="template-editor-bar" aria-hidden="true">
                     <span class="template-editor-dot"></span>
-                    <span>template.html</span>
+                    <span class="template-editor-name">template.html</span>
                     <span class="template-editor-language">HTML</span>
                 </div>
                 <div class="template-editor-body">
@@ -187,14 +189,33 @@
                     <textarea id="customHtml" class="css-input" rows="13" spellcheck="false" aria-label="HTML 模板编辑器"
                               placeholder="&lt;div class=&quot;my-clock&quot;&gt;{{time}}&lt;/div&gt;"></textarea>
                 </div>
+                <div class="template-editor-actions">
+                    <button type="button" id="clearCustomHtml" class="clear-btn" title="清空当前自定义 HTML 模板内容（不影响「启用」开关）">清除</button>
+                    <button type="button" id="applyCustomHtml" class="apply-btn" disabled>应用</button>
+                </div>
             </div>
 
             <section class="docs">
-                <h2>使用说明</h2>
-                <p>支持标签、SVG 和 <code>&lt;style&gt;</code>；保存后立即生效。</p>
+                <div class="template-getting-started">
+                    <div class="template-getting-started-head">
+                        <div>
+                            <span class="template-eyebrow">从这里开始</span>
+                            <h2>三步做出自己的时钟</h2>
+                        </div>
+                        <button type="button" class="template-start-btn" id="useStarterTemplate">载入起步模板</button>
+                    </div>
+                    <ol class="template-steps">
+                        <li><span>1</span><p>点击「载入起步模板」，先得到一个可运行的时钟。</p></li>
+                        <li><span>2</span><p>修改 <code>&lt;style&gt;</code> 里的颜色、字号、圆角等；预览会立即更新。</p></li>
+                        <li><span>3</span><p>保留至少一个时间占位符，例如 <code>{{time}}</code>，否则不会显示时间。</p></li>
+                    </ol>
+                </div>
+
+                <h3>模板怎么写</h3>
+                <p>模板由两部分组成：<strong>HTML</strong> 决定结构，<strong><code>&lt;style&gt;</code></strong> 决定外观。支持普通标签、SVG 和内嵌样式，保存后立即生效。</p>
                 <div class="docs-notes">
-                    <p>建议以 <code>.bpx-player-top-clock</code> 作为样式选择器前缀。</p>
-                    <p><code>&lt;script&gt;</code> 不会执行；图片和外部字体可能发出网络请求。</p>
+                    <p><strong>只改自己的时钟：</strong>每条样式都用 <code>.bpx-player-top-clock</code> 开头，避免影响 B 站页面。</p>
+                    <p><strong>不需要写 JavaScript：</strong><code>&lt;script&gt;</code> 不会执行；图片和外部字体可能发出网络请求。</p>
                 </div>
 
                 <h3>占位符</h3>
@@ -205,10 +226,10 @@
                     <div class="docs-selector-row"><code>{{time}}</code><span>完整 HH:MM:SS</span></div>
                 </div>
 
-                <h3>示例</h3>
+                <h3>可复制的模板</h3>
 
                 <details class="docs-card">
-                    <summary class="docs-card-head"><span class="docs-card-title">最简卡片</span><span class="docs-disclosure">展开代码</span></summary>
+                    <summary class="docs-card-head"><span class="docs-card-title">起步模板：彩色时间卡片</span><span class="docs-disclosure">展开代码</span></summary>
                     <div class="docs-card-content">
                         <button type="button" class="copy-btn" data-copy="html-minimal">复制</button>
                     <pre class="docs-code" id="code-html-minimal"><code>&lt;style&gt;

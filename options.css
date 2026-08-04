@@ -531,42 +531,45 @@ legend {
     color: var(--ink-3);
 }
 
-/* HTML 模板总开关置于分区开头；关闭时下方内容完全不占布局。 */
-.template-mode-toggle {
+/* HTML 模板模块总开关：放在 legend 里，因为它控制的是「自定义 HTML 模板」
+   整个模块（含 textarea + 文档区）。勾选关掉时，下方内容完全不占布局。 */
+.template-legend {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    min-height: 54px;
-    margin: 0 0 14px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    cursor: pointer;
+    padding: 0 6px;
+    margin-bottom: 14px;
+    /* legend 默认带 padding-top：legend 之上的空白是 fieldset 给 legend 的
+       顶部 padding 留出来的空间，复用 legend 的展示态即可。 */
 }
 
-.template-mode-toggle:has(input:checked) {
-    border-color: color-mix(in oklch, var(--pink) 45%, var(--border));
-    background: var(--pink-soft);
-}
-
-.template-mode-copy {
+.template-legend-copy {
     display: grid;
     gap: 1px;
 }
 
-.template-mode-name {
+.template-legend-name {
     font-weight: 650;
+    font-size: 14px;
     color: var(--ink);
 }
 
-.template-mode-desc {
+.template-legend-desc {
     font-size: 12px;
     color: var(--ink-3);
 }
 
-.template-mode-toggle:has(#customHtmlEnabled:not(:checked)) + .custom-html-content {
+.template-legend-toggle {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* 模块开关未勾选时，下方 textarea + 文档区整体折叠。
+   旧规则以 .template-mode-toggle + .custom-html-content 直接相邻为基础，
+   现在开关移进 legend，用 fieldset:has() 选中，避免依赖特定兄弟顺序。 */
+.css-fieldset:has(#customHtmlEnabled:not(:checked)) .custom-html-content {
     display: none;
 }
 
@@ -1370,6 +1373,113 @@ input[type="range"]:active::-moz-range-thumb {
     letter-spacing: .07em;
 }
 
+/* 编辑器底栏：承载「应用」按钮。
+   - 编辑器无未应用改动时按钮禁用（disabled，置灰），告诉用户当前文本已是生效态；
+   - 有未应用改动（data-dirty="true"）时按钮亮起可点。 */
+.template-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(255,255,255,.09);
+    background: rgba(0,0,0,.16);
+}
+
+.apply-btn {
+    padding: 6px 16px;
+    border: 1px solid var(--pink);
+    border-radius: 6px;
+    background: var(--pink);
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .14s var(--ease),
+                border-color .14s var(--ease),
+                box-shadow .14s var(--ease);
+}
+
+.apply-btn:hover:not(:disabled) {
+    background: var(--pink-hi);
+    border-color: var(--pink-hi);
+}
+
+.apply-btn:focus-visible:not(:disabled) {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+.apply-btn:active:not(:disabled) {
+    background: var(--pink-hi);
+}
+
+.apply-btn:disabled {
+    border-color: rgba(255,255,255,.16);
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.45);
+    cursor: not-allowed;
+}
+
+/* 「清除」按钮：把当前自定义 HTML 模板清空，时钟回退到内置外观。
+   会丢失已应用的模板文本，故采用二次确认：
+   首次点击进入确认态（红底 + 文案改成「确认清除？」），3 秒内再次点击才真正执行；
+   超时或点别处自动取消。无内容可清时（config.customHtml 为空）禁用。 */
+.clear-btn {
+    margin-right: auto;
+    padding: 6px 14px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 6px;
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.78);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .14s var(--ease),
+                border-color .14s var(--ease),
+                color .14s var(--ease),
+                box-shadow .14s var(--ease);
+}
+
+.clear-btn:hover:not(:disabled):not([data-confirm="true"]) {
+    border-color: oklch(62% 0.22 25);
+    color: oklch(72% 0.18 25);
+    background: rgba(255,120,120,.1);
+}
+
+.clear-btn:focus-visible:not(:disabled) {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+.clear-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* 确认态：红底白字 + 文案改成「确认清除？」。
+   data-confirm 由 JS 在首次点击时挂上，3 秒后自动摘除。 */
+.clear-btn[data-confirm="true"] {
+    border-color: oklch(58% 0.22 25);
+    background: oklch(58% 0.22 25);
+    color: #fff;
+    font-weight: 600;
+    animation: clear-confirm-pulse 0.2s var(--ease);
+}
+
+@keyframes clear-confirm-pulse {
+    from { transform: scale(0.96); }
+    to   { transform: scale(1); }
+}
+
+/* 有未应用改动时，编辑器顶部加一条粉色提示边，告诉用户「文本已变、还没生效」。
+   与底部 .apply-btn 的 enabled 态互为呼应。 */
+.template-editor[data-dirty="true"] {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(251,114,153,.16), inset 0 1px 0 rgba(255,255,255,.05);
+}
+
 .template-editor-body {
     position: relative;
     min-height: 300px;
@@ -1452,6 +1562,74 @@ textarea.css-input::placeholder {
     font-weight: 600;
     color: var(--ink);
 }
+
+.template-getting-started {
+    margin: 0 0 20px;
+    padding: 16px;
+    border: 1px solid color-mix(in oklch, var(--pink) 32%, var(--border));
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--pink-soft), var(--surface) 70%);
+}
+
+.template-getting-started-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.template-getting-started h2 { margin: 2px 0 0; }
+
+.template-eyebrow {
+    color: var(--pink-hi);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+}
+
+.template-start-btn {
+    flex: none;
+    padding: 7px 11px;
+    border: 1px solid var(--pink);
+    border-radius: 6px;
+    background: var(--pink);
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(251,114,153,.24);
+    transition: transform .14s var(--ease), background .14s var(--ease), box-shadow .14s var(--ease);
+}
+
+.template-start-btn:hover { background: var(--pink-hi); transform: translateY(-1px); }
+.template-start-btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.template-start-btn[data-loaded="true"] { background: var(--pink-hi); }
+
+.template-steps {
+    display: grid;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.template-steps li { display: flex; align-items: flex-start; gap: 9px; }
+
+.template-steps li > span {
+    display: grid;
+    flex: none;
+    width: 19px;
+    height: 19px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--pink);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.template-steps p { margin: 1px 0 0; font-size: 12px; line-height: 1.5; }
 
 .docs h3 {
     margin: 18px 0 8px;

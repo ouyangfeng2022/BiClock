@@ -190,6 +190,8 @@ function fillForm() {
     $('customHtml').value = config.customHtml || '';
     $('customHtmlEnabled').checked = !!config.customHtmlEnabled;
     refreshTemplateHighlight();
+    updateApplyDirtyState();
+    updateClearButtonState();
     updateSwatchSelection();
     updateThemeSelection();
     updateHelpActiveStates();
@@ -230,6 +232,153 @@ function initTemplateEditor() {
     if (!input) return;
     input.addEventListener('scroll', refreshTemplateHighlight);
     refreshTemplateHighlight();
+}
+
+// 「应用」按钮：HTML 模板从自动保存改为显式提交。
+// textarea 编辑期只是草稿，按「应用」才把草稿写进 config.customHtml 并刷新预览 / 落盘。
+// dirty 状态用编辑器上的 data-dirty 与按钮的 disabled 双重表达，让用户一眼看出
+// 「文本已变、还没生效」。
+function updateApplyDirtyState() {
+    var editor = document.querySelector('.template-editor');
+    var applyBtn = $('applyCustomHtml');
+    if (!editor || !applyBtn) return;
+    var dirty = $('customHtml').value !== (config.customHtml || '');
+    editor.dataset.dirty = dirty ? 'true' : 'false';
+    applyBtn.disabled = !dirty;
+}
+
+function initApplyButton() {
+    var applyBtn = $('applyCustomHtml');
+    if (!applyBtn) return;
+    applyBtn.addEventListener('click', function () {
+        // 提交草稿：把 textarea 当前值写入 config，与旧版自动保存路径完全一致
+        // （写 customHtml + 标记 clockStyle + 刷新预览 + 落盘 + 同步主题选中态）。
+        config.customHtml = $('customHtml').value;
+        // HTML 模板也是自定义主题的一部分；手动提交即偏离任何已保存主题。
+        config.clockStyle = 'custom';
+        applyToPreview();
+        save();
+        updateThemeSelection();
+        // dirty 已消化；按钮回禁用态、编辑器边框恢复正常。
+        updateApplyDirtyState();
+    });
+}
+
+// 「清除」按钮：把当前已应用的自定义 HTML 模板文本整段清空。
+// 注意：只清内容，不动 customHtmlEnabled——「启用」是模块开关，是否启用 HTML 模板
+// 模块与「模板里有没有内容」是两件事。清空后模块仍处于启用态，只是模板为空，
+// 等同于没有可应用的模板（renderClockLayout 的 HTML 模板分支 gate 是
+// customHtmlEnabled && customHtml，空串会自然落到内置布局）。
+// 会丢失已应用的模板文本，故二次确认：首次点击进入确认态（按钮变红 + 文案改成
+// 「确认清除？」），3 秒内再次点击才真正执行；超时、点别处、或按 Esc 自动取消。
+function updateClearButtonState() {
+    var clearBtn = $('clearCustomHtml');
+    if (!clearBtn) return;
+    // 只看 config.customHtml（已应用的那份），不看 textarea 草稿：
+    // 草稿有内容但还没应用时，清除已应用的空模板本来就没东西可清。
+    var hasApplied = !!(config.customHtml || '').trim();
+    // 确认态下不强抢 disabled——确认态本身就是「即将执行」的中间态。
+    if (clearBtn.dataset.confirm !== 'true') {
+        clearBtn.disabled = !hasApplied;
+    }
+}
+
+function initClearButton() {
+    var clearBtn = $('clearCustomHtml');
+    if (!clearBtn) return;
+    var confirmTimer = null;
+    var originalText = clearBtn.textContent;
+
+    function leaveConfirmState(restoreText) {
+        if (confirmTimer) {
+            clearTimeout(confirmTimer);
+            confirmTimer = null;
+        }
+        clearBtn.removeAttribute('data-confirm');
+        if (restoreText) clearBtn.textContent = originalText;
+        updateClearButtonState();
+    }
+
+    function performClear() {
+        // 只清空模板内容，保留 customHtmlEnabled 不变：
+        // 启用开关是模块级开关，与本按钮「清空当前模板」的职责正交。
+        config.customHtml = '';
+        config.clockStyle = 'custom';
+        $('customHtml').value = '';
+        applyToPreview();
+        save();
+        refreshTemplateHighlight();
+        updateApplyDirtyState();
+        updateThemeSelection();
+        // 清除完同样给个即时反馈，与「载入起步模板」的成功态同源。
+        clearBtn.textContent = '✓ 已清除';
+        leaveConfirmState(false);
+        setTimeout(function () {
+            clearBtn.textContent = originalText;
+        }, 1400);
+    }
+
+    clearBtn.addEventListener('click', function () {
+        // 已经在确认态 → 第二次点击 = 确认执行。
+        if (clearBtn.dataset.confirm === 'true') {
+            performClear();
+            return;
+        }
+        // 否则进入确认态。
+        clearBtn.dataset.confirm = 'true';
+        clearBtn.textContent = '确认清除？';
+        clearBtn.disabled = false;
+        // 3 秒窗口；超时自动退出确认态、恢复原文案、按 hasApplied 重算 disabled。
+        confirmTimer = setTimeout(function () {
+            leaveConfirmState(true);
+        }, 3000);
+    });
+
+    // 点击确认态以外的任意处，或在编辑器内按 Esc，都视为放弃确认。
+    // 用 mousedown 而非 click：让按钮自身的 click 优先触发（先进入确认态），
+    // 同一笔 mousedown→click 不会立刻把刚进入的确认态又关掉。
+    document.addEventListener('mousedown', function (e) {
+        if (clearBtn.dataset.confirm !== 'true') return;
+        if (e.target === clearBtn || clearBtn.contains(e.target)) return;
+        leaveConfirmState(true);
+    });
+    $('customHtml').addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && clearBtn.dataset.confirm === 'true') {
+            leaveConfirmState(true);
+        }
+    });
+}
+
+// 新用户可一键把最简、可运行的示例放进编辑器，再在此基础上修改。
+// 读取 textContent 而不是硬编码字符串，确保「起步模板」与文档示例始终一致。
+function initStarterTemplate() {
+    var button = $('useStarterTemplate');
+    var input = $('customHtml');
+    var source = $('code-html-minimal');
+    if (!button || !input || !source) return;
+
+    button.addEventListener('click', function () {
+        input.value = source.dataset.copyText || source.textContent;
+        // 载入起步模板是一次显式的「整段替换」，直接落盘生效，等价于旧版自动应用路径；
+        // 用户之后在 textarea 里的增量编辑仍走「应用」按钮提交。
+        config.customHtml = input.value;
+        config.customHtmlEnabled = true;
+        config.clockStyle = 'custom';
+        $('customHtmlEnabled').checked = true;
+        applyToPreview();
+        save();
+        refreshTemplateHighlight();
+        updateApplyDirtyState();
+        updateClearButtonState();
+        updateThemeSelection();
+        input.focus();
+        button.textContent = '✓ 已载入，可直接修改';
+        button.dataset.loaded = 'true';
+        setTimeout(function () {
+            button.textContent = '重新载入起步模板';
+            delete button.dataset.loaded;
+        }, 1800);
+    });
 }
 
 // 示例代码与编辑器使用同一套 token 色彩。示例的原始文本始终保留在 data 属性中，
@@ -829,16 +978,16 @@ function init() {
     bindHexInput('bgColorHex', 'backgroundColor');
 
     $('customHtml').addEventListener('input', function () {
-        config.customHtml = $('customHtml').value;
-        // HTML 模板也是自定义主题的一部分；手动编辑即偏离任何已保存主题。
-        config.clockStyle = 'custom';
-        applyToPreview();
-        save();
+        // 编辑不再立即写入 config.customHtml：textarea 是草稿态，应用按钮才提交。
+        // 这里只刷新高亮预览与 dirty 标记，让用户看到「文本已变、还没生效」。
         refreshTemplateHighlight();
-        updateThemeSelection();
+        updateApplyDirtyState();
     });
     initTemplateEditor();
+    initStarterTemplate();
     initExampleHighlights();
+    initApplyButton();
+    initClearButton();
 
     initPositionPanel();
     initSaveCustomTheme();
