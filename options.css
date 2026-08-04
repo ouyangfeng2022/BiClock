@@ -17,14 +17,14 @@
     /* 与 popup.css 同源的 tokens 副本（保持两边视觉一致） */
     --bg:          oklch(98.8% 0.003 350);
     --surface:     oklch(100%  0    0);
-    --surface-2:   oklch(97.2% 0.004 350);
+    --surface-2:   oklch(96.8% 0.005 350);
     --surface-3:   oklch(94.5% 0.005 350);
 
-    --border:      oklch(90.0% 0.004 350);
+    --border:      oklch(88.0% 0.005 350);
     --border-hi:   oklch(82.0% 0.006 350);
 
-    --ink:         oklch(26.0% 0.015 350);
-    --ink-2:       oklch(42.0% 0.014 350);
+    --ink:         oklch(24.0% 0.014 350);
+    --ink-2:       oklch(40.0% 0.014 350);
     --ink-3:       oklch(46.0% 0.013 350);
     --ink-unit:    oklch(52.0% 0.012 350);
 
@@ -500,14 +500,14 @@ body {
 .options-main {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 22px;
     min-width: 0;
 }
 
 .options-main fieldset {
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 18px 20px;
+    padding: 20px 22px;
     margin: 0;
     background: var(--surface);
     /* grid item 默认 min-width: auto，内部有不可换行长内容（HTML 模板示例的
@@ -517,11 +517,13 @@ body {
 }
 
 legend {
+    display: flex;
+    align-items: center;
     font-weight: 600;
     font-size: 14px;
     color: var(--ink);
-    padding: 0 6px;
-    margin-bottom: 4px;
+    padding: 0 8px;
+    margin-bottom: 8px;
 }
 
 .section-intro {
@@ -753,15 +755,15 @@ legend {
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    row-gap: 10px;
+    row-gap: 12px;
     column-gap: 14px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .field {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
     margin-bottom: 0;
 }
 
@@ -775,25 +777,25 @@ legend {
 }
 
 .field-color {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .color-row {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
 }
 
 .swatches {
     display: flex;
     flex-wrap: wrap;
-    gap: 7px;
+    gap: 6px;
 }
 
 .swatch {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     padding: 0;
     border: 1px solid var(--border-hi);
     border-radius: 6px;
@@ -824,7 +826,7 @@ legend {
 }
 
 .hex-input {
-    width: 96px;
+    width: 92px;
     margin-left: auto;
 }
 
@@ -847,7 +849,7 @@ legend {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 5px 0;
+    padding: 7px 0;
 }
 
 .toggle-line + .toggle-line {
@@ -1088,7 +1090,7 @@ legend {
 .row-stacked {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .row-stacked > .row-head {
@@ -1974,7 +1976,7 @@ pre.docs-code code {
 }
 
 .about-desc {
-    margin: 0 0 12px;
+    margin: 0 0 14px;
     font-size: 13px;
     line-height: 1.65;
     color: var(--ink-2);
@@ -2083,8 +2085,8 @@ pre.docs-code code {
 .master-toggle-card {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
+    gap: 14px;
+    padding: 14px 20px;
     margin: 0;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -2093,11 +2095,11 @@ pre.docs-code code {
 
 .master-toggle-eyebrow {
     flex: none;
-    padding: 3px 9px;
+    padding: 2px 8px;
     border-radius: 999px;
     background: var(--pink-soft);
     color: var(--pink-hi);
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.06em;
 }
@@ -2111,8 +2113,8 @@ pre.docs-code code {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 15px;
-    font-weight: 650;
+    font-size: 14.5px;
+    font-weight: 600;
     color: var(--ink);
 }
 
@@ -2151,7 +2153,7 @@ pre.docs-code code {
 
 .sub-group-title {
     margin: 0 0 8px;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 600;
     color: var(--ink-3);
     letter-spacing: 0.04em;

@@ -18,14 +18,14 @@
     /* 中性灰阶：很轻地往粉的方向偏 0.003 chroma，避免冷灰感 */
     --bg:          oklch(98.8% 0.003 350);
     --surface:     oklch(100%  0    0);
-    --surface-2:   oklch(97.2% 0.004 350);
+    --surface-2:   oklch(96.8% 0.005 350);
     --surface-3:   oklch(94.5% 0.005 350);
 
-    --border:      oklch(90.0% 0.004 350);
+    --border:      oklch(88.0% 0.005 350);
     --border-hi:   oklch(82.0% 0.006 350);
 
-    --ink:         oklch(26.0% 0.015 350);
-    --ink-2:       oklch(42.0% 0.014 350);
+    --ink:         oklch(24.0% 0.014 350);
+    --ink-2:       oklch(40.0% 0.014 350);
     --ink-3:       oklch(46.0% 0.013 350);
     --ink-unit:    oklch(52.0% 0.012 350);
 
@@ -49,7 +49,7 @@
 body {
     width: 296px;
     margin: 0;
-    padding: 14px 14px 14px;
+    padding: 16px 16px 18px;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
     font-size: 13px;
     line-height: 1.45;
@@ -188,7 +188,7 @@ fieldset {
 }
 
 fieldset + fieldset {
-    margin-top: 14px;
+    margin-top: 16px;
 }
 
 legend {
@@ -212,9 +212,9 @@ label:last-child { margin-bottom: 0; }
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    row-gap: 8px;
-    column-gap: 10px;
-    margin-bottom: 9px;
+    row-gap: 10px;
+    column-gap: 12px;
+    margin-bottom: 12px;
 }
 
 .field {
@@ -238,26 +238,26 @@ label:last-child { margin-bottom: 0; }
    只覆盖 color / backgroundColor 单键，bold / 字号 / 透明度不动。
    ============================================================ */
 .field-color {
-    margin-bottom: 9px;
+    margin-bottom: 12px;
 }
 
 .color-row {
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 6px;
+    gap: 8px;
 }
 
 .swatches {
     display: flex;
     flex: none;
     flex-wrap: nowrap;
-    gap: 4px;
+    gap: 3px;
 }
 
 .swatch {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     flex: none;
     padding: 0;
     border: 1px solid var(--border-hi);
@@ -291,7 +291,7 @@ label:last-child { margin-bottom: 0; }
 /* 用 .color-row 提升特异性，压过通用 input[type="text"]{width:100%} (0,1,1)，
    否则 Hex 输入会被拉满 color-row，与 nowrap 色块叠加后挤出 popup。 */
 .color-row .hex-input {
-    width: 80px;
+    width: 76px;
     flex: none;
 }
 
@@ -313,11 +313,11 @@ label:last-child { margin-bottom: 0; }
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 4px 0;
+    padding: 6px 0;
 }
 
 .toggle-line + .toggle-line {
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
 .toggle-line-text {
@@ -553,7 +553,7 @@ label:last-child { margin-bottom: 0; }
 .row-stacked {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
 .row-stacked > .row-head {
@@ -570,7 +570,7 @@ label:last-child { margin-bottom: 0; }
 
 /* 数值徽标（range 的当前值，粉色 accent） */
 .value-display {
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--pink-hi);
     font-variant-numeric: tabular-nums;
     font-weight: 600;
@@ -593,13 +593,13 @@ label:last-child { margin-bottom: 0; }
 }
 
 .reset-inline-btn {
-    padding: 1px 8px;
+    padding: 2px 9px;
     border: 1px solid var(--border-hi);
     border-radius: 4px;
     background: var(--surface);
     color: var(--ink-3);
     font: inherit;
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 500;
     line-height: 1.5;
     cursor: pointer;
@@ -640,7 +640,7 @@ label:last-child { margin-bottom: 0; }
 
 .input-unit .unit {
     position: absolute;
-    right: 8px;
+    right: 9px;
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
@@ -870,7 +870,7 @@ input[type="checkbox"]:focus-visible {
    底部「更多设置」提示行：链接形式，触发同一 openOptions
    ============================================================ */
 .more-hint {
-    margin: 14px 0 0;
+    margin: 16px 0 0;
     padding: 10px 12px;
     border-radius: var(--radius-sm);
     background: var(--surface-2);
@@ -907,8 +907,8 @@ input[type="checkbox"]:focus-visible {
 .master-toggle-card {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: 11px;
+    padding: 9px 12px;
     margin: 0;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -917,11 +917,11 @@ input[type="checkbox"]:focus-visible {
 
 .master-toggle-eyebrow {
     flex: none;
-    padding: 2px 8px;
+    padding: 2px 7px;
     border-radius: 999px;
     background: var(--pink-soft);
     color: var(--pink-hi);
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 700;
     letter-spacing: 0.06em;
 }
@@ -932,8 +932,8 @@ input[type="checkbox"]:focus-visible {
 }
 
 .master-toggle-name {
-    font-size: 13.5px;
-    font-weight: 650;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--ink);
 }
 
@@ -964,7 +964,7 @@ input[type="checkbox"]:focus-visible {
 
 .sub-group-title {
     margin: 0 0 6px;
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 600;
     color: var(--ink-3);
     letter-spacing: 0.04em;
