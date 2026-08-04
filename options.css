@@ -1568,7 +1568,7 @@ textarea.css-input::placeholder {
     padding: 16px;
     border: 1px solid color-mix(in oklch, var(--pink) 32%, var(--border));
     border-radius: var(--radius);
-    background: linear-gradient(135deg, var(--pink-soft), var(--surface) 70%);
+    background: var(--pink-soft);
 }
 
 .template-getting-started-head {
@@ -1631,6 +1631,126 @@ textarea.css-input::placeholder {
 
 .template-steps p { margin: 1px 0 0; font-size: 12px; line-height: 1.5; }
 
+.ai-prompt-card {
+    position: relative;
+    margin: 0 0 14px;
+    padding: 20px;
+    border: 1px solid color-mix(in oklch, var(--pink) 50%, var(--border));
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: 0 8px 20px rgba(251,114,153,.09);
+}
+
+.ai-prompt-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ai-prompt-card h2 { margin: 3px 0 0; color: var(--ink); font-size: 17px; }
+.ai-prompt-card > p { margin: 13px 0; font-size: 12.5px; }
+
+.ai-prompt-badge {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--pink);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    box-shadow: 0 4px 10px rgba(251,114,153,.3);
+}
+
+.ai-prompt-request { display: grid; gap: 6px; }
+
+.ai-prompt-request > span {
+    color: var(--ink-2);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ai-prompt-request textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font: 12px/1.55 ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    resize: vertical;
+}
+
+.ai-prompt-request textarea:focus-visible { outline: none; border-color: var(--pink); box-shadow: var(--ring); }
+
+.ai-prompt-copy-main {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--pink);
+    border-radius: 7px;
+    background: var(--pink);
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(251,114,153,.24);
+    transition: transform .14s var(--ease), background .14s var(--ease), box-shadow .14s var(--ease);
+}
+
+.ai-prompt-copy-main:hover { background: var(--pink-hi); transform: translateY(-1px); }
+.ai-prompt-copy-main:focus-visible { outline: none; box-shadow: var(--ring); }
+.ai-prompt-copy-main[data-copied="true"] { background: var(--pink-hi); }
+
+.ai-prompt-next { margin: 9px 0 0 !important; color: var(--ink-3); font-size: 11.5px !important; text-align: center; }
+
+.ai-prompt-preview {
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+}
+
+.ai-prompt-preview summary { color: var(--ink-3); font-size: 12px; cursor: pointer; }
+
+.ai-prompt-preview pre {
+    max-height: 280px;
+    margin: 10px 0 0;
+    padding: 12px;
+    overflow: auto;
+    border-radius: var(--radius-sm);
+    background: #20222b;
+    color: #dfe4f2;
+    font: 11px/1.55 ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+}
+
+.handwrite-reference {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+}
+
+.handwrite-reference > summary {
+    padding: 12px 14px;
+    color: var(--ink-3);
+    font-size: 12px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.handwrite-reference > summary::-webkit-details-marker { display: none; }
+.handwrite-reference > summary::before { content: '›'; display: inline-block; margin-right: 7px; color: var(--pink-hi); font-size: 17px; line-height: 0; transition: transform .16s var(--ease); }
+.handwrite-reference[open] > summary { border-bottom: 1px solid var(--border); color: var(--ink); }
+.handwrite-reference[open] > summary::before { transform: rotate(90deg); }
+.handwrite-reference > summary span { color: var(--ink-2); font-weight: 650; }
+.handwrite-reference-content { padding: 16px; }
+
 .docs h3 {
     margin: 18px 0 8px;
     font-size: 13px;
@@ -1672,7 +1792,7 @@ textarea.css-input::placeholder {
     padding: 12px 14px;
     border-left: 3px solid var(--pink);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background: linear-gradient(90deg, var(--pink-soft), transparent);
+    background: var(--pink-soft);
 }
 
 .docs-notes p { margin: 0; font-size: 12.5px; }
@@ -1909,43 +2029,45 @@ pre.docs-code code {
 }
 
 /* ============================================================
-   显示分区独有：L1 总开关（启用时钟）+ L2 子项分组（显示模式）。
-   关闭时钟（=总开关未勾选）时，L2 与下方所有 is-clock-config 一起折叠。
+   L1 总开关（启用时钟）：独立卡片，位于设置页最高层级，
+   不属于任何分区——它控制整个时钟是否生效。关闭后下方所有
+   is-clock-config 设置（显示 / 主题 / 外观 / HTML 模板 / 预览 / 保存）
+   一并折叠，只留这张卡片与「关于」始终可用。
    ============================================================ */
-.display-fieldset {
-    background: var(--surface-2);
-}
-
-/* L1 总开关：横排「标签 + 描述 + toggle」。
-   不加边框 / 不加底色 —— 用更大的字号、字重、间距建立层级，
-   而不是用视觉装饰（避免 AI tell 的"卡片里塞卡片"）。 */
-.master-toggle {
+.master-toggle-card {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 16px;
-    padding: 4px 0 18px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.master-toggle-eyebrow {
+    flex: none;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--pink-soft);
+    color: var(--pink-hi);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
 }
 
 .master-toggle-label {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
     min-width: 0;
+    flex: 1 1 auto;
 }
 
 .master-toggle-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 650;
     color: var(--ink);
-}
-
-.master-toggle-desc {
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--ink-3);
 }
 
 /* 总开关用更大的 toggle（52×32）拉开与子项的视觉差距 */
@@ -1968,9 +2090,17 @@ pre.docs-code code {
     transform: translateX(20px) scale(0.92);
 }
 
-/* L2 子项分组：标题 + 普通 toggle 行 */
+/* ============================================================
+   显示分区：仅全屏 / 常驻两项（启用时钟已上移为顶层卡片）。
+   关闭时钟时整个分区随 is-clock-config 折叠。
+   ============================================================ */
+.display-fieldset {
+    background: var(--surface-2);
+}
+
+/* 子项分组：标题 + 普通 toggle 行 */
 .sub-group {
-    padding-top: 14px;
+    padding-top: 0;
 }
 
 .sub-group-title {
@@ -1984,10 +2114,10 @@ pre.docs-code code {
 
 /* ============================================================
    关闭时钟状态（hiddenForever=true，即总开关未勾选）：
-   - 折叠所有「时钟生效后才有意义」的设置（显示模式 / 主题 / 外观 / CSS / 预览 / 保存）
+   - 折叠所有「时钟生效后才有意义」的设置（显示 / 主题 / 外观 / HTML 模板 / 预览 / 保存）
    - 占位面板登场
    - 侧栏对应导航项置灰不可点（保留布局）
-   仅「显示」分区里的总开关与「关于」始终可用，让用户能重新开启时钟。
+   仅顶层的「启用时钟」卡片与「关于」始终可用，让用户能重新开启时钟。
    ============================================================ */
 body[data-clock-disabled="true"] .is-clock-config {
     display: none;
@@ -1997,6 +2127,7 @@ body[data-clock-disabled="true"] .preview-disabled {
     display: flex;
 }
 
+body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-display"],
 body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-theme"],
 body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-appearance"],
 body[data-clock-disabled="true"] .options-nav .nav-item[href="#sec-html"] {

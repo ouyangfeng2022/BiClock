@@ -881,12 +881,6 @@ input[type="checkbox"]:focus-visible {
     color: var(--ink);
 }
 
-.master-toggle-desc {
-    font-size: 11px;
-    line-height: 1.45;
-    color: var(--ink-3);
-}
-
 /* 总开关用更大的 toggle（50×30）拉开与子项的视觉差距 */
 .master-toggle-switch {
     width: 50px;

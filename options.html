@@ -23,23 +23,45 @@
 
         <!-- 中栏：滚动控制面板 -->
         <main class="options-main">
-          <fieldset class="display-fieldset" id="sec-display">
+          <!-- L1 总开关：启用时钟（与 hiddenForever 反向；勾上即代表"开"）。
+               不属于任何分区——它控制整个时钟是否生效，理应位于设置页最高层级。 -->
+          <fieldset class="master-toggle-card">
+              <span class="master-toggle-eyebrow">总开关</span>
+              <span class="master-toggle-label">
+                  <span class="master-toggle-name">
+                      启用时钟
+                      <span class="help-tip" tabindex="0" role="button" aria-label="启用时钟说明">
+                          <span class="help-icon" aria-hidden="true">?</span>
+                          <span class="help-bubble">
+                              <span class="help-item" data-help-key="clockEnabled">
+                                  <span class="help-item-title">启用时钟</span>
+                                  <span class="help-item-line" data-state="on">
+                                      <span class="help-tag">开</span>
+                                      <span class="help-item-text">按下方显示模式判断是否显示</span>
+                                  </span>
+                                  <span class="help-item-line" data-state="off">
+                                      <span class="help-tag">关</span>
+                                      <span class="help-item-text">不显示时钟</span>
+                                  </span>
+                              </span>
+                          </span>
+                      </span>
+                  </span>
+              </span>
+              <label class="toggle master-toggle-switch">
+                  <input type="checkbox" id="clockEnabled">
+                  <span class="toggle-track" aria-hidden="true">
+                      <span class="toggle-thumb"></span>
+                  </span>
+              </label>
+          </fieldset>
+
+          <fieldset class="display-fieldset is-clock-config" id="sec-display">
             <legend class="legend-tip">
                 显示
                 <span class="help-tip" tabindex="0" role="button" aria-label="显示设置说明">
                     <span class="help-icon" aria-hidden="true">?</span>
                     <span class="help-bubble">
-                        <span class="help-item" data-help-key="clockEnabled">
-                            <span class="help-item-title">启用时钟</span>
-                            <span class="help-item-line" data-state="on">
-                                <span class="help-tag">开</span>
-                                <span class="help-item-text">按下方显示模式判断是否显示</span>
-                            </span>
-                            <span class="help-item-line" data-state="off">
-                                <span class="help-tag">关</span>
-                                <span class="help-item-text">不显示时钟</span>
-                            </span>
-                        </span>
                         <span class="help-item" data-help-key="fullscreenOnly">
                             <span class="help-item-title">仅全屏显示</span>
                             <span class="help-item-line" data-state="on">
@@ -66,21 +88,8 @@
                 </span>
             </legend>
 
-            <!-- L1 总开关：启用时钟（与 hiddenForever 反向；勾上即代表"开"）。 -->
-            <div class="master-toggle">
-                <span class="master-toggle-label">
-                    <span class="master-toggle-name">启用时钟</span>
-                </span>
-                <label class="toggle master-toggle-switch">
-                    <input type="checkbox" id="clockEnabled">
-                    <span class="toggle-track" aria-hidden="true">
-                        <span class="toggle-thumb"></span>
-                    </span>
-                </label>
-            </div>
-
-            <!-- L2 显示模式：作为总开关下的子项，关闭时钟时一并折叠。 -->
-            <div class="sub-group is-clock-config">
+            <!-- 显示模式：在总开关之下作为子项；总开关关闭时随整个显示分区折叠。 -->
+            <div class="sub-group">
                 <h3 class="sub-group-title">显示模式</h3>
                 <div class="toggle-line">
                     <span class="toggle-line-text">仅全屏显示</span>
@@ -196,6 +205,30 @@
             </div>
 
             <section class="docs">
+                <section class="ai-prompt-card" aria-labelledby="aiPromptTitle">
+                    <div class="ai-prompt-heading">
+                        <div>
+                            <span class="template-eyebrow">推荐方式 · 无需手写代码</span>
+                            <h2 id="aiPromptTitle">让 AI 帮你生成专属时钟</h2>
+                        </div>
+                        <span class="ai-prompt-badge" aria-hidden="true">AI</span>
+                    </div>
+                    <p>写下你想要的视觉效果，复制提示词发给任意 LLM；它会生成一份可以直接粘贴到上方编辑器的完整模板。</p>
+                    <label class="ai-prompt-request" for="aiStyleDescription">
+                        <span>你想要什么样的时钟？</span>
+                        <textarea id="aiStyleDescription" rows="3" spellcheck="false" placeholder="例如：做成深蓝色的赛博电子钟，带青色发光边框，数字要很大。"></textarea>
+                    </label>
+                    <button type="button" class="ai-prompt-copy-main" id="copyAiPrompt">复制提示词，发给 AI →</button>
+                    <p class="ai-prompt-next">拿到代码后粘贴到编辑器，点击「应用」即可预览。</p>
+                    <details class="ai-prompt-preview">
+                        <summary>查看将被复制的完整提示词</summary>
+                        <pre id="aiPromptText"></pre>
+                    </details>
+                </section>
+
+                <details class="handwrite-reference">
+                    <summary><span>想自己写？</span> 查看模板格式、占位符和示例</summary>
+                    <div class="handwrite-reference-content">
                 <div class="template-getting-started">
                     <div class="template-getting-started-head">
                         <div>
@@ -212,9 +245,10 @@
                 </div>
 
                 <h3>模板怎么写</h3>
-                <p>模板由两部分组成：<strong>HTML</strong> 决定结构，<strong><code>&lt;style&gt;</code></strong> 决定外观。支持普通标签、SVG 和内嵌样式，保存后立即生效。</p>
+                <p>模板由两部分组成：<strong>HTML</strong> 决定结构，<strong>必须包在 <code>&lt;style&gt;...&lt;/style&gt;</code> 中的 CSS</strong> 决定外观。CSS 不能直接写在最外层；支持普通标签、SVG 和内嵌样式，保存后立即生效。</p>
                 <div class="docs-notes">
                     <p><strong>只改自己的时钟：</strong>每条样式都用 <code>.bpx-player-top-clock</code> 开头，避免影响 B 站页面。</p>
+                    <p><strong>最常见的失效原因：</strong>把 CSS 漏在 <code>&lt;style&gt;...&lt;/style&gt;</code> 外面。请先写 <code>&lt;style&gt;</code>，最后写 <code>&lt;/style&gt;</code>，再放 HTML 标签。</p>
                     <p><strong>不需要写 JavaScript：</strong><code>&lt;script&gt;</code> 不会执行；图片和外部字体可能发出网络请求。</p>
                 </div>
 
@@ -300,6 +334,8 @@
     &lt;ellipse cx="149" cy="118" rx="12" ry="9" fill="#ffc7d8" transform="rotate(25 149 118)"/&gt;
   &lt;/svg&gt;
 &lt;/div&gt;</code></pre>
+                    </div>
+                </details>
                     </div>
                 </details>
             </section>

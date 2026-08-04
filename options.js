@@ -261,6 +261,9 @@ function initApplyButton() {
         updateThemeSelection();
         // dirty 已消化；按钮回禁用态、编辑器边框恢复正常。
         updateApplyDirtyState();
+        // customHtml 由空变非空，「清除」按钮需要从禁用态唤醒；
+        // 漏掉这一步会导致「刚应用完模板却点不动清除」，直到刷新页面才恢复。
+        updateClearButtonState();
     });
 }
 
@@ -358,27 +361,82 @@ function initStarterTemplate() {
     if (!button || !input || !source) return;
 
     button.addEventListener('click', function () {
+        // 载入起步模板只把示例文本灌进 textarea 当作草稿，不立即写 config / 不
+        // 刷新预览 / 不落盘——与「编辑 textarea 后须点『应用』」的显式提交契约
+        // 保持一致，避免这里绕过应用按钮直接生效。用户随后点『应用』才把草稿
+        // 提交进 config.customHtml。模块「启用」开关也保持原样不被强开：启用与
+        // 「有没有模板内容」是两件事（与「清除」按钮同源）。
         input.value = source.dataset.copyText || source.textContent;
-        // 载入起步模板是一次显式的「整段替换」，直接落盘生效，等价于旧版自动应用路径；
-        // 用户之后在 textarea 里的增量编辑仍走「应用」按钮提交。
-        config.customHtml = input.value;
-        config.customHtmlEnabled = true;
-        config.clockStyle = 'custom';
-        $('customHtmlEnabled').checked = true;
-        applyToPreview();
-        save();
         refreshTemplateHighlight();
         updateApplyDirtyState();
-        updateClearButtonState();
-        updateThemeSelection();
         input.focus();
-        button.textContent = '✓ 已载入，可直接修改';
+        button.textContent = '✓ 已载入草稿，点应用生效';
         button.dataset.loaded = 'true';
         setTimeout(function () {
             button.textContent = '重新载入起步模板';
             delete button.dataset.loaded;
         }, 1800);
     });
+}
+
+function getAiTemplatePrompt() {
+    var description = ($('aiStyleDescription').value || '').trim();
+    return [
+        '请为 BiClock 浏览器扩展生成一份“自定义 HTML 模板”。',
+        '',
+        '请严格遵守：',
+        '1. 只输出可直接粘贴的完整 HTML 片段；不要 Markdown 代码围栏、解释或使用说明。',
+        '2. 如果写 CSS，必须把全部 CSS 放进模板最开头的 <style> 和 </style> 之间；在第一个 HTML 标签前先关闭 </style>。绝不能把 CSS 裸写在模板最外层。',
+        '3. 可使用普通 HTML 标签、SVG 和这个内嵌 <style> 标签；不要使用 <script>、事件属性或外部资源。',
+        '4. 时钟外层容器已经由扩展提供，类名为 .bpx-player-top-clock；不要重复创建这个外层容器。',
+        '5. 给你自己创建的内部元素取独特 class name，例如 .my-clock、.my-clock-frame。',
+        '6. <style> 中的每一条选择器都必须以 .bpx-player-top-clock 开头，例如：.bpx-player-top-clock .my-clock { ... }。不要给 body、html 或 B 站页面其它元素写样式。',
+        '7. 模板中必须保留至少一个时间占位符：{{time}}（HH:MM:SS）、{{hh}}、{{mm}} 或 {{ss}}。占位符会由扩展每秒自动更新。',
+        '8. 外层位置由扩展拖拽控制；不要对 .bpx-player-top-clock 设置 position、left、top 或 transform。',
+        '9. 请确保文字易读，成品在深色视频播放器上也能看清。',
+        '',
+        '我希望的视觉风格：',
+        description || '请设计一个精致、简洁且具有辨识度的时钟样式。'
+    ].join('\n');
+}
+
+// 把约束与用户的审美描述合成一段可直接发送给 LLM 的提示词。
+function initAiPrompt() {
+    var input = $('aiStyleDescription');
+    var output = $('aiPromptText');
+    var button = $('copyAiPrompt');
+    if (!input || !output || !button) return;
+
+    function refresh() {
+        output.textContent = getAiTemplatePrompt();
+    }
+
+    function selectPrompt() {
+        var range = document.createRange();
+        range.selectNodeContents(output);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    input.addEventListener('input', refresh);
+    button.addEventListener('click', function () {
+        var prompt = getAiTemplatePrompt();
+        function flash() {
+            button.textContent = '✓ 已复制，可发给 AI';
+            button.dataset.copied = 'true';
+            setTimeout(function () {
+                button.textContent = '复制提示词';
+                delete button.dataset.copied;
+            }, 1600);
+        }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(prompt).then(flash, selectPrompt);
+        } else {
+            selectPrompt();
+        }
+    });
+    refresh();
 }
 
 // 示例代码与编辑器使用同一套 token 色彩。示例的原始文本始终保留在 data 属性中，
@@ -985,6 +1043,7 @@ function init() {
     });
     initTemplateEditor();
     initStarterTemplate();
+    initAiPrompt();
     initExampleHighlights();
     initApplyButton();
     initClearButton();
