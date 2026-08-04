@@ -16,28 +16,28 @@ var BG_SWATCHES   = ['#fb7299', '#000000', '#ffffff', '#2563eb', '#16a34a', '#dc
 var THEMES = [
     {
         id: 'bili-pink', name: 'Bilibili 粉', note: '默认品牌标签',
-        fontSize: 30, color: '#ffffff', backgroundColor: '#fb7299', bgOpacity: 100, bold: true,
+        fontSize: 30, clockScale: 1, color: '#ffffff', backgroundColor: '#fb7299', bgOpacity: 100, bold: true,
         fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif',
         textShadow: 'none', borderColor: '#ffffff', borderOpacity: 0, borderWidth: 0,
         accentColor: '#fb7299', clockLayout: 'single'
     },
     {
         id: 'recording', name: '录像时间码', note: 'REC 播出状态条',
-        fontSize: 29, color: '#ffffff', backgroundColor: '#171717', bgOpacity: 94, bold: true,
+        fontSize: 29, clockScale: 1, color: '#ffffff', backgroundColor: '#171717', bgOpacity: 94, bold: true,
         fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
         textShadow: 'none', borderColor: '#ff4d4f', borderOpacity: 72, borderWidth: 1,
         accentColor: '#ff3b30', clockLayout: 'recording'
     },
     {
         id: 'analog', name: '指针表盘', note: '圆形模拟时钟',
-        fontSize: 48, color: '#e8e5de', backgroundColor: '#3b3d3b', bgOpacity: 96, bold: true,
+        fontSize: 48, clockScale: 1, color: '#e8e5de', backgroundColor: '#3b3d3b', bgOpacity: 96, bold: true,
         fontFamily: 'ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace',
         textShadow: 'none', borderColor: '#aaa69c', borderOpacity: 82, borderWidth: 2,
         accentColor: '#a87078', clockLayout: 'analog'
     },
     {
         id: 'calendar', name: '日历桌牌', note: '日期与时间卡片',
-        fontSize: 27, color: '#172033', backgroundColor: '#fffdf5', bgOpacity: 98, bold: true,
+        fontSize: 27, clockScale: 1, color: '#172033', backgroundColor: '#fffdf5', bgOpacity: 98, bold: true,
         fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif',
         textShadow: 'none', borderColor: '#f43f5e', borderOpacity: 75, borderWidth: 1,
         accentColor: '#f43f5e', clockLayout: 'calendar'
@@ -129,7 +129,16 @@ function updatePreviewPosition() {
     var el = $('previewClock');
     el.style.left = (config.posX * 100) + '%';
     el.style.top = (config.posY * 100) + '%';
+    // transform 链 scale + translate 必须配合 transform-origin: 0 0：
+    // origin 在左上角时，元素左上角视觉位置 = (ox + posX·w) - s·posX·W
+    // = ox + posX·(w - sW)，与 setPositionFromPointer 用 getBoundingClientRect
+    // 算的 spanX = w - sW 一致，拖动不抖。CSS 默认 origin=50% 50% 会让视觉
+    // 位置多出 W/2·(1-s) 项，导致 s≠1 时 mousedown→mousemove 抖一下。
+    // 详见 biclock.js applyStyles 的完整推导。
+    el.style.transformOrigin = '0 0';
+    var scale = config.clockScale != null ? config.clockScale : 1;
     el.style.transform =
+        'scale(' + scale + ') ' +
         'translate(' + (config.posX * -100) + '%, ' + (config.posY * -100) + '%)';
 }
 
@@ -148,6 +157,7 @@ function save() {
 // 不合法时 readFromForm 跳过该字段（保留上次有效值），由调用方决定是否落盘。
 function readFromForm() {
     config.fontSize = parseInt($('fontSize').value, 10) || DEFAULTS.fontSize;
+    config.clockScale = parseFloat($('clockScale').value) || 1;
     var textHex = normalizeHex($('colorHex').value);
     if (textHex) config.color = textHex;
     var bgHex = normalizeHex($('bgColorHex').value);
@@ -173,8 +183,20 @@ function refreshOpacityTrack() {
     );
 }
 
+// 缩放重置按钮可用态：clockScale=1（默认）时禁用置灰，偏离默认值时点亮。
+// 与 fillForm / onInput 同步，让用户一眼看出"当前不是 100%"并能一键回归。
+function updateResetClockScaleState() {
+    var btn = $('resetClockScale');
+    if (!btn) return;
+    var scale = config.clockScale != null ? config.clockScale : 1;
+    btn.disabled = Math.abs(scale - 1) < 0.001;
+}
+
 function fillForm() {
     $('fontSize').value = config.fontSize;
+    $('clockScale').value = config.clockScale != null ? config.clockScale : 1;
+    $('clockScaleValue').textContent = Math.round((config.clockScale != null ? config.clockScale : 1) * 100) + '%';
+    updateResetClockScaleState();
     $('colorHex').value = config.color;
     $('bgColorHex').value = config.backgroundColor;
     $('colorHex').setAttribute('aria-invalid', 'false');
@@ -494,10 +516,12 @@ function onInput(event) {
     readFromForm();
     // 显示范围与常驻开关不属于主题视觉，不应把已选主题标成"自定义"。
     // 外观键与 CSS 启用开关属于主题视觉，编辑即视为偏离当前主题。
-    if (!event || ['fontSize', 'bgOpacity', 'bold', 'customHtmlEnabled'].indexOf(event.target.id) !== -1) {
+    if (!event || ['fontSize', 'clockScale', 'bgOpacity', 'bold', 'customHtmlEnabled'].indexOf(event.target.id) !== -1) {
         config.clockStyle = 'custom';
     }
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
+    $('clockScaleValue').textContent = Math.round(config.clockScale * 100) + '%';
+    updateResetClockScaleState();
     refreshOpacityTrack();
     applyToPreview();
     save();
@@ -532,8 +556,13 @@ function setPositionFromPointer(clientX, clientY, offsetX, offsetY) {
     var banner = $('previewBanner');
     var clock = $('previewClock');
     var rect = banner.getBoundingClientRect();
-    var ownW = clock.offsetWidth;
-    var ownH = clock.offsetHeight;
+    // 用 getBoundingClientRect 而非 offsetWidth/Height：scale≠1 时
+    // offsetWidth 是 transform 之前的布局宽度，grabOffset（mousedown 时
+    // 也用 getBoundingClientRect 算）是缩放后的渲染宽度，两者比例不一致
+    // 会让拖动不跟手。两边统一用缩放后的实际尺寸，scale=1 时与原先等价。
+    var clockRect = clock.getBoundingClientRect();
+    var ownW = clockRect.width;
+    var ownH = clockRect.height;
     // 时钟尺寸接近 banner 时（极端情况）退化为整 banner 范围，避免除以 0。
     var spanX = Math.max(1, rect.width - ownW);
     var spanY = Math.max(1, rect.height - ownH);
@@ -1027,7 +1056,7 @@ function init() {
         applyToPreview();
     });
 
-    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'customHtmlEnabled', 'clockEnabled'];
+    var ids = ['fontSize', 'clockScale', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'customHtmlEnabled', 'clockEnabled'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);
@@ -1052,6 +1081,19 @@ function init() {
     initSaveCustomTheme();
     initCopyButtons();
     initNavSpy();
+
+    // 缩放重置：点击把 clockScale 恢复为 1（100%）。重置是外观编辑，
+    // 故一并标记 clockStyle='custom'（与拖滑条一致），并同步主题选中态。
+    $('resetClockScale').addEventListener('click', function () {
+        config.clockScale = 1;
+        config.clockStyle = 'custom';
+        $('clockScale').value = 1;
+        $('clockScaleValue').textContent = '100%';
+        updateResetClockScaleState();
+        applyToPreview();
+        save();
+        updateThemeSelection();
+    });
 
     setInterval(refreshPreviewText, 1000);
 }

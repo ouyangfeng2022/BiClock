@@ -12,6 +12,12 @@
 // 都从这里读，不再各自维护一份。
 var DEFAULTS = {
     fontSize: 30,
+    // 整体缩放倍率（1 = 原始大小）。用 transform: scale() 等比缩放整个时钟节点，
+    // 是唯一能整体放大/缩小「自定义 HTML 模板」时钟的方式 —— 模板里写死的 px
+    // 尺寸 JS 无法改写，但 scale 会等比缩放整棵子树（含模板、内置布局、关闭按钮）。
+    // 与 fontSize 互补：fontSize 决定基础字号（内置布局的 padding/圆角/em 都基于它），
+    // clockScale 在其之上做整体倍率放大。默认 1.0 = 不缩放。
+    clockScale: 1,
     color: '#ffffff',
     // 默认背景即 B 站粉品牌色，与时钟叠在 B 站播放器上的语境一致。
     backgroundColor: '#fb7299',
@@ -45,7 +51,7 @@ var DEFAULTS = {
     posX: 0.5,
     posY: 0,
     // 用户在 options 页保存的自定义主题列表；仅 options 页读写，内容脚本不消费。
-    // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 12 个外观键
+    // 每个元素形状：{ id, name } + THEME_STYLE_KEYS 的 13 个外观键
     // + THEME_CSS_KEYS 的 2 个 HTML 模板键（customHtml / customHtmlEnabled）。
     // id 形如 "custom_<timestamp>"，作为 clockStyle 标记当前激活的自定义主题。
     customThemes: [],
@@ -65,7 +71,7 @@ var REMOVED_THEME_IDS = ['minimal', 'glass', 'neon', 'retro', 'corner', 'capsule
 
 // 主题能够覆盖的外观字段（位置/显示开关等不归主题管）。
 var THEME_STYLE_KEYS = [
-    'fontSize', 'color', 'backgroundColor', 'bgOpacity', 'bold',
+    'fontSize', 'clockScale', 'color', 'backgroundColor', 'bgOpacity', 'bold',
     'fontFamily', 'textShadow', 'borderColor', 'borderOpacity',
     'borderWidth', 'accentColor', 'clockLayout'
 ];

@@ -1116,6 +1116,52 @@ legend {
     font-size: 12.5px;
 }
 
+/* 缩放滑条头：数值 + 重置按钮并列。
+   .reset-inline-btn 在 clockScale=1（默认）时禁用置灰，
+   偏离默认值时点亮，让用户一眼看出"当前不是 100%"并能一键回归。 */
+.scale-head-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reset-inline-btn {
+    padding: 2px 10px;
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink-3);
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: border-color 0.14s var(--ease),
+                color 0.14s var(--ease),
+                background 0.14s var(--ease);
+}
+
+.reset-inline-btn:hover:not(:disabled) {
+    border-color: var(--pink);
+    color: var(--pink-hi);
+    background: var(--pink-soft);
+}
+
+.reset-inline-btn:focus-visible:not(:disabled) {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--ring);
+}
+
+.reset-inline-btn:active:not(:disabled) {
+    background: var(--surface-2);
+}
+
+.reset-inline-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .input-unit {
     position: relative;
     width: 100%;

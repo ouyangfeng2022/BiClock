@@ -104,7 +104,23 @@ function applyStyles() {
     // 边角对齐：translate 的百分比相对元素自身尺寸。
     // posX=0 → 不偏移（左贴左），posX=1 → 偏移整身宽（右贴右），
     // 0.5 → 偏移半身（居中）。不测量像素，让 posY=0 能真正贴顶。
-    clock.style.transform = 'translate(' + (config.posX * -100) + '%, ' + (config.posY * -100) + '%)';
+    //
+    // transform 链 scale + translate 配合 transform-origin: 0 0（左上角），
+    // 才能让拖动数学严格自洽。推导：origin 在左上角时，元素左上角视觉位置 =
+    // layout_left + s·translate_x = (ox + posX·w) - s·posX·W
+    //                      = ox + posX·(w - sW)   （sW = 视觉宽度）
+    // 与 setPositionFromPointer 用 getBoundingClientRect().width（= sW）算的
+    // spanX = w - sW 完全一致；mousedown 记录的 grabOffset 与 mousemove 重算的
+    // posX 同坐标系，元素不会跳。
+    //
+    // 关键陷阱：CSS 默认 transform-origin 是 50% 50%（中心），那样元素视觉
+    // 位置会多出 W/2·(1-s) 项，s≠1 时 mousedown→mousemove 之间会"抖一下"，
+    // 即用户报告的抖动。必须显式设 0 0 才能 scale 绕左上角展开。
+    clock.style.transformOrigin = '0 0';
+    var scale = config.clockScale != null ? config.clockScale : 1;
+    clock.style.transform =
+        'scale(' + scale + ') ' +
+        'translate(' + (config.posX * -100) + '%, ' + (config.posY * -100) + '%)';
 
     // 外观两模式：HTML 模板启用时清掉外观类 inline style，让用户模板成为
     // 唯一来源（无需 !important）；否则照常把外观灌成 inline。
@@ -156,8 +172,13 @@ function setPositionFromPointer(clientX, clientY, offsetX, offsetY) {
     var container = document.getElementsByClassName('bpx-player-container')[0];
     if (!container) return;
     var rect = container.getBoundingClientRect();
-    var ownW = clock.offsetWidth;
-    var ownH = clock.offsetHeight;
+    // 用 getBoundingClientRect 而非 offsetWidth/Height：scale≠1 时
+    // offsetWidth 是 transform 之前的布局宽度，grabOffset（mousedown 时
+    // 也用 getBoundingClientRect 算）是缩放后的渲染宽度，两者比例不一致
+    // 会让拖动不跟手。两边统一用缩放后的实际尺寸，scale=1 时与原先等价。
+    var clockRect = clock.getBoundingClientRect();
+    var ownW = clockRect.width;
+    var ownH = clockRect.height;
     // edge-aligned：定位是 left/top + transform 按自身尺寸反向偏移，
     // 所以时钟真正可移动范围是容器减去自身尺寸，分母必须用 spanX/Y，
     // 否则首次 mousemove 会因比例错位让时钟先抖一下再开始跟随。

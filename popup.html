@@ -127,6 +127,17 @@
             </div>
         </div>
 
+        <label class="row-stacked">
+            <span class="row-head">
+                缩放
+                <span class="scale-head-actions">
+                    <span class="unit value-display" id="clockScaleValue">100%</span>
+                    <button type="button" id="resetClockScale" class="reset-inline-btn" title="重置缩放为 100%" aria-label="重置缩放为 100%">重置</button>
+                </span>
+            </span>
+            <input type="range" id="clockScale" class="clock-scale-range" min="0.5" max="2" step="0.05">
+        </label>
+
         <div class="field field-color">
             <span class="field-label">文字颜色</span>
             <div class="color-row">

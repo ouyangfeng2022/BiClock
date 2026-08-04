@@ -64,6 +64,11 @@ function applyToPreview() {
         el.style.padding = '0 ' + (config.fontSize * 0.3).toFixed(1) + 'px';
         el.style.borderRadius = (config.fontSize * 0.3).toFixed(1) + 'px';
     }
+    // 整体缩放：popup 预览不参与拖动定位（CSS flex 居中），所以这里只需 scale，
+    // 不像 biclock.js / options.js 需要 translate + scale 组合。clockScale 由
+    // popup 与 options 共用同一份 storage，预览缩放与真实播放器保持一致。
+    var scale = config.clockScale != null ? config.clockScale : 1;
+    el.style.transform = 'scale(' + scale + ')';
     // 最后渲染布局：让形态主题对 el 背景/边框/padding 的清理成为最终态，
     // 与每秒 setInterval 的单独 refreshPreviewText() 渲染路径完全等价。
     refreshPreviewText();
@@ -84,6 +89,7 @@ function save() {
 // 不合法时 readFromForm 跳过该字段（保留上次有效值），由调用方决定是否落盘。
 function readFromForm() {
     config.fontSize = parseInt($('fontSize').value, 10) || DEFAULTS.fontSize;
+    config.clockScale = parseFloat($('clockScale').value) || 1;
     var textHex = normalizeHex($('colorHex').value);
     if (textHex) config.color = textHex;
     var bgHex = normalizeHex($('bgColorHex').value);
@@ -106,8 +112,20 @@ function refreshOpacityTrack() {
     );
 }
 
+// 缩放重置按钮可用态：clockScale=1（默认）时禁用置灰，偏离默认值时点亮。
+// 与 fillForm / onInput 同步，让用户一眼看出"当前不是 100%"并能一键回归。
+function updateResetClockScaleState() {
+    var btn = $('resetClockScale');
+    if (!btn) return;
+    var scale = config.clockScale != null ? config.clockScale : 1;
+    btn.disabled = Math.abs(scale - 1) < 0.001;
+}
+
 function fillForm() {
     $('fontSize').value = config.fontSize;
+    $('clockScale').value = config.clockScale != null ? config.clockScale : 1;
+    $('clockScaleValue').textContent = Math.round((config.clockScale != null ? config.clockScale : 1) * 100) + '%';
+    updateResetClockScaleState();
     $('colorHex').value = config.color;
     $('bgColorHex').value = config.backgroundColor;
     $('colorHex').setAttribute('aria-invalid', 'false');
@@ -136,10 +154,12 @@ function applyHiddenState() {
 function onInput(event) {
     readFromForm();
     // 手动改外观时把已选主题标成「自定义」，提示用户已偏离预设。
-    if (!event || ['fontSize', 'bgOpacity', 'bold'].indexOf(event.target.id) !== -1) {
+    if (!event || ['fontSize', 'clockScale', 'bgOpacity', 'bold'].indexOf(event.target.id) !== -1) {
         config.clockStyle = 'custom';
     }
     $('bgOpacityValue').textContent = config.bgOpacity + '%';
+    $('clockScaleValue').textContent = Math.round(config.clockScale * 100) + '%';
+    updateResetClockScaleState();
     refreshOpacityTrack();
     applyToPreview();
     save();
@@ -254,7 +274,7 @@ function init() {
     });
 
     // 颜色字段由 bindHexInput 单独处理（含校验逻辑），其余字段走统一的 onInput。
-    var ids = ['fontSize', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'clockEnabled'];
+    var ids = ['fontSize', 'clockScale', 'bgOpacity', 'bold', 'fullscreenOnly', 'modeAlways', 'clockEnabled'];
     ids.forEach(function (id) {
         $(id).addEventListener('input', onInput);
         $(id).addEventListener('change', onInput);
@@ -267,6 +287,18 @@ function init() {
     $('openOptionsLink').addEventListener('click', function (e) {
         e.preventDefault();
         openOptions();
+    });
+
+    // 缩放重置：点击把 clockScale 恢复为 1（100%）。重置是外观编辑，
+    // 故一并标记 clockStyle='custom'（与拖滑条一致），避免误以为仍在原主题。
+    $('resetClockScale').addEventListener('click', function () {
+        config.clockScale = 1;
+        config.clockStyle = 'custom';
+        $('clockScale').value = 1;
+        $('clockScaleValue').textContent = '100%';
+        updateResetClockScaleState();
+        applyToPreview();
+        save();
     });
 
     setInterval(refreshPreviewText, 1000);
