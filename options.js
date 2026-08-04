@@ -189,10 +189,90 @@ function fillForm() {
     $('clockEnabled').checked = !config.hiddenForever;
     $('customHtml').value = config.customHtml || '';
     $('customHtmlEnabled').checked = !!config.customHtmlEnabled;
+    refreshTemplateHighlight();
     updateSwatchSelection();
     updateThemeSelection();
     updateHelpActiveStates();
     applyHiddenState();
+}
+
+// textarea 保持原生编辑体验；底下的 pre 仅负责展示语法色彩。这样不引入编辑器
+// 依赖，也不会改变 storage 中保存的原始 HTML 文本。
+function escapeTemplateHtml(text) {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function highlightTemplateHtml(source) {
+    var escaped = escapeTemplateHtml(source);
+    return escaped.replace(/(&lt;\/?)([\w:-]+)([\s\S]*?)(&gt;)/g,
+        function (_, open, name, attributes, close) {
+            var highlightedAttrs = attributes.replace(/([\w:-]+)(\s*=\s*)(&quot;.*?&quot;|'[^']*?'|[^\s]+)/g,
+                '<span class="template-token-attr">$1</span>$2<span class="template-token-string">$3</span>');
+            return '<span class="template-token-tag">' + open + '</span><span class="template-token-name">' + name + '</span>' + highlightedAttrs + '<span class="template-token-tag">' + close + '</span>';
+        })
+        .replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="template-token-comment">$1</span>')
+        .replace(/(\{\{\s*(?:hh|mm|ss|time)\s*\}\})/gi, '<span class="template-token-placeholder">$1</span>');
+}
+
+function refreshTemplateHighlight() {
+    var input = $('customHtml');
+    var output = $('customHtmlHighlight');
+    var editor = document.querySelector('.template-editor');
+    if (!input || !output || !editor) return;
+    output.innerHTML = '<code>' + highlightTemplateHtml(input.value) + '</code>';
+    output.scrollTop = input.scrollTop;
+    output.scrollLeft = input.scrollLeft;
+    editor.dataset.empty = input.value ? 'false' : 'true';
+}
+
+function initTemplateEditor() {
+    var input = $('customHtml');
+    if (!input) return;
+    input.addEventListener('scroll', refreshTemplateHighlight);
+    refreshTemplateHighlight();
+}
+
+// 示例代码与编辑器使用同一套 token 色彩。示例的原始文本始终保留在 data 属性中，
+// 因此高亮插入的 span 不会影响「复制」得到的内容。
+function highlightExampleCode(source) {
+    var parts = source.split(/(<!--[\s\S]*?-->|<\/?[\w:-]+(?:\s+[^<>]*?)?>|\{\{\s*(?:hh|mm|ss|time)\s*\}\})/gi);
+    var inStyle = false;
+
+    return parts.map(function (part) {
+        if (!part) return '';
+        if (/^<!--[\s\S]*-->$/.test(part)) {
+            return '<span class="template-token-comment">' + escapeTemplateHtml(part) + '</span>';
+        }
+        if (/^\{\{\s*(?:hh|mm|ss|time)\s*\}\}$/i.test(part)) {
+            return '<span class="template-token-placeholder">' + escapeTemplateHtml(part) + '</span>';
+        }
+        if (/^<\/?[\w:-]+/.test(part)) {
+            var match = part.match(/^<(\/)?([\w:-]+)([\s\S]*?)(\/?)>$/);
+            if (!match) return escapeTemplateHtml(part);
+            var closing = !!match[1];
+            var name = match[2];
+            var attrs = escapeTemplateHtml(match[3]).replace(/([\w:-]+)(\s*=\s*)(&quot;.*?&quot;|'[^']*?'|[^\s]+)/g,
+                '<span class="template-token-attr">$1</span>$2<span class="template-token-string">$3</span>');
+            if (name.toLowerCase() === 'style') inStyle = !closing;
+            return '<span class="template-token-tag">&lt;' + (closing ? '/' : '') + '</span><span class="template-token-name">' + name + '</span>' + attrs + '<span class="template-token-tag">' + (match[4] || '') + '&gt;</span>';
+        }
+        if (!inStyle) return escapeTemplateHtml(part);
+        return escapeTemplateHtml(part).replace(/(\/\*[\s\S]*?\*\/|&quot;.*?&quot;|'[^']*?')|([\w-]+)(?=\s*:)|(#[\da-f]{3,8}\b)|(\b\d+(?:\.\d+)?(?:px|em|rem|%|s|deg)?\b)/gi,
+            function (_, literal, property, color, value) {
+                if (literal) return '<span class="' + (literal.indexOf('/*') === 0 ? 'template-token-comment' : 'template-token-string') + '">' + literal + '</span>';
+                if (property) return '<span class="template-token-css-property">' + property + '</span>';
+                if (color) return '<span class="template-token-css-value">' + color + '</span>';
+                return '<span class="template-token-css-value">' + value + '</span>';
+            });
+    }).join('');
+}
+
+function initExampleHighlights() {
+    document.querySelectorAll('pre.docs-code code').forEach(function (codeEl) {
+        var source = codeEl.textContent;
+        codeEl.dataset.copyText = source;
+        codeEl.innerHTML = highlightExampleCode(source);
+    });
 }
 
 // 关闭时钟（hiddenForever=true）时把主题 / 外观 / CSS / 预览 / 保存按钮
@@ -588,18 +668,9 @@ function startRename(theme, nameSpan) {
 
 function updateThemeSelection() {
     var activeId = config.clockStyle;
-    var hint = $('themeHint');
     document.querySelectorAll('.theme-card').forEach(function (button) {
         button.setAttribute('aria-pressed', button.dataset.themeId === activeId ? 'true' : 'false');
     });
-    if (activeId === 'custom') {
-        hint.textContent = '已手动调整外观。点击下方「保存当前外观为自定义主题」可存成主题卡。';
-    } else {
-        var isPreset = THEMES.some(function (t) { return t.id === activeId; });
-        hint.textContent = isPreset
-            ? '当前为预设主题：不带 HTML 模板，切回时不会恢复自定义内容。'
-            : '当前为自定义主题：外观与 HTML 模板已一并恢复。';
-    }
 }
 
 function updateHelpActiveStates() {
@@ -654,7 +725,7 @@ function initCopyButtons() {
     buttons.forEach(function (btn) {
         btn.addEventListener('click', function () {
             var codeEl = document.getElementById('code-' + btn.dataset.copy);
-            var text = codeEl ? codeEl.textContent : '';
+            var text = codeEl ? (codeEl.dataset.copyText || codeEl.textContent) : '';
             function flash() {
                 var prev = btn.textContent;
                 btn.textContent = '✓ 已复制';
@@ -763,8 +834,11 @@ function init() {
         config.clockStyle = 'custom';
         applyToPreview();
         save();
+        refreshTemplateHighlight();
         updateThemeSelection();
     });
+    initTemplateEditor();
+    initExampleHighlights();
 
     initPositionPanel();
     initSaveCustomTheme();

@@ -531,6 +531,45 @@ legend {
     color: var(--ink-3);
 }
 
+/* HTML 模板总开关置于分区开头；关闭时下方内容完全不占布局。 */
+.template-mode-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 54px;
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    cursor: pointer;
+}
+
+.template-mode-toggle:has(input:checked) {
+    border-color: color-mix(in oklch, var(--pink) 45%, var(--border));
+    background: var(--pink-soft);
+}
+
+.template-mode-copy {
+    display: grid;
+    gap: 1px;
+}
+
+.template-mode-name {
+    font-weight: 650;
+    color: var(--ink);
+}
+
+.template-mode-desc {
+    font-size: 12px;
+    color: var(--ink-3);
+}
+
+.template-mode-toggle:has(#customHtmlEnabled:not(:checked)) + .custom-html-content {
+    display: none;
+}
+
 .section-intro code {
     padding: 1px 5px;
     border-radius: 3px;
@@ -1283,39 +1322,120 @@ input[type="range"]:active::-moz-range-thumb {
 }
 
 /* ============================================================
-   自定义 CSS textarea
+   HTML 模板编辑器
    ============================================================ */
-textarea.css-input {
-    display: block;
-    width: 100%;
-    min-height: 140px;
-    margin-top: 12px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--ink);
-    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 12.5px;
-    line-height: 1.55;
-    resize: vertical;
-    transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
+.template-editor {
+    margin-top: 14px;
+    overflow: hidden;
+    border: 1px solid #dedfe7;
+    border-radius: 10px;
+    background: #20222b;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 3px 12px rgba(39,42,57,.08);
+    transition: border-color .14s var(--ease), box-shadow .14s var(--ease);
 }
 
-textarea.css-input:hover {
-    border-color: var(--border-hi);
+.template-editor:focus-within {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(251,114,153,.16), inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.template-editor-bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 34px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    color: #aeb4c5;
+    font: 12px/1 ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.template-editor-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--pink);
+    box-shadow: 15px 0 #f5c451, 30px 0 #7dd3a8;
+    margin-right: 26px;
+}
+
+.template-editor-language {
+    margin-left: auto;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: rgba(251,114,153,.16);
+    color: #ffa5bf;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .07em;
+}
+
+.template-editor-body {
+    position: relative;
+    min-height: 300px;
+    overflow: hidden;
+}
+
+.template-highlight,
+textarea.css-input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-height: 300px;
+    margin: 0;
+    padding: 16px 18px;
+    border: 0;
+    border-radius: 0;
+    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    letter-spacing: .01em;
+    tab-size: 2;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+.template-highlight {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    color: #dfe4f2;
+}
+
+textarea.css-input {
+    position: relative;
+    z-index: 1;
+    resize: vertical;
+    background: transparent;
+    color: transparent;
+    caret-color: #fff;
+    font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+textarea.css-input::selection {
+    background: rgba(251,114,153,.38);
+    color: transparent;
 }
 
 textarea.css-input:focus-visible {
     outline: none;
-    border-color: var(--pink);
-    box-shadow: var(--ring);
 }
 
 textarea.css-input::placeholder {
-    color: var(--ink-unit);
+    color: #7d8498;
     font-style: italic;
 }
+
+.template-editor[data-empty="true"] .template-highlight { display: none; }
+.template-token-tag { color: #ff9bb7; }
+.template-token-name { color: #f5c76b; }
+.template-token-attr { color: #8fd7ff; }
+.template-token-string { color: #a8d98d; }
+.template-token-placeholder { color: #c6a6ff; font-weight: 700; }
+.template-token-comment { color: #70778a; font-style: italic; }
+.template-token-css-property { color: #8fd7ff; }
+.template-token-css-value { color: #a8d98d; }
 
 /* ============================================================
    自定义 CSS 文档区
@@ -1367,6 +1487,18 @@ textarea.css-input::placeholder {
     font-style: italic;
 }
 
+.docs-notes {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+    padding: 12px 14px;
+    border-left: 3px solid var(--pink);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background: linear-gradient(90deg, var(--pink-soft), transparent);
+}
+
+.docs-notes p { margin: 0; font-size: 12.5px; }
+
 /* 选择器速查表：两列 */
 .docs-selector-grid {
     display: grid;
@@ -1413,7 +1545,21 @@ textarea.css-input::placeholder {
     padding: 8px 12px;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
+    cursor: pointer;
+    list-style: none;
 }
+
+.docs-card-head::-webkit-details-marker { display: none; }
+.docs-card-head::before { content: '›'; color: var(--pink-hi); font-size: 18px; line-height: 1; transition: transform .16s var(--ease); }
+.docs-card[open] .docs-card-head::before { transform: rotate(90deg); }
+.docs-card[open] .docs-card-head { border-bottom: 1px solid var(--border); }
+
+.docs-disclosure { margin-left: auto; color: var(--ink-3); font-size: 11.5px; }
+.docs-card[open] .docs-disclosure { font-size: 0; }
+.docs-card[open] .docs-disclosure::after { content: '收起代码'; font-size: 11.5px; }
+
+.docs-card-content { position: relative; }
+.docs-card-content .copy-btn { position: absolute; z-index: 1; top: 9px; right: 12px; background: var(--surface-2); }
 
 .docs-card-title {
     font-size: 12.5px;
@@ -1458,7 +1604,7 @@ pre.docs-code {
     margin: 0;
     padding: 12px 14px;
     overflow-x: auto;
-    background: var(--surface);
+    background: #20222b;
     /* HTML 模板示例里有不可换行的长行（SVG 属性串），pre 默认 min-width: auto
        会用最长行的 min-content 撑爆父级 fieldset，进而把 .options-main 中间列
        撑进预览栏。强制 0 让 pre 由父级宽度反推，超出靠 overflow-x: auto 内部滚动。*/
@@ -1469,7 +1615,7 @@ pre.docs-code {
 pre.docs-code code {
     padding: 0;
     background: none;
-    color: var(--ink);
+    color: #dfe4f2;
     font-family: ui-monospace, "Roboto Mono", SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 12px;
     line-height: 1.6;
@@ -1499,7 +1645,72 @@ pre.docs-code code {
     line-height: 1.8;
 }
 
+/* GitHub CTA 行：把底部的链接从灰色 meta 文字升级为
+   显眼的「主按钮 + 次按钮」组合，呼应页面顶部的 github-link，
+   让用户一眼看到入口而不是埋在版本号旁。 */
+.about-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 14px;
+}
+
+.about-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.14s var(--ease),
+                color 0.14s var(--ease),
+                background 0.14s var(--ease),
+                box-shadow 0.14s var(--ease);
+}
+
+.about-cta:hover {
+    border-color: var(--pink);
+    color: var(--pink-hi);
+    background: var(--pink-soft);
+}
+
+.about-cta:focus-visible {
+    outline: none;
+    border-color: var(--pink);
+    box-shadow: var(--ring);
+}
+
+.about-cta--primary {
+    border-color: var(--pink);
+    background: var(--pink);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 1px 2px color-mix(in oklch, var(--pink) 40%, transparent);
+}
+
+.about-cta--primary:hover {
+    background: var(--pink-hi);
+    border-color: var(--pink-hi);
+    color: #fff;
+}
+
+.about-cta-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+}
+
 .about-meta a {
+    /* about-meta 现在只保留「版本 · MIT License」纯文本，
+       这条规则留着以防未来再次放链接。 */
     color: var(--ink-2);
     text-decoration: none;
     border-bottom: 1px solid var(--border-hi);

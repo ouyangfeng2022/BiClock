@@ -37,7 +37,7 @@
                             </span>
                             <span class="help-item-line" data-state="off">
                                 <span class="help-tag">关</span>
-                                <span class="help-item-text">一律不显示时钟，所有相关设置折叠</span>
+                                <span class="help-item-text">不显示时钟</span>
                             </span>
                         </span>
                         <span class="help-item" data-help-key="fullscreenOnly">
@@ -67,18 +67,17 @@
             </legend>
 
             <!-- L1 总开关：启用时钟（与 hiddenForever 反向；勾上即代表"开"）。 -->
-            <label class="master-toggle">
+            <div class="master-toggle">
                 <span class="master-toggle-label">
                     <span class="master-toggle-name">启用时钟</span>
-                    <span class="master-toggle-desc">关闭后，所有显示 / 主题 / 外观 / CSS 设置都会折叠</span>
                 </span>
-                <span class="toggle master-toggle-switch">
+                <label class="toggle master-toggle-switch">
                     <input type="checkbox" id="clockEnabled">
                     <span class="toggle-track" aria-hidden="true">
                         <span class="toggle-thumb"></span>
                     </span>
-                </span>
-            </label>
+                </label>
+            </div>
 
             <!-- L2 显示模式：作为总开关下的子项，关闭时钟时一并折叠。 -->
             <div class="sub-group is-clock-config">
@@ -108,7 +107,6 @@
           <fieldset class="theme-fieldset is-clock-config" id="sec-theme">
             <legend>主题</legend>
             <div class="theme-grid" id="themeGrid" role="group" aria-label="时钟主题"></div>
-            <p class="theme-hint" id="themeHint">预设主题不带 CSS；自定义主题会保存当前外观与 CSS。</p>
           </fieldset>
 
           <fieldset class="is-clock-config" id="sec-appearance">
@@ -165,31 +163,39 @@
 
           <fieldset class="css-fieldset is-clock-config" id="sec-html">
             <legend>自定义 HTML 模板</legend>
-            <p class="section-intro">
-                启用后，扩展不再每秒重建时钟子树——你写的 HTML 直接作为时钟内容，里面的装饰元素（小狗、图标、容器）都会保留。时间用占位符 <code>{{hh}}</code> <code>{{mm}}</code> <code>{{ss}}</code> <code>{{time}}</code> 表示，每秒只更新占位符的文本，<strong>不会清空其它内容</strong>。外观由模板里的内联 <code>style</code> 或 <code>&lt;style&gt;</code> 自理，<strong>无需 <code>!important</code></strong>。位置仍由预览拖拽控制。
-            </p>
-
-            <div class="toggle-line">
-                <span class="toggle-line-text">启用</span>
+            <label class="template-mode-toggle">
+                <span class="template-mode-copy">
+                    <span class="template-mode-name">启用自定义 HTML 模板</span>
+                </span>
                 <span class="toggle">
                     <input type="checkbox" id="customHtmlEnabled">
                     <span class="toggle-track" aria-hidden="true">
                         <span class="toggle-thumb"></span>
                     </span>
                 </span>
+            </label>
+
+            <div class="custom-html-content">
+            <div class="template-editor" data-empty="true">
+                <div class="template-editor-bar" aria-hidden="true">
+                    <span class="template-editor-dot"></span>
+                    <span>template.html</span>
+                    <span class="template-editor-language">HTML</span>
+                </div>
+                <div class="template-editor-body">
+                    <pre class="template-highlight" id="customHtmlHighlight" aria-hidden="true"><code></code></pre>
+                    <textarea id="customHtml" class="css-input" rows="13" spellcheck="false" aria-label="HTML 模板编辑器"
+                              placeholder="&lt;div class=&quot;my-clock&quot;&gt;{{time}}&lt;/div&gt;"></textarea>
+                </div>
             </div>
 
-            <textarea id="customHtml" class="css-input" rows="8" spellcheck="false"
-                      placeholder="<div class='dog-clock'>&#10;  <span class='dog-time'>{{time}}</span>&#10;</div>"></textarea>
-
             <section class="docs">
-                <h2>HTML 模板说明</h2>
-                <p>
-                    模板里写任意 HTML 结构，扩展把 <code>{{hh}}</code> / <code>{{mm}}</code> / <code>{{ss}}</code> / <code>{{time}}</code> 替换成当前时/分/秒/完整时间，<strong>每秒只更新占位符</strong>，模板里的其它元素原样保留。同一占位符可多次出现。未识别的 <code>{{...}}</code> 原样当文本保留。
-                </p>
-                <p class="docs-hint">
-                    注意：模板里的 <code>&lt;script&gt;</code> 不会执行（浏览器对 <code>template</code> 内容的内置行为）；<code>&lt;img&gt;</code> 等会真的发起网络请求，请自行负责。外观请在模板内用内联 <code>style</code> 或 <code>&lt;style&gt;</code> 自理。
-                </p>
+                <h2>使用说明</h2>
+                <p>支持标签、SVG 和 <code>&lt;style&gt;</code>；保存后立即生效。</p>
+                <div class="docs-notes">
+                    <p>建议以 <code>.bpx-player-top-clock</code> 作为样式选择器前缀。</p>
+                    <p><code>&lt;script&gt;</code> 不会执行；图片和外部字体可能发出网络请求。</p>
+                </div>
 
                 <h3>占位符</h3>
                 <div class="docs-selector-grid">
@@ -200,15 +206,13 @@
                 </div>
 
                 <h3>示例</h3>
-                <p class="docs-hint">点击「复制」可直接粘贴到上面的输入框试用。复制后记得勾「启用」。</p>
 
-                <div class="docs-card">
-                    <div class="docs-card-head">
-                        <span class="docs-card-title">最简卡片</span>
+                <details class="docs-card">
+                    <summary class="docs-card-head"><span class="docs-card-title">最简卡片</span><span class="docs-disclosure">展开代码</span></summary>
+                    <div class="docs-card-content">
                         <button type="button" class="copy-btn" data-copy="html-minimal">复制</button>
-                    </div>
                     <pre class="docs-code" id="code-html-minimal"><code>&lt;style&gt;
-.dog-clock {
+.bpx-player-top-clock .my-clock {
   font-family: ui-monospace, monospace;
   font-size: 30px;
   color: #fff;
@@ -217,14 +221,14 @@
   padding: 4px 14px;
 }
 &lt;/style&gt;
-&lt;div class="dog-clock"&gt;{{time}}&lt;/div&gt;</code></pre>
-                </div>
-
-                <div class="docs-card">
-                    <div class="docs-card-head">
-                        <span class="docs-card-title">小狗抱时钟（SVG 装饰）</span>
-                        <button type="button" class="copy-btn" data-copy="html-dog">复制</button>
+&lt;div class="my-clock"&gt;{{time}}&lt;/div&gt;</code></pre>
                     </div>
+                </details>
+
+                <details class="docs-card">
+                    <summary class="docs-card-head"><span class="docs-card-title">小狗抱时钟（SVG 装饰）</span><span class="docs-disclosure">展开代码</span></summary>
+                    <div class="docs-card-content">
+                        <button type="button" class="copy-btn" data-copy="html-dog">复制</button>
                     <pre class="docs-code" id="code-html-dog"><code>&lt;style&gt;
 /* 用宿主类限定，避免模板样式影响 B 站页面其它元素。 */
 .bpx-player-top-clock .dog-clock {
@@ -275,8 +279,10 @@
     &lt;ellipse cx="149" cy="118" rx="12" ry="9" fill="#ffc7d8" transform="rotate(25 149 118)"/&gt;
   &lt;/svg&gt;
 &lt;/div&gt;</code></pre>
-                </div>
+                    </div>
+                </details>
             </section>
+            </div>
           </fieldset>
 
           <fieldset class="about-fieldset" id="sec-about">
@@ -284,11 +290,18 @@
             <p class="about-desc">
                 BiClock 是一个轻量的 Manifest V3 浏览器扩展，在 Bilibili 视频播放器顶部叠加显示当前时间。纯原生 JS，零依赖、零构建，同一套代码同时支持 Chrome / Edge / Firefox。
             </p>
+            <div class="about-actions">
+                <a class="about-cta about-cta--primary" href="https://github.com/ouyangfeng2022/BiClock" target="_blank" rel="noopener">
+                    <svg class="about-cta-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                        <path fill="currentColor" fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    在 GitHub 上查看
+                </a>
+                <a class="about-cta" href="https://github.com/ouyangfeng2022/BiClock/issues" target="_blank" rel="noopener">反馈问题</a>
+                <a class="about-cta" href="https://github.com/ouyangfeng2022/BiClock#readme" target="_blank" rel="noopener">使用文档</a>
+            </div>
             <p class="about-meta">
-                版本 <span id="versionTag">3.5</span> · MIT License ·
-                <a href="https://github.com/ouyangfeng2022/BiClock" target="_blank" rel="noopener">源代码</a> ·
-                <a href="https://github.com/ouyangfeng2022/BiClock/issues" target="_blank" rel="noopener">反馈问题</a> ·
-                <a href="https://github.com/ouyangfeng2022/BiClock#readme" target="_blank" rel="noopener">使用文档</a>
+                版本 <span id="versionTag">3.5</span> · MIT License
             </p>
           </fieldset>
         </main>
@@ -323,10 +336,7 @@
             <section class="preview-disabled" aria-hidden="true">
                 <div class="preview-disabled-icon" aria-hidden="true">⏻</div>
                 <div class="preview-disabled-title">时钟已关闭</div>
-                <div class="preview-disabled-desc">
-                    在「显示 → 关闭时钟」处关闭后，所有外观 / 主题 / CSS 设置都会折叠。<br>
-                    重新开启该开关即可恢复。
-                </div>
+                <div class="preview-disabled-desc">请在“显示”中重新启用。</div>
             </section>
 
             <!-- 保存按钮紧贴预览旁，作为预览栏的一部分 -->
